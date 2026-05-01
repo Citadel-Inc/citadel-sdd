@@ -1,26 +1,39 @@
 # citadel-sdd
 
-MCP server wrapping the citadel **Spec-Driven Development** lifecycle.
+MCP server wrapping the **Spec-Driven Development** lifecycle for Bastion, Citadel operators, Citadel customers, and public agent workflows.
 
-**Status:** PRD draft only. Not yet implemented.
+**License:** MIT.
+**Status:** PRD ratified 011945ZMAY26. Implementation Phase A pending.
+**Language:** TypeScript on Bun.
+**Repo:** [Rethunk-AI/citadel-sdd](https://github.com/Rethunk-AI/citadel-sdd).
 
 ## Why
 
-Per-spec ceremony in citadel runs ~15 hand-edited tool calls per claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, `specs/README.md` index splice, conventional-commit authoring). Five-spec sessions burn ~75 calls of pure mechanical work. This MCP collapses each lifecycle event into one atomic call.
+Hand-driven SDD lifecycle = ~15 mechanical tool calls per spec claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, `specs/README.md` index splice, conventional-commit authoring). Five-spec sessions burn ~75 calls of pure ceremony. This MCP collapses each lifecycle event into one atomic call.
+
+## Profiles
+
+Three shipped profiles, inheritance-chained:
+
+```
+default (vanilla SDD baseline)
+  └── bastion (DTG injection, IRONLAW callouts, militant commit voice)
+        └── citadel (bastion + citadel paths/conventions + push-on-close)
+```
+
+Each consuming repo declares its profile in `specs/config.yaml`.
 
 ## Where to start
 
-Read [PRD.md](PRD.md). It is self-contained; the next agent does not need to recover session state.
-
-## Position
-
-Sibling of [`Rethunk-Tech/citadel`](https://github.com/Rethunk-Tech/citadel) at `/usr/local/src/com.github/Rethunk-Tech/citadel-sdd/`. Standalone repo / workspace.
+Read [PRD.md](PRD.md). Self-contained; no session-state recovery needed.
 
 ## Build status
 
 | Phase | State |
 |-------|-------|
-| PRD | DRAFT 011920ZMAY26 |
-| Implementation | not started |
-| Tested | not started |
-| Installed | not started |
+| PRD | RATIFIED 011945ZMAY26 |
+| Phase A (substrate) | not started |
+| Phase B (tools) | not started |
+| Phase C (MCP wiring) | not started |
+| Phase D (close + parity) | not started |
+| Tag v0.1.0 (parity green ×7) | not started |
