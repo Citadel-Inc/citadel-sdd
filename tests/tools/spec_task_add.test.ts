@@ -57,4 +57,15 @@ describe("specTaskAdd", () => {
       "spec_not_found",
     );
   });
+
+  test("inline-format tasks.md: add succeeds and preserves Status line", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-inline"] });
+    specTaskAdd({ slug: "in-progress-inline", phase: "P2", text: "Extra cleanup" }, ctx());
+    const tasks = readFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-inline", "tasks.md"),
+      "utf8",
+    );
+    expect(tasks).toContain("- [ ] Extra cleanup");
+    expect(tasks).toMatch(/^Status:/m);
+  });
 });

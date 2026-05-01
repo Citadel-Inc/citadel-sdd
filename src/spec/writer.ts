@@ -55,13 +55,28 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
 export function spliceFrontmatter(rawMd: string, newFm: Frontmatter): string {
   const lines = rawMd.split(/\r?\n/);
   const block = findFirstPipeBlock(lines);
-  if (!block) {
+  if (block) {
+    const before = lines.slice(0, block.start);
+    const after = lines.slice(block.end);
+    const renderedLines = renderFrontmatter(newFm).split("\n");
+    return [...before, ...renderedLines, ...after].join("\n");
+  }
+  // Inline frontmatter: replace each matching "Key: value" line in-place.
+  const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]));
+  let found = false;
+  const newLines = lines.map((line) => {
+    const m = /^([A-Za-z][A-Za-z _-]*?):\s+/.exec(line);
+    if (!m) return line;
+    const keyLower = (m[1] ?? "").trim().toLowerCase();
+    const entry = fieldMap.get(keyLower);
+    if (!entry) return line;
+    found = true;
+    return `${entry.key}: ${entry.value}`;
+  });
+  if (!found) {
     throw new Error("frontmatter_missing");
   }
-  const before = lines.slice(0, block.start);
-  const after = lines.slice(block.end);
-  const renderedLines = renderFrontmatter(newFm).split("\n");
-  return [...before, ...renderedLines, ...after].join("\n");
+  return newLines.join("\n");
 }
 
 export function spliceQTable(rawMd: string, newRows: readonly QTableRow[]): string {

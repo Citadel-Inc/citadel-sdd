@@ -78,4 +78,33 @@ describe("specTaskCheck", () => {
       specTaskCheck({ slug: "draft-minimal", phase: "P0", match: 99, checked: true }, ctx()),
     ).toThrow("task_not_found");
   });
+
+  test("inline-format tasks.md: check succeeds and preserves Status line", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-inline"] });
+    const out = specTaskCheck(
+      { slug: "in-progress-inline", phase: "P0", match: "Land renderer", checked: true },
+      ctx(),
+    );
+    expect(out.before.checked).toBe(false);
+    expect(out.after.checked).toBe(true);
+    const tasks = readFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-inline", "tasks.md"),
+      "utf8",
+    );
+    expect(tasks).toContain("- [x] Land renderer");
+    expect(tasks).toMatch(/^Status:/m);
+  });
+
+  test("inline-format tasks.md: dryRun does not throw and does not write", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-inline"] });
+    const path = join(temp.rootDir, "specs", "active", "in-progress-inline", "tasks.md");
+    const before = readFileSync(path, "utf8");
+    expect(() =>
+      specTaskCheck(
+        { slug: "in-progress-inline", phase: "P1", match: 1, checked: false, dryRun: true },
+        ctx(),
+      ),
+    ).not.toThrow();
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
 });
