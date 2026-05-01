@@ -15,6 +15,8 @@ export const SpecReadShape = {
 
 export const SpecStatusShape = {
   slug: SlugSchema,
+  recent_limit: z.number().int().min(0).optional(),
+  since: z.string().optional(),
 } as const;
 
 export const SpecLintShape = {

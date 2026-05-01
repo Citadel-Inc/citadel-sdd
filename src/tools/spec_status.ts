@@ -33,6 +33,7 @@ export interface SpecStatusOutput {
   days_since?: number;
   reason?: ClosureReason;
   by_source?: Partial<Record<"tasks" | "plan" | "spec", ChecklistCounts>>;
+  recent_commits?: string[];
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -90,7 +91,17 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     const days = daysBetween(last, today);
     if (days !== null) out.days_since = days;
   }
-  void recentCommits; // wired in T7
+  if (input.recent_limit !== undefined && input.recent_limit > 0) {
+    const lines = recentCommits({
+      metaRoot: ctx.rootDir,
+      specsRoot,
+      section: loc.state,
+      slug: loc.slug,
+      limit: input.recent_limit,
+      since: input.since,
+    });
+    if (lines.length > 0) out.recent_commits = lines;
+  }
 
   if (loc.state === "active") {
     const counts = readClosureCounts(loc);
