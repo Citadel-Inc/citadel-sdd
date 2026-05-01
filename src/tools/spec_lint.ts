@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import type { StrictCategory } from "../lint/strict.js";
+import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from "../lint/strict.js";
 import { checkSlugInCorrectDir, checkSpecTasksStatusAlign } from "../spec/invariants.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { listSpecs, locateSpec, type RepoContext, slugLooksValid } from "../spec/repo.js";
@@ -7,6 +9,8 @@ import type { ToolContext } from "./types.js";
 export interface SpecLintInput {
   slug?: string;
   include_done?: boolean;
+  no_strict?: boolean;
+  fail_on?: ReadonlyArray<string> | "all";
 }
 
 export type LintSeverity = "error" | "warning" | "info";
@@ -146,9 +150,58 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
   return findings;
 }
 
+function lintStrict(loc: ReturnType<typeof locateSpec>, noStrict: boolean): SpecLintFinding[] {
+  if (!loc || noStrict) return [];
+  const findings: SpecLintFinding[] = [];
+
+  for (const file of [
+    { name: "spec.md", abs: loc.specMd },
+    { name: "plan.md", abs: loc.planMd },
+    { name: "tasks.md", abs: loc.tasksMd },
+  ]) {
+    let text: string;
+    try {
+      text = readFileSync(file.abs, "utf8");
+    } catch {
+      continue;
+    }
+    for (const f of scanStrictFile(file.name, text)) {
+      findings.push({
+        severity: "warning",
+        code: f.category,
+        message: f.message,
+        slug: loc.slug,
+        path: loc.relDir,
+      });
+    }
+    if (file.name !== "tasks.md") {
+      for (const f of scanPriorityInNontasks(file.name, text)) {
+        findings.push({
+          severity: "warning",
+          code: f.category,
+          message: f.message,
+          slug: loc.slug,
+          path: loc.relDir,
+        });
+      }
+    }
+  }
+
+  return findings;
+}
+
+function resolveFailOn(input: SpecLintInput): Set<string> | null {
+  if (input.fail_on === undefined) return null;
+  if (input.fail_on === "all") {
+    return new Set<string>([...ALL_STRICT_CATEGORIES, "error"]);
+  }
+  return new Set<string>(input.fail_on);
+}
+
 export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput {
   const repo = repoCtx(ctx);
   const findings: SpecLintFinding[] = [];
+  const noStrict = input.no_strict === true;
 
   if (input.slug !== undefined) {
     const loc = locateSpec(repo, input.slug);
@@ -161,14 +214,28 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
       });
     } else {
       findings.push(...lintSingle(loc, ctx));
+      findings.push(...lintStrict(loc, noStrict));
     }
   } else {
     const scope = input.include_done === true ? "all" : "active";
     for (const loc of listSpecs(repo, scope)) {
       findings.push(...lintSingle(loc, ctx));
+      findings.push(...lintStrict(loc, noStrict));
     }
   }
 
-  const exit_code = findings.some((f) => f.severity === "error") ? 1 : 0;
+  const failOn = resolveFailOn(input);
+  let exit_code = findings.some((f) => f.severity === "error") ? 1 : 0;
+  if (failOn !== null) {
+    const triggered = findings.some(
+      (f) =>
+        failOn.has(f.code) ||
+        (failOn.has("error") && f.severity === "error") ||
+        (failOn.has("warning") && f.severity === "warning"),
+    );
+    exit_code = triggered ? 1 : 0;
+  }
   return { findings, exit_code };
 }
+
+export type { StrictCategory };

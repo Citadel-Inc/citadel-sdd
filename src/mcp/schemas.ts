@@ -20,6 +20,8 @@ export const SpecStatusShape = {
 export const SpecLintShape = {
   slug: SlugSchema.optional(),
   include_done: z.boolean().optional(),
+  no_strict: z.boolean().optional(),
+  fail_on: z.union([z.array(z.string()), z.literal("all")]).optional(),
 } as const;
 
 export const SddDoctorShape = {} as const;
