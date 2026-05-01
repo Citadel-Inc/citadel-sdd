@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseTasks } from "../spec/parse.js";
 import { listSpecs, type RepoContext, type SpecLocation, specsRoot } from "../spec/repo.js";
+import { BLOCKER_CATEGORIES, blockerLint, parseBlockers } from "./blockers.js";
 
 export interface CrossCuttingFinding {
   category: string;
@@ -159,6 +160,17 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
     }
   }
 
+  const blockers = parseBlockers(repo.rootDir);
+  if (blockers !== null) {
+    const activeSlugs = new Set(active.map((l) => l.slug));
+    const activeSlugsWithOpenHuman = new Set(
+      activeSummaries.filter((s) => s.human > 0).map((s) => s.loc.slug),
+    );
+    for (const f of blockerLint(blockers, { activeSlugs, activeSlugsWithOpenHuman })) {
+      findings.push({ category: f.category, message: f.message });
+    }
+  }
+
   return findings;
 }
 
@@ -168,4 +180,5 @@ export const CROSS_CUTTING_CATEGORIES: ReadonlyArray<string> = [
   "orphan-indexed",
   "orphan-done",
   "human-uncrossed",
+  ...BLOCKER_CATEGORIES,
 ];

@@ -5,6 +5,43 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-05-01
+
+Wave-port of `spec-status.py` features into `spec_lint`. Closes the v0.1.0 gap where the TS port covered only basic lint while the Python script enforced richer canonical-shape contracts.
+
+### Added
+
+- **Strict-parsing rules** (`src/lint/strict.ts`) — 7 categories ported from `spec-status.py`'s `strict.py`:
+  - `strict-bullets` — non-canonical `*` bullet
+  - `strict-numbered-checklist` — `1. [ ]` numbered shape
+  - `strict-alt-state` — `[/]` / `[~]` / `[?]` checkbox states
+  - `strict-alt-marker` — `[BLOCKED]` / `[NCA]` / `[TODO]` / `[WIP]` / `[WAIT]` / `[NEEDS-DECISION]` (use `[HUMAN]`)
+  - `strict-frontmatter` — YAML/TOML frontmatter fence at line 1
+  - `strict-priority-heading` — `## Priority N` / `## Phase N` (use `## P<n>`)
+  - `strict-priority-in-nontasks` — `## P<n>` in spec.md/plan.md
+- **Cross-cutting checks** (`src/lint/cross_cutting.ts`):
+  - `ready-to-close` — active spec with `open=0`, `done>0`, no `[HUMAN]` gates
+  - `not-indexed` / `orphan-indexed` — `specs/active/` ↔ `specs/README.md` parity
+  - `orphan-done` — `specs/done/` parity
+  - `human-uncrossed` — `[HUMAN]` gate present but slug not in `HUMAN_BLOCKERS.md`
+- **HUMAN_BLOCKERS analysis** (`src/lint/blockers.ts`):
+  - `blocker-stale` — entry ≥7 days old
+  - `blocker-stub` — empty / RESOLVED / SUPERSEDED body
+  - `blocker-orphan` — references non-active or non-`[HUMAN]` spec
+- **`spec_lint` tool** new params:
+  - `no_strict?: boolean` — skip strict-parsing pass
+  - `fail_on?: string[] | "all"` — exit-code gating on category set
+
+### Changed
+
+- `spec_lint` whole-tree mode (no `slug` arg) now appends cross-cutting + blocker findings after per-spec lint.
+- Citadel-parity test still passes: 22 findings (5 strict-warning additions for real citadel deviations), exit_code 0 on both sides.
+
+### Stats
+
+- **225 tests** (was 204) across 30 files.
+- 11 strict-rule tests + 5 cross-cutting tests + 5 blocker tests added.
+
 ## [0.1.0] — 2026-05-01
 
 First public release. End-to-end SDD lifecycle wrapped as an MCP stdio server.
