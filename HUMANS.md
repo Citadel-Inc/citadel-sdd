@@ -7,7 +7,7 @@ MCP server wrapping **Spec-Driven Development** lifecycle. Drop ~75 ceremony too
 
 ## Status
 
-Phase A pending. PRD ratified `011945ZMAY26`. v0.0.x track until citadel-parity test green ×7.
+Phase A pending. PRD ratified `011945ZMAY26`. v0.0.x until synthetic-fixture suite green ×7 + maintainer-run citadel-parity green on the candidate commit.
 
 ## Authentication
 

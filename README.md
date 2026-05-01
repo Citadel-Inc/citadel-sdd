@@ -36,4 +36,4 @@ Read [PRD.md](PRD.md). Self-contained; no session-state recovery needed.
 | Phase B (tools) | not started |
 | Phase C (MCP wiring) | not started |
 | Phase D (close + parity) | not started |
-| Tag v0.1.0 (parity green ×7) | not started |
+| Tag v0.1.0 (synthetic green ×7 + maintainer parity) | not started |

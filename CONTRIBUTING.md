@@ -65,9 +65,12 @@ GitHub Actions (Phase D):
 2. `bun run build`
 3. `bun run check` (Biome)
 4. `bun run test:coverage` + 80% line coverage threshold
-5. **Citadel parity test** — clone `Rethunk-Tech/citadel`, run `spec_lint` against live tree, expect exit-code parity with archived `spec-status.py --strict --include-done`.
 
 Match CI steps locally before opening a PR.
+
+### Citadel parity (off-CI, maintainer-only)
+
+Citadel is a private repo and we do **not** trust GitHub-hosted runners with token access to it. Citadel-parity validation (run `spec_lint` against `Rethunk-Tech/citadel`'s live tree, expect exit-code parity with archived `spec-status.py --strict --include-done`) runs **locally on a maintainer's machine** before tagging v0.1.0. Public CI uses synthetic fixtures only.
 
 ## Pull request checklist
 

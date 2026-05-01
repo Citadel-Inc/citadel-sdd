@@ -50,7 +50,9 @@ src/
 
 ## Validate + CI
 
-Local (Phase A onward): `bun run build` | `bun run check` | `bun run test`. Citadel-parity test required green for v0.1.0 promotion.
+Local (Phase A onward): `bun run build` | `bun run check` | `bun run test`. v0.1.0 promotion gate: synthetic-fixture suite green ×7 consecutive commits.
+
+> **Citadel-parity validation runs OFF GitHub CI** — citadel is private and we do not trust GitHub-hosted runners with token access to it. Maintainers run parity locally against `Rethunk-Tech/citadel` before tagging v0.1.0. Public CI uses synthetic fixtures only.
 
 ## Changing contracts
 

@@ -271,10 +271,11 @@ citadel-sdd/
 - **Unit:** `tests/*.test.ts` (bun test) — parser round-trips on all 30+ existing citadel specs (good + bad). Render-then-parse must be idempotent.
 - **Golden:** snapshot diffs for `spec_claim`/`spec_close`/`spec_reopen` against fixture before-states.
 - **Integration:** spin temp git repo from fixtures, run each tool end-to-end, assert tree + commit log shape.
-- **Citadel parity:** CI step runs `spec_lint` against live citadel tree (shallow clone in CI). Stay green.
+- **Synthetic-fixture suite:** hand-authored fixtures under `tests/spec-fixtures/` cover every state, transition, Q-table shape, and lint-rule trigger. Public CI runs these only — no GitHub-hosted runner ever holds credentials to citadel.
 - **Profile parity:** every profile (`default`, `bastion`, `citadel`) round-trips through full lifecycle on a fixture repo.
+- **Citadel parity (off-CI, maintainer-only):** `spec_lint` against `Rethunk-Tech/citadel`'s live tree must match archived `spec-status.py --strict --include-done` exit-code-wise. Run locally on a maintainer's machine before tagging. **Never run in GitHub CI** — citadel is private and we do not trust hosted runners with token access.
 
-**Promotion gate:** v0.0.x → v0.1.0 only when citadel-parity test green for 7 consecutive commits.
+**Promotion gate:** v0.0.x → v0.1.0 only when (a) synthetic-fixture suite green for 7 consecutive commits AND (b) maintainer-run citadel-parity green on the candidate commit.
 
 ---
 
@@ -327,10 +328,11 @@ citadel-sdd/
 4. `scripts/install.sh` for `~/.claude/mcp_servers.json`.
 
 ### Phase D — close
-1. CI parity test (lint citadel live tree on every commit).
+1. Public CI green on synthetic-fixture suite (no citadel access in CI).
 2. Citadel `/spec-status` slash command rewired to MCP.
 3. Citadel `CLAUDE.md` flips forward-pointer → live-tool.
-4. Tag `v0.1.0` after 7 green parity commits.
+4. Maintainer-run citadel-parity validation green on candidate commit.
+5. Tag `v0.1.0` after 7 consecutive synthetic-suite green commits + parity green on candidate.
 
 ---
 
@@ -338,7 +340,7 @@ citadel-sdd/
 
 A1. `spec_claim`/`spec_close`/`spec_reopen` exit successfully with idempotent diffs against fixture before-states.
 A2. After `spec_close`: dir in `specs/done/`, status `DONE`, all checkboxes flipped (or explicitly allow-listed), `specs/README.md` active-row removed + done-row top-of-Done, single conventional commit captures the diff.
-A3. `spec_lint` exit-code parity with archived Python `spec-status.py --strict --include-done` across all citadel specs.
+A3. `spec_lint` exit-code parity with archived Python `spec-status.py --strict --include-done` across (a) the synthetic-fixture suite (verified in CI) and (b) the live `Rethunk-Tech/citadel` tree (verified locally by maintainer before v0.1.0 tag).
 A4. `spec_list --mine` returns only specs whose Owner matches caller principal.
 A5. Every write tool supports `dryRun: true` with diff-equivalence to live call.
 A6. Drift between `spec.md` status, `tasks.md` status, on-disk path, `specs/README.md` index = impossible after any tool's success.
