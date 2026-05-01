@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.log
+*.tgz
+coverage/
+
+# Editor / local
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Sandbox / AI tooling
+.mcp.json
+
+# Bun
+.bun/
