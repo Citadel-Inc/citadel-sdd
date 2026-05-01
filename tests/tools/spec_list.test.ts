@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specList } from "../../src/tools/spec_list.js";
 import type { ToolContext } from "../../src/tools/types.js";
@@ -78,6 +80,24 @@ describe("specList", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const out = specList({ mine: true }, ctx());
     expect(out).toHaveLength(1);
+  });
+
+  test("skips spec with unparseable status instead of throwing", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const brokenDir = join(temp.rootDir, "specs", "active", "broken-status");
+    mkdirSync(brokenDir, { recursive: true });
+    writeFileSync(
+      join(brokenDir, "spec.md"),
+      "# Spec — broken-status\n\n| | |\n|---|---|\n| Status | **DRAFT** — no DTG token here, just prose |\n",
+    );
+    writeFileSync(
+      join(brokenDir, "tasks.md"),
+      "# Tasks — broken-status\n\nStatus: **DRAFT 010000ZJAN26** — test\n\n## P0\n",
+    );
+    expect(() => specList({}, ctx())).not.toThrow();
+    const out = specList({}, ctx());
+    expect(out.map((e) => e.slug)).toContain("draft-minimal");
+    expect(out.map((e) => e.slug)).not.toContain("broken-status");
   });
 
   test("default sort by DTG descending", () => {

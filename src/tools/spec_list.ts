@@ -42,8 +42,14 @@ export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[
       continue;
     }
 
-    const spec = parseSpec(specMd);
-    const tasks = parseTasks(tasksMd);
+    let spec: ReturnType<typeof parseSpec>;
+    let tasks: ReturnType<typeof parseTasks>;
+    try {
+      spec = parseSpec(specMd);
+      tasks = parseTasks(tasksMd);
+    } catch {
+      continue;
+    }
 
     if (requested === "blocked" && spec.frontmatter.status.state !== "BLOCKED") continue;
 
