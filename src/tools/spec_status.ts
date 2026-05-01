@@ -1,4 +1,6 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { daysBetween, lastTouchedBulk, recentCommits } from "../spec/git_history.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { QTableRow, SpecState } from "../spec/types.js";
@@ -6,6 +8,8 @@ import type { ToolContext } from "./types.js";
 
 export interface SpecStatusInput {
   slug: string;
+  recent_limit?: number;
+  since?: string;
 }
 
 export interface PhaseTaskCount {
@@ -23,6 +27,8 @@ export interface SpecStatusOutput {
   q_table: QTableRow[];
   task_counts: { P0: PhaseTaskCount; P1: PhaseTaskCount; P2: PhaseTaskCount };
   blockers: string[];
+  last_touched?: string;
+  days_since?: number;
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -55,7 +61,7 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     blockers.push(spec.frontmatter.status.tail);
   }
 
-  return {
+  const out: SpecStatusOutput = {
     slug: loc.slug,
     state: spec.frontmatter.status.state,
     dtg: spec.frontmatter.status.dtg,
@@ -66,4 +72,21 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     task_counts: { P0: count("P0"), P1: count("P1"), P2: count("P2") },
     blockers,
   };
+
+  const specsRoot = join(ctx.rootDir, ctx.profile.spec_dir);
+  const map = lastTouchedBulk({
+    metaRoot: ctx.rootDir,
+    specsRoot,
+    section: loc.state,
+  });
+  const last = map.get(loc.slug);
+  if (last !== undefined) {
+    out.last_touched = last;
+    const today = ctx.clock ? ctx.clock() : new Date();
+    const days = daysBetween(last, today);
+    if (days !== null) out.days_since = days;
+  }
+  void recentCommits; // wired in T7
+
+  return out;
 }

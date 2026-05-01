@@ -1,8 +1,10 @@
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { selectRoots } from "../discovery/roots.js";
 import { CROSS_CUTTING_CATEGORIES, crossCutting } from "../lint/cross_cutting.js";
 import type { StrictCategory } from "../lint/strict.js";
 import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from "../lint/strict.js";
+import { daysBetween, lastTouchedBulk } from "../spec/git_history.js";
 import { checkSlugInCorrectDir, checkSpecTasksStatusAlign } from "../spec/invariants.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { listSpecs, locateSpec, type RepoContext, slugLooksValid } from "../spec/repo.js";
@@ -39,6 +41,31 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
+function lintStaleDays(repo: RepoContext, staleDays: number, today: Date): SpecLintFinding[] {
+  const findings: SpecLintFinding[] = [];
+  const map = lastTouchedBulk({
+    metaRoot: repo.rootDir,
+    specsRoot: join(repo.rootDir, repo.specDir),
+    section: "active",
+  });
+  for (const loc of listSpecs(repo, "active")) {
+    const last = map.get(loc.slug);
+    if (last === undefined) continue;
+    const days = daysBetween(last, today);
+    if (days === null) continue;
+    if (days >= staleDays) {
+      findings.push({
+        severity: "warning",
+        code: "stale",
+        message: `${loc.slug}: stale — last touched ${last} (${days}d ago, threshold ${staleDays}d)`,
+        slug: loc.slug,
+        path: loc.relDir,
+      });
+    }
+  }
+  return findings;
+}
+
 function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput): SpecLintFinding[] {
   const findings: SpecLintFinding[] = [];
   const noStrict = input.no_strict === true;
@@ -69,6 +96,10 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
         message: cc.message,
         slug: cc.slug,
       });
+    }
+    if (input.stale_days !== undefined && input.stale_days >= 0) {
+      const today = ctx.clock ? ctx.clock() : new Date();
+      findings.push(...lintStaleDays(repo, input.stale_days, today));
     }
   }
   return findings;
@@ -235,7 +266,16 @@ function lintStrict(loc: ReturnType<typeof locateSpec>, noStrict: boolean): Spec
 function resolveFailOn(input: SpecLintInput): Set<string> | null {
   if (input.fail_on === undefined) return null;
   if (input.fail_on === "all") {
-    return new Set<string>([...ALL_STRICT_CATEGORIES, ...CROSS_CUTTING_CATEGORIES, "error"]);
+    return new Set<string>([
+      ...ALL_STRICT_CATEGORIES,
+      ...CROSS_CUTTING_CATEGORIES,
+      "stale",
+      "missing-tasks",
+      "missing-spec",
+      "missing-plan",
+      "progress-file",
+      "error",
+    ]);
   }
   return new Set<string>(input.fail_on);
 }
