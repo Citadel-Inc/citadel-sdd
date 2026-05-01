@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { selectRoots } from "../discovery/roots.js";
 import { CROSS_CUTTING_CATEGORIES, crossCutting } from "../lint/cross_cutting.js";
@@ -41,6 +41,40 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
+function lintFilePresence(loc: ReturnType<typeof locateSpec>): SpecLintFinding[] {
+  if (!loc) return [];
+  const findings: SpecLintFinding[] = [];
+  const checks: ReadonlyArray<{ code: string; abs: string; msg: string }> = [
+    { code: "missing-tasks", abs: loc.tasksMd, msg: `${loc.slug}: missing tasks.md` },
+    { code: "missing-spec", abs: loc.specMd, msg: `${loc.slug}: missing spec.md` },
+    { code: "missing-plan", abs: loc.planMd, msg: `${loc.slug}: missing plan.md` },
+  ];
+  for (const c of checks) {
+    if (!existsSync(c.abs)) {
+      findings.push({
+        severity: "warning",
+        code: c.code,
+        message: c.msg,
+        slug: loc.slug,
+        path: loc.relDir,
+      });
+    }
+  }
+  for (const name of ["progress.md", "PROGRESS.md"]) {
+    if (existsSync(join(loc.dir, name))) {
+      findings.push({
+        severity: "warning",
+        code: "progress-file",
+        message: `${loc.slug}: ${name} present (delete before commit)`,
+        slug: loc.slug,
+        path: loc.relDir,
+      });
+      break;
+    }
+  }
+  return findings;
+}
+
 function lintStaleDays(repo: RepoContext, staleDays: number, today: Date): SpecLintFinding[] {
   const findings: SpecLintFinding[] = [];
   const map = lastTouchedBulk({
@@ -80,12 +114,14 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
         slug: input.slug,
       });
     } else {
+      if (loc.state === "active") findings.push(...lintFilePresence(loc));
       findings.push(...lintSingle(loc, ctx));
       findings.push(...lintStrict(loc, noStrict));
     }
   } else {
     const scope = input.include_done === true ? "all" : "active";
     for (const loc of listSpecs(repo, scope)) {
+      if (loc.state === "active") findings.push(...lintFilePresence(loc));
       findings.push(...lintSingle(loc, ctx));
       findings.push(...lintStrict(loc, noStrict));
     }
