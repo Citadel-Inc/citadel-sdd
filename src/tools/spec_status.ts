@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { type ClosureReason, computeClosureReason, readClosureCounts } from "../lint/closure.js";
 import { daysBetween, lastTouchedBulk, recentCommits } from "../spec/git_history.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -29,6 +30,7 @@ export interface SpecStatusOutput {
   blockers: string[];
   last_touched?: string;
   days_since?: number;
+  reason?: ClosureReason;
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -88,5 +90,41 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
   }
   void recentCommits; // wired in T7
 
+  if (loc.state === "active") {
+    const counts = readClosureCounts(loc);
+    if (counts !== null) {
+      const indexedActive = readIndexedActive(ctx.rootDir, ctx.profile.spec_dir);
+      out.reason = computeClosureReason(counts, { slug: loc.slug, indexedActive });
+    }
+  }
+
+  return out;
+}
+
+function readIndexedActive(rootDir: string, specDir: string): ReadonlySet<string> {
+  const path = join(rootDir, specDir, "README.md");
+  const out = new Set<string>();
+  let text: string;
+  try {
+    text = readFileSync(path, "utf8");
+  } catch {
+    return out;
+  }
+  const lines = text.split(/\r?\n/);
+  let inActive = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (/^##\s+Active\b/i.test(line)) {
+      inActive = true;
+      continue;
+    }
+    if (/^##\s+/.test(line)) {
+      inActive = false;
+      continue;
+    }
+    if (!inActive) continue;
+    const m = /^\|\s+([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
+    if (m?.[1]) out.add(m[1]);
+  }
   return out;
 }
