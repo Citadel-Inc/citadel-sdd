@@ -1,0 +1,68 @@
+name: Bug report
+description: Report a defect in citadel-sdd (MCP tool, parser, lint, profile resolver, etc.)
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Security vulnerabilities should NOT be filed here** — see [SECURITY.md](../SECURITY.md).
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `bunx @rethunk/citadel-sdd --version`, or commit SHA if from source.
+      placeholder: "v0.0.x or 1234567"
+    validations:
+      required: true
+
+  - type: input
+    id: profile
+    attributes:
+      label: Active profile
+      description: Value of `extends:` (or absent) in your `specs/config.yaml`.
+      placeholder: "default | bastion | citadel | (none)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: One paragraph. Quote exact error text where applicable.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Tool name, full input args, minimal repo state needed to reproduce. A 3-line spec fixture is fine.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: OS, Bun version (`bun --version`), Node version, MCP client (Claude Code / Cursor / Zed / etc.).
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any stderr / MCP transport logs. Redact secrets.
+      render: text
+    validations:
+      required: false

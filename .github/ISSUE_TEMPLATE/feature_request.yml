@@ -1,0 +1,61 @@
+name: Feature request
+description: Propose a new tool, profile, lint rule, or behavior change.
+title: "[feat] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before filing, check [PRD.md](../PRD.md) — your idea may already be ratified, intentionally out-of-scope, or pending a phase.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow is currently painful, blocked, or impossible?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Concrete shape — tool name + inputs/outputs, or profile key + values, or lint rule + trigger.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      options:
+        - New MCP tool
+        - New profile
+        - New lint rule
+        - State machine change (CAUTION — see PRD § 5)
+        - File-system contract change (CAUTION — see PRD § 6)
+        - CI / build / release
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Why is the proposal better than doing nothing, or doing it in the consumer agent?
+    validations:
+      required: false
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: PRD § 2.2 check
+      description: |
+        Confirm your proposal is NOT one of the documented out-of-scope items
+        (GitHub/GitLab API, spec authoring AI, multi-repo coordination, Q-table
+        reasoning, CI/deploy hooks, web UI, telemetry).
+      placeholder: "Confirmed in-scope because..."
+    validations:
+      required: true
