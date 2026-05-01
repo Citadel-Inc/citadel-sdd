@@ -1,0 +1,70 @@
+{
+  "name": "@rethunk/citadel-sdd",
+  "version": "0.0.1",
+  "description": "MCP stdio server wrapping the Spec-Driven Development lifecycle for agent workflows.",
+  "type": "module",
+  "private": false,
+  "packageManager": "bun@1.3.11",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "files": [
+    "dist",
+    "docs",
+    "AGENTS.md",
+    "HUMANS.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "bin": {
+    "citadel-sdd": "dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "rimraf dist && tsc",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "test": "bun test src/ tests/",
+    "test:coverage": "bun test src/ tests/ --coverage",
+    "setup-hooks": "git config core.hooksPath .githooks"
+  },
+  "keywords": [
+    "mcp",
+    "spec-driven-development",
+    "sdd",
+    "model-context-protocol",
+    "stdio",
+    "llm",
+    "agent-workflow",
+    "bastion",
+    "citadel"
+  ],
+  "author": "Rethunk-AI",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rethunk-AI/citadel-sdd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Rethunk-AI/citadel-sdd/issues"
+  },
+  "homepage": "https://github.com/Rethunk-AI/citadel-sdd#readme",
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "yaml": "^2.6.1",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.13",
+    "@types/node": "^25.6.0",
+    "rimraf": "^6.1.3",
+    "typescript": "^6.0.3"
+  }
+}
