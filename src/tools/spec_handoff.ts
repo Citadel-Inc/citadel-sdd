@@ -1,0 +1,72 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { gitAdd, gitCommit } from "../spec/git.js";
+import { setOwner } from "../spec/mutate.js";
+import { parseSpec } from "../spec/parse.js";
+import { locateSpec, type RepoContext } from "../spec/repo.js";
+import { spliceFrontmatter } from "../spec/writer.js";
+import type { ToolContext } from "./types.js";
+
+export interface SpecHandoffInput {
+  slug: string;
+  new_owner: string;
+  note?: string;
+  commit?: boolean;
+  dryRun?: boolean;
+}
+
+export interface SpecHandoffOutput {
+  slug: string;
+  before_owner: string;
+  after_owner: string;
+  commit_sha: string | null;
+  dryRun: boolean;
+}
+
+function repoCtx(ctx: ToolContext): RepoContext {
+  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+}
+
+export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHandoffOutput {
+  const repo = repoCtx(ctx);
+  const loc = locateSpec(repo, input.slug);
+  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+
+  const raw = readFileSync(loc.specMd, "utf8");
+  const spec = parseSpec(raw);
+
+  const beforeOwnerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
+  const before_owner = beforeOwnerField?.[1] ?? "";
+
+  const updated = setOwner(spec, input.new_owner);
+  const newRaw = spliceFrontmatter(raw, updated.frontmatter);
+
+  if (input.dryRun === true) {
+    return {
+      slug: loc.slug,
+      before_owner,
+      after_owner: input.new_owner,
+      commit_sha: null,
+      dryRun: true,
+    };
+  }
+
+  writeFileSync(loc.specMd, newRaw);
+
+  let commit_sha: string | null = null;
+  if (input.commit !== false) {
+    const subject =
+      ctx.profile.commit_style === "conventional"
+        ? `spec(${loc.slug}): handoff to ${input.new_owner}${input.note ? ` — ${input.note}` : ""}`
+        : `Handoff ${loc.slug} to ${input.new_owner}`;
+    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
+    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+  }
+
+  return {
+    slug: loc.slug,
+    before_owner,
+    after_owner: input.new_owner,
+    commit_sha,
+    dryRun: false,
+  };
+}
