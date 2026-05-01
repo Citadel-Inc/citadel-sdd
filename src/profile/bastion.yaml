@@ -1,0 +1,3 @@
+extends: default
+dtg_format: DDHHMMZMONYY
+commit_style: conventional

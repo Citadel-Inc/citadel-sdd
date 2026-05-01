@@ -1,0 +1,2 @@
+extends: bastion
+push_policy: on_close

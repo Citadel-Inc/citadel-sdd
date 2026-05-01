@@ -1,0 +1,11 @@
+spec_dir: specs
+states:
+  - DRAFT
+  - APPROVED
+  - IN_PROGRESS
+  - BLOCKED
+  - DONE
+priorities: [P0, P1, P2]
+dtg_format: ISO-8601
+commit_style: freeform
+push_policy: never
