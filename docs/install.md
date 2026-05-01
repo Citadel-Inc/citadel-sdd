@@ -1,7 +1,6 @@
 # Install
 
-> **Status:** Phase D placeholder. Real install instructions land when v0.1.0 ships.
-> Until then, see [PRD § 11 Build sequence](../PRD.md#11-build-sequence) for what's gated on what.
+> **Status:** Phase D placeholder. Real install instructions land when v0.1.0 ships. Phase ordering is in `PRD.md` (transient, will be deleted at v0.1.0).
 
 ## Prerequisites (target)
 
@@ -50,4 +49,4 @@ node dist/index.js  # or: bun run dist/index.js
 
 ## After install
 
-First-run bootstrap and profile selection are covered in [HUMANS.md "Quickstart"](../HUMANS.md#quickstart). Profile system reference is [PRD § 3](../PRD.md#3-profile-system).
+First-run bootstrap and profile selection are covered in [HUMANS.md "Quickstart"](../HUMANS.md#quickstart). Profile system reference is [docs/profile-system.md](profile-system.md).

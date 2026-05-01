@@ -1,14 +1,16 @@
-# @rethunk/citadel-sdd — User guide
+# HUMANS.md — User guide
 
-MCP server wrapping **Spec-Driven Development** lifecycle. Drops mechanical ceremony from agent-driven spec workflows.
+MCP server wrapping **Spec-Driven Development** lifecycle for Bastion, Citadel operators, Citadel customers, and public agent workflows.
 
-## Canon pointers
+## Mission
 
-- **What it is, why, scope, profile system, tool inventory, state machine, decision log** → [PRD.md](PRD.md)
-- **Per-client wiring (Claude Code, Cursor, Zed, VS Code) + from-source build** → [docs/install.md](docs/install.md)
-- **Per-tool schema reference** → [docs/mcp-tools.md](docs/mcp-tools.md)
-- **Security / vulnerability reporting** → [SECURITY.md](SECURITY.md)
-- **Build status + project state** → [README.md](README.md)
+Drop the ~15 mechanical tool calls per spec claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, `specs/README.md` index splice, conventional-commit authoring) into **one atomic MCP call per lifecycle event**.
+
+## Scope
+
+**In:** spec lifecycle (claim, approve, close, reopen, block, unblock, ratify, handoff, task ops, lint, init, doctor), profile system (`default → bastion → citadel`), TS port of archived `spec-status.py`.
+
+**Out:** GitHub/GitLab API, spec authoring AI, multi-repo coordination, Q-table reasoning, CI/deploy hooks, web UI, telemetry.
 
 ## Quickstart
 
@@ -28,11 +30,11 @@ specs/
 └── done/.gitkeep
 ```
 
-Choose a different profile by editing `specs/config.yaml` — see [PRD § 3 Profile system](PRD.md#3-profile-system).
+Choose a different profile by editing `specs/config.yaml`. See [docs/profile-system.md](docs/profile-system.md).
 
 ## Common operations
 
-Goal-oriented tool mapping. For full schemas see [docs/mcp-tools.md](docs/mcp-tools.md).
+Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-tools.md).
 
 | Goal | Tool |
 |------|------|
@@ -55,10 +57,10 @@ Goal-oriented tool mapping. For full schemas see [docs/mcp-tools.md](docs/mcp-to
 
 All write tools support `dryRun: true` for preview.
 
-## Development
+## Where to go next
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## Publishing
-
-Phase D onward. See [PRD § 11](PRD.md#11-build-sequence).
+- Install detail → [docs/install.md](docs/install.md)
+- Per-tool schemas → [docs/mcp-tools.md](docs/mcp-tools.md)
+- Profile system reference → [docs/profile-system.md](docs/profile-system.md)
+- Security / vulnerability reporting → [SECURITY.md](SECURITY.md)
+- Contributing → [CONTRIBUTING.md](CONTRIBUTING.md)

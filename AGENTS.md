@@ -1,36 +1,25 @@
-# AGENTS.md — implementation map
+# AGENTS.md
 
-IDEs injecting context: don't re-link from rules. Canonical content lives elsewhere; this file is the implementation-map rollup only.
+LLM + dev orientation. **This file is intentionally thin** — it points at the canon files and lists the contract-change rules. Canon lives in `docs/` and the top-level role files.
+
+> `PRD.md` is a **transient design doc** (origin, rationale, build sequence). Deleted at v0.1.0 tag. **Do not point canon at it.**
+
+## Status
+
+Phase A pending. PRD ratified `011945ZMAY26`.
 
 ## Canon pointers
 
-- **Project rationale, scope, profile system, tool inventory, state machine, FS contract, decision log, testing strategy, promotion gate** → [PRD.md](PRD.md)
-- **Dev setup, commit conventions, CI behavior, PR checklist, how-to-add-a-tool** → [CONTRIBUTING.md](CONTRIBUTING.md)
-- **End-user install + quickstart + goal-oriented tool mapping** → [HUMANS.md](HUMANS.md)
-- **Per-client wiring detail (Claude Code, Cursor, Zed, VS Code)** → [docs/install.md](docs/install.md)
-- **Per-tool schema rollup** → [docs/mcp-tools.md](docs/mcp-tools.md)
-- **Threat model + vulnerability reporting** → [SECURITY.md](SECURITY.md)
-
-Don't duplicate any of the above into this file.
-
-## Implementation status
-
-**Phase A pending.** No `src/` yet. PRD ratified `011945ZMAY26`.
-
-## Target file layout
-
-Per [PRD § 8.2](PRD.md#82-layout):
-
-```
-src/
-├── index.ts                # entrypoint
-├── mcp/                    # JSON-RPC dispatch + schemas
-├── spec/                   # parse / render / transitions / git / invariants
-├── lint/                   # ported spec-status
-├── profile/                # resolver + default/bastion/citadel YAMLs
-├── config/                 # specs/config.yaml loader
-└── tools/                  # one file per MCP tool
-```
+| Topic | File |
+|-------|------|
+| Mission, scope (in/out), end-user quickstart, goal-oriented tool mapping | [HUMANS.md](HUMANS.md) |
+| File layout, state machine, file-system contract, write invariants, tool taxonomy | [docs/architecture.md](docs/architecture.md) |
+| Profile config schema, inheritance, slug uniqueness, shipped profile defaults | [docs/profile-system.md](docs/profile-system.md) |
+| Per-tool inputs / outputs / failure modes | [docs/mcp-tools.md](docs/mcp-tools.md) |
+| Architectural decision log (D-1, D-2, …) | [docs/decisions.md](docs/decisions.md) |
+| Per-client wiring + from-source build | [docs/install.md](docs/install.md) |
+| Dev setup, commit conventions, CI, testing strategy, promotion gate, PR checklist | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Threat model, V1 local-only design, vulnerability reporting | [SECURITY.md](SECURITY.md) |
 
 ## Contract-change rules
 
@@ -38,8 +27,9 @@ When you change a contract, update its canon location:
 
 | Contract | Canon to update |
 |----------|-----------------|
-| Public tool surface (rename / add / remove) | [PRD § 4](PRD.md#4-tool-inventory-16-tools) + [docs/mcp-tools.md](docs/mcp-tools.md) + [HUMANS.md](HUMANS.md) goal-table |
-| Profile config schema | [PRD § 3](PRD.md#3-profile-system) |
-| State machine | [PRD § 5](PRD.md#5-state-machine) + transitions tests |
-| File-system contract | [PRD § 6](PRD.md#6-file-system-contracts) + invariants checker |
-| Promotion gate / versioning | [PRD § 9](PRD.md#9-testing-strategy) |
+| Public tool surface (rename / add / remove) | [docs/mcp-tools.md](docs/mcp-tools.md) + [docs/architecture.md § Tool taxonomy](docs/architecture.md#tool-taxonomy) + [HUMANS.md](HUMANS.md) goal-table |
+| Profile config schema | [docs/profile-system.md](docs/profile-system.md) |
+| State machine | [docs/architecture.md § State machine](docs/architecture.md#state-machine) + transitions tests |
+| File-system contract | [docs/architecture.md § File-system contract](docs/architecture.md#file-system-contract) + invariants checker |
+| Promotion gate / versioning | [CONTRIBUTING.md § Promotion gate](CONTRIBUTING.md#promotion-gate) |
+| Architectural decision | [docs/decisions.md](docs/decisions.md) — append, do not edit history |

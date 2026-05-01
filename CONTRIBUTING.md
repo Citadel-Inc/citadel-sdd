@@ -21,7 +21,7 @@ bun run test        # bun test src/
 bun run test:coverage  # bun test src/ --coverage
 ```
 
-(Build / test scripts land in Phase A — see [PRD § 11](PRD.md#11-build-sequence).)
+(Build / test scripts land in Phase A.)
 
 ## Git hooks
 
@@ -59,7 +59,7 @@ One logical unit per commit. Max ~7 files. Split by theme, not by file count.
 
 ## CI
 
-GitHub Actions (Phase D):
+GitHub Actions runs on PRs and pushes to `main`:
 
 1. `bun install --frozen-lockfile`
 2. `bun run build`
@@ -68,9 +68,40 @@ GitHub Actions (Phase D):
 
 Match CI steps locally before opening a PR.
 
+The CI workflow uses a phase-detect guard (`hashFiles('package.json')`) so pre-Phase-A pushes hit no-op skip steps.
+
+## Testing strategy
+
+### Synthetic-fixture suite (public CI)
+
+Hand-authored fixture specs under `tests/spec-fixtures/` cover every state, transition, Q-table shape, and lint-rule trigger. Public CI runs these only — no private-repo content vendored, no network dependency, no credential plumbing ([D-18](docs/decisions.md), [D-19](docs/decisions.md)).
+
+Test categories:
+
+- **Unit:** parser round-trips on every fixture; render-then-parse idempotency.
+- **Integration:** spin temp git repo from fixtures; run each tool end-to-end; assert tree + commit log shape.
+- **Profile parity:** every shipped profile (`default`, `bastion`, `citadel`) round-trips through full lifecycle on a fixture repo.
+- **Lint parity (synthetic):** TS port matches archived Python `spec-status.py --strict --include-done` exit-code-wise on the fixture suite.
+
 ### Citadel parity (off-CI, maintainer-only)
 
-Citadel is a private repo and we do **not** trust GitHub-hosted runners with token access to it. Citadel-parity validation (run `spec_lint` against `Rethunk-Tech/citadel`'s live tree, expect exit-code parity with archived `spec-status.py --strict --include-done`) runs **locally on a maintainer's machine** before tagging v0.1.0. Public CI uses synthetic fixtures only.
+Citadel is private; GitHub-hosted runners are not trusted with credentials. Maintainer runs locally before tagging v0.1.0:
+
+```bash
+# on maintainer machine, with citadel checkout adjacent
+bun run lint:citadel-parity --citadel ../citadel
+```
+
+Expects exit-code parity with archived `spec-status.py --strict --include-done` against the live citadel tree.
+
+## Promotion gate
+
+`v0.0.x` → `v0.1.0` requires:
+
+1. Synthetic-fixture suite green on **7 consecutive commits**.
+2. Maintainer-run citadel-parity green on the candidate commit.
+
+Both must hold; either failure blocks the tag.
 
 ## Pull request checklist
 
@@ -86,14 +117,18 @@ Citadel is a private repo and we do **not** trust GitHub-hosted runners with tok
 2. Register in `src/mcp/tools.ts`.
 3. Add JSONSchema input via Zod in `src/mcp/schemas.ts`.
 4. Add test `src/tools/<tool_name>.test.ts`.
-5. Update [PRD § 4](PRD.md#4-tool-inventory-16-tools), [docs/mcp-tools.md](docs/mcp-tools.md), and the [HUMANS.md](HUMANS.md) goal-table.
+5. Update [docs/mcp-tools.md](docs/mcp-tools.md), [docs/architecture.md § Tool taxonomy](docs/architecture.md#tool-taxonomy), and [HUMANS.md](HUMANS.md) goal-table.
 
 ## Adding a profile
 
 1. Create `src/profile/<name>.yaml`.
 2. Set `extends:` if the profile inherits.
 3. Add round-trip test in `tests/profile/`.
-4. Update [PRD § 3](PRD.md#3-profile-system).
+4. Update [docs/profile-system.md](docs/profile-system.md).
+
+## Adding an architectural decision
+
+Append to [docs/decisions.md](docs/decisions.md). Do not edit prior entries.
 
 ## Code style
 
