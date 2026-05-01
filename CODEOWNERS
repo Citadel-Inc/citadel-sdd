@@ -1,0 +1,25 @@
+# CODEOWNERS for Rethunk-AI/citadel-sdd
+#
+# Order matters: later patterns override earlier ones.
+# Reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default ownership — Rethunk-AI maintainers
+*                                @AlbinoGeek
+
+# Documentation
+*.md                             @AlbinoGeek
+/PRD.md                          @AlbinoGeek
+/SECURITY.md                     @AlbinoGeek
+
+# Profile YAMLs — coordinate changes (affects all consumers)
+/src/profile/                    @AlbinoGeek
+
+# State machine + invariants — touch carefully
+/src/spec/transitions.ts         @AlbinoGeek
+/src/spec/invariants.ts          @AlbinoGeek
+
+# Lint rules — must stay in parity with archived spec-status.py
+/src/lint/                       @AlbinoGeek
+
+# CI / release
+/.github/                        @AlbinoGeek
