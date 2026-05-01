@@ -3,11 +3,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  daysBetween,
-  lastTouchedBulk,
-  recentCommits,
-} from "../../src/spec/git_history.js";
+import { daysBetween, lastTouchedBulk, recentCommits } from "../../src/spec/git_history.js";
 
 function makeRepo(): { root: string; cleanup(): void } {
   const root = mkdtempSync(join(tmpdir(), "citadel-sdd-git-"));

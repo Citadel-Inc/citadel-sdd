@@ -5,6 +5,51 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-05-01
+
+Tier 1+2 port of `spec-status.py` reporting + discovery features. Unblocks cross-repo / agent-fleet usage and exposes git-derived posture signals on `spec_status`. No breaking changes — all new params are optional.
+
+### Added
+
+- **Multi-root + nested-scan discovery** (`src/discovery/roots.ts`):
+  - `findSingleRoot(start)` — walk-up auto-detect.
+  - `resolveRoots(paths[])` — validate + dedupe explicit roots.
+  - `scanNested({ parent, depth })` — walk up to N levels for `*/specs/active/`, skipping noise dirs (`node_modules`, `.git`, `dist`, `build`, etc.) and symlinks.
+  - `selectRoots({...})` — single dispatch entry point.
+- **Git history layer** (`src/spec/git_history.ts`):
+  - `lastTouchedBulk` — `{slug → ISO date}` of most recent commit per spec, rename-aware.
+  - `recentCommits` — last-N subjects for a single spec dir.
+  - `daysBetween` — UTC day delta helper.
+  - Graceful degradation on missing-git / non-repo trees.
+- **Closure-reason ladder** (`src/lint/closure.ts`): `uninitialised → open_human → open_tasks → progress_file → not_indexed → ready`.
+- **`spec_lint` new params**:
+  - `roots?: string[]` — fan out across multiple meta-roots (each finding tagged with `root`).
+  - `scan_nested?: { parent, depth? }` — walk-tree discovery; takes precedence over `roots`.
+  - `stale_days?: number` — emit `stale` warning when active spec's last commit is older than threshold.
+  - Output gains `roots?: string[]` (when multi-root) and `root?: string` per finding.
+- **`spec_lint` new categories**: `stale`, `missing-tasks`, `missing-spec`, `missing-plan`, `progress-file`. All warnings; `fail_on: "all"` includes them.
+- **`spec_status` new params**: `recent_limit?: number`, `since?: string` (git-log filter).
+- **`spec_status` new optional output fields**:
+  - `last_touched?: string` (ISO date), `days_since?: number`.
+  - `reason?: ClosureReason` (active specs only).
+  - `by_source?: Partial<Record<"tasks"|"plan"|"spec", { open, done, human }>>` — checklist breakdown by file (diagnostic for stray non-tasks checklists).
+  - `recent_commits?: string[]` when `recent_limit` set.
+
+### Changed
+
+- Citadel-parity test still passes: 24 findings, exit 0 on both sides. (Increase from 22 reflects the 2 cross-cutting + parity-preserving warnings introduced by the closure ladder applied through cross_cutting; no behaviour regression.)
+
+### Stats
+
+- **262 tests** (was 225) across 37 files.
+- 6 git_history tests + 4 stale tests + 7 closure tests + 4 missing-file tests + 3 checklist-scan tests + 4 spec_status recent tests + 10 discovery tests.
+
+### Notes
+
+- Components heuristic and TODO.md-backlog parsing intentionally NOT ported — Bastion-private / convention-specific. Per v0.1.1 decision pivots.
+- Emit-format helpers (markdown / one-line summary / text-table) deferred to v0.3.x or post-CLI surface; MCP returns structured JSON natively.
+- Cache layer for `lastTouchedBulk` deferred — no perf signal yet.
+
 ## [0.1.1] — 2026-05-01
 
 Wave-port of `spec-status.py` features into `spec_lint`. Closes the v0.1.0 gap where the TS port covered only basic lint while the Python script enforced richer canonical-shape contracts.
