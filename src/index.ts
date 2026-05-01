@@ -6,7 +6,7 @@ import { resolveBuiltIn } from "./profile/resolver.js";
 import { gitConfigUserName, gitRevParseShowToplevel } from "./spec/git.js";
 import type { ToolContext } from "./tools/types.js";
 
-const VERSION = "0.0.1";
+const VERSION = "0.1.0";
 
 function discoverRoot(): string {
   const fromEnv = process.env.CITADEL_SDD_ROOT;

@@ -1,6 +1,5 @@
 # Install
 
-> **Status:** Phase D placeholder. Real install instructions land when v0.1.0 ships. Phase ordering is in `PRD.md` (transient, will be deleted at v0.1.0).
 
 ## Prerequisites (target)
 

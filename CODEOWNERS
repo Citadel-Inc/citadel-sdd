@@ -8,7 +8,6 @@
 
 # Documentation
 *.md                             @AlbinoGeek
-/PRD.md                          @AlbinoGeek
 /SECURITY.md                     @AlbinoGeek
 
 # Profile YAMLs — coordinate changes (affects all consumers)

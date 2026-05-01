@@ -1,7 +1,7 @@
 # citadel-sdd
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Status: pre-v0.1.0](https://img.shields.io/badge/status-pre--v0.1.0-orange.svg)](docs/decisions.md)
+[![Version: 0.1.0](https://img.shields.io/badge/version-0.1.0-green.svg)](CHANGELOG.md)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-Bun-black.svg)](https://bun.sh)
 [![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6.svg)](https://www.typescriptlang.org)
 [![Repo: Rethunk-AI](https://img.shields.io/badge/repo-Rethunk--AI-blue.svg)](https://github.com/Rethunk-AI/citadel-sdd)

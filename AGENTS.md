@@ -2,11 +2,9 @@
 
 LLM + dev orientation. **This file is intentionally thin** — it points at the canon files and lists the contract-change rules. Canon lives in `docs/` and the top-level role files.
 
-> `PRD.md` is a **transient design doc** (origin, rationale, build sequence). Deleted at v0.1.0 tag. **Do not point canon at it.**
-
 ## Status
 
-Phase A pending. PRD ratified `011945ZMAY26`.
+`v0.1.0` shipped. Maintenance phase. Canon is distributed across permanent files per the table below.
 
 ## Canon pointers
 
