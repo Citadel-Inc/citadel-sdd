@@ -48,37 +48,6 @@ bun run build
 node dist/index.js  # or: bun run dist/index.js
 ```
 
-## Bootstrap a fresh repo
+## After install
 
-Inside the consuming repo:
-
-```bash
-# (via MCP client) call: spec_init({ profile: "default" })
-```
-
-Yields:
-
-```
-specs/
-├── config.yaml           # profile declaration
-├── README.md             # auto-generated index (empty)
-├── active/.gitkeep
-└── done/.gitkeep
-```
-
-## Profile selection
-
-Edit `specs/config.yaml`:
-
-```yaml
-extends: bastion          # or: default | citadel
-```
-
-See [PRD § 3 Profile system](../PRD.md#3-profile-system) for full schema and inheritance rules.
-
-## Verification
-
-```bash
-# (via MCP client) call: sdd_doctor({})
-# Expected: { inferred_profile: "...", findings: [], drift: false }
-```
+First-run bootstrap and profile selection are covered in [HUMANS.md "Quickstart"](../HUMANS.md#quickstart). Profile system reference is [PRD § 3](../PRD.md#3-profile-system).

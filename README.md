@@ -3,37 +3,29 @@
 MCP server wrapping the **Spec-Driven Development** lifecycle for Bastion, Citadel operators, Citadel customers, and public agent workflows.
 
 **License:** MIT.
-**Status:** PRD ratified 011945ZMAY26. Implementation Phase A pending.
+**Status:** PRD ratified `011945ZMAY26`. Implementation Phase A pending.
 **Language:** TypeScript on Bun.
 **Repo:** [Rethunk-AI/citadel-sdd](https://github.com/Rethunk-AI/citadel-sdd).
 
-## Why
-
-Hand-driven SDD lifecycle = ~15 mechanical tool calls per spec claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, `specs/README.md` index splice, conventional-commit authoring). Five-spec sessions burn ~75 calls of pure ceremony. This MCP collapses each lifecycle event into one atomic call.
-
-## Profiles
-
-Three shipped profiles, inheritance-chained:
-
-```
-default (vanilla SDD baseline)
-  └── bastion (DTG injection, IRONLAW callouts, militant commit voice)
-        └── citadel (bastion + citadel paths/conventions + push-on-close)
-```
-
-Each consuming repo declares its profile in `specs/config.yaml`.
-
 ## Where to start
 
-Read [PRD.md](PRD.md). Self-contained; no session-state recovery needed.
+| You are… | Start here |
+|---------|------------|
+| An agent / LLM working in this repo | [AGENTS.md](AGENTS.md) |
+| Designing or reading the spec | [PRD.md](PRD.md) |
+| Installing as a user | [HUMANS.md](HUMANS.md) → [docs/install.md](docs/install.md) |
+| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| Reporting a vulnerability | [SECURITY.md](SECURITY.md) |
 
 ## Build status
 
 | Phase | State |
 |-------|-------|
-| PRD | RATIFIED 011945ZMAY26 |
+| PRD | RATIFIED `011945ZMAY26` |
 | Phase A (substrate) | not started |
 | Phase B (tools) | not started |
 | Phase C (MCP wiring) | not started |
 | Phase D (close + parity) | not started |
-| Tag v0.1.0 (synthetic green ×7 + maintainer parity) | not started |
+| Tag `v0.1.0` | not started |
+
+Promotion-gate criteria → [PRD § 9](PRD.md#9-testing-strategy).

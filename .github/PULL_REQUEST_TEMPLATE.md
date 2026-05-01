@@ -36,7 +36,7 @@ For commit / scope conventions see CONTRIBUTING.md.
 - [ ] `bun run check` passes (no Biome errors)
 - [ ] `bun run test` passes
 - [ ] New tool / profile / lint rule has a test file
-- [ ] [CHANGELOG.md](../CHANGELOG.md) entry under `[Unreleased]`
+- [ ] Contract changes updated their canon location per [AGENTS.md "Contract-change rules"](../AGENTS.md#contract-change-rules)
 - [ ] Commit messages follow `type(scope): subject` convention
 - [ ] No secrets or tokens in diff
 

@@ -78,8 +78,7 @@ Citadel is a private repo and we do **not** trust GitHub-hosted runners with tok
 - [ ] `bun run check` passes (no Biome errors).
 - [ ] `bun run test` passes.
 - [ ] Any new tool has a corresponding `*.test.ts` file.
-- [ ] [PRD.md](PRD.md) tool table + [AGENTS.md](AGENTS.md) tool surface updated if public surface changed.
-- [ ] [CHANGELOG.md](CHANGELOG.md) entry added under `[Unreleased]`.
+- [ ] Contract changes hit their canon location per [AGENTS.md "Contract-change rules"](AGENTS.md#contract-change-rules).
 
 ## Adding a tool
 
@@ -87,15 +86,14 @@ Citadel is a private repo and we do **not** trust GitHub-hosted runners with tok
 2. Register in `src/mcp/tools.ts`.
 3. Add JSONSchema input via Zod in `src/mcp/schemas.ts`.
 4. Add test `src/tools/<tool_name>.test.ts`.
-5. Update [PRD § 4](PRD.md#4-tool-inventory-16-tools) and [HUMANS.md](HUMANS.md) tool table.
-6. Add [CHANGELOG.md](CHANGELOG.md) entry.
+5. Update [PRD § 4](PRD.md#4-tool-inventory-16-tools), [docs/mcp-tools.md](docs/mcp-tools.md), and the [HUMANS.md](HUMANS.md) goal-table.
 
 ## Adding a profile
 
 1. Create `src/profile/<name>.yaml`.
 2. Set `extends:` if the profile inherits.
 3. Add round-trip test in `tests/profile/`.
-4. Document in [PRD § 3](PRD.md#3-profile-system) and [HUMANS.md](HUMANS.md).
+4. Update [PRD § 3](PRD.md#3-profile-system).
 
 ## Code style
 
