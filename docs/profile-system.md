@@ -33,7 +33,33 @@ priorities: [P0, P1, P2]
 dtg_format: DDHHMMZMONYY    # ISO-8601 for default profile; bastion+citadel use DDHHMMZMONYY
 commit_style: conventional   # conventional | freeform
 push_policy: never           # never | on_close | always
+frontmatter_format: any      # pipe-table | inline | any (default: any)
+lint_rules: {}               # per-rule overrides: { <code>: error | warn | off }
 ```
+
+### `frontmatter_format`
+
+Controls how transition tools write spec.md and tasks.md frontmatter:
+
+| Value | Behavior |
+|-------|----------|
+| `any` | Preserve existing format (default — backward-compat) |
+| `pipe-table` | Enforce pipe-table on every write; converts inline files on touch |
+| `inline` | Enforce `Key: value` inline format on every write; converts pipe-table on touch |
+
+The linter emits `strict-frontmatter-format` (warning) for any file whose actual format differs from the enforced value. Override with `lint_rules` to escalate to error.
+
+### `lint_rules`
+
+Per-rule severity map. Applies after strict scanning — lets teams opt rules in or out without the blunt `no_strict: true` bypass.
+
+```yaml
+lint_rules:
+  strict-priority-in-nontasks: off    # silence the P0/P1/P2-in-plan.md rule
+  strict-frontmatter-format: error    # escalate format drift to build-breaker
+```
+
+Valid levels: `error` | `warn` | `off`. Omitted rules keep their default severity.
 
 ### Validation
 
@@ -50,6 +76,8 @@ priorities: [P0, P1, P2]
 dtg_format: ISO-8601
 commit_style: freeform
 push_policy: never
+frontmatter_format: any
+lint_rules: {}
 ```
 
 ### `bastion` (extends `default`)

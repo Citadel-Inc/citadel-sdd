@@ -24,6 +24,7 @@ Permanent canon. Each decision is append-only — do not edit history. To revers
 | D-18 | Test fixtures | Synthetic-only; no private-repo content vendored into MIT public repo | 011958ZMAY26 |
 | D-19 | Citadel parity | Off-CI, maintainer-run only; never in GitHub Actions (private-repo credential exposure) | 011958ZMAY26 |
 | D-20 | Documentation canon | PRD.md is transient (deleted at v0.1.0); permanent canon distributes across `AGENTS.md`, `HUMANS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `README.md`, `docs/*` | 012005ZMAY26 |
+| D-21 | Conformance flexibility | Profile gains `frontmatter_format` (`pipe-table` / `inline` / `any`; default `any`) and `lint_rules` (per-rule `error`/`warn`/`off` map; default `{}`). Allows teams to enforce a canonical frontmatter format on writes and to suppress or escalate specific lint categories without the blunt `no_strict` bypass. Backward-compat: all defaults preserve prior behavior. | 012353ZMAY26 |
 
 ## Adding a decision
 
