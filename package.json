@@ -30,6 +30,7 @@
     "check:fix": "biome check --write .",
     "test": "bun test src/ tests/",
     "test:coverage": "bun test src/ tests/ --coverage",
+    "lint:citadel-parity": "bun scripts/lint-citadel-parity.ts",
     "setup-hooks": "git config core.hooksPath .githooks"
   },
   "keywords": [

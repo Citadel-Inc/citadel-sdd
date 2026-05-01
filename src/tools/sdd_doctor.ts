@@ -64,7 +64,9 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
   return {
     inferred_profile: inferred,
     findings: lint.findings,
-    drift: lint.findings.some((f) => f.severity === "error"),
+    drift: lint.findings.some(
+      (f) => f.severity === "error" || f.code === "status_drift" || f.code === "path_mismatch",
+    ),
     recommendations,
   };
 }

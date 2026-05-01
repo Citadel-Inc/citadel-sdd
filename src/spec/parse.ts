@@ -50,22 +50,60 @@ function extractPipeTable(lines: readonly string[], startIdx: number): PipeTable
 }
 
 export function parseStatusValue(raw: string): StatusValue {
-  const trimmed = raw.trim();
+  let trimmed = raw.trim();
+  let bold = false;
+  const boldMatch = /^\*\*([^*]+?)\*\*(.*)$/.exec(trimmed);
+  if (boldMatch) {
+    bold = true;
+    trimmed = `${boldMatch[1] ?? ""}${boldMatch[2] ?? ""}`.trim();
+  }
   const match = /^([A-Z_]+)\s+(\S+)(?:\s+[—-]\s+(.*))?$/.exec(trimmed);
   if (!match) {
     throw new Error(`status_unparseable: "${raw}"`);
   }
-  const state = match[1] as SpecState;
+  const stateRaw = match[1] ?? "";
+  const STATE_ALIASES: Record<string, SpecState> = { CLOSED: "DONE" };
+  const aliased = STATE_ALIASES[stateRaw];
+  const state = (aliased ?? stateRaw) as SpecState;
   if (!SPEC_STATES.has(state)) {
-    throw new Error(`state_unknown: "${state}"`);
+    throw new Error(`state_unknown: "${stateRaw}"`);
   }
-  return { state, dtg: match[2] ?? "", tail: match[3] ?? "" };
+  return { state, dtg: match[2] ?? "", tail: match[3] ?? "", bold };
+}
+
+function parseInlineFrontmatter(md: string): Frontmatter | null {
+  const lines = md.split(/\r?\n/);
+  const fields: Array<readonly [string, string]> = [];
+  let status: StatusValue | null = null;
+  for (const raw of lines) {
+    if (raw === undefined) continue;
+    const m = /^([A-Z][A-Za-z _-]*?):\s+(.+)$/.exec(raw);
+    if (!m) {
+      if (status !== null) break;
+      continue;
+    }
+    const key = (m[1] ?? "").trim();
+    const value = (m[2] ?? "").trim();
+    if (!key) continue;
+    fields.push([key, value] as const);
+    if (key.toLowerCase() === "status") {
+      try {
+        status = parseStatusValue(value);
+      } catch {
+        return null;
+      }
+    }
+  }
+  if (!status) return null;
+  return { status, fields };
 }
 
 export function parseFrontmatter(md: string): Frontmatter {
   const lines = md.split(/\r?\n/);
   const startIdx = findFirstPipeLine(lines);
   if (startIdx === -1) {
+    const inline = parseInlineFrontmatter(md);
+    if (inline) return inline;
     throw new Error("frontmatter_missing");
   }
   const { rows } = extractPipeTable(lines, startIdx);

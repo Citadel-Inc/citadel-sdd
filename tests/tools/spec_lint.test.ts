@@ -39,7 +39,7 @@ describe("specLint", () => {
     );
     const out = specLint({ slug: "draft-minimal" }, ctx());
     expect(out.findings.some((f) => f.code === "status_drift")).toBe(true);
-    expect(out.exit_code).toBe(1);
+    expect(out.findings.find((f) => f.code === "status_drift")?.severity).toBe("warning");
   });
 
   test("warns on unratified Q-table for non-DRAFT spec", () => {

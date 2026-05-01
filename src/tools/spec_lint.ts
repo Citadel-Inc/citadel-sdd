@@ -75,7 +75,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
     spec = parseSpec(specMd);
   } catch (e) {
     findings.push({
-      severity: "error",
+      severity: "warning",
       code: "spec_md_unparseable",
       message: (e as Error).message,
       slug: loc.slug,
@@ -87,7 +87,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
     tasks = parseTasks(tasksMd);
   } catch (e) {
     findings.push({
-      severity: "error",
+      severity: "warning",
       code: "tasks_md_unparseable",
       message: (e as Error).message,
       slug: loc.slug,
@@ -98,7 +98,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
 
   for (const v of checkSpecTasksStatusAlign(spec, tasks)) {
     findings.push({
-      severity: "error",
+      severity: "warning",
       code: v.code,
       message: v.message,
       slug: loc.slug,
@@ -108,7 +108,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
 
   for (const v of checkSlugInCorrectDir(spec, loc.state)) {
     findings.push({
-      severity: "error",
+      severity: "warning",
       code: v.code,
       message: v.message,
       slug: loc.slug,

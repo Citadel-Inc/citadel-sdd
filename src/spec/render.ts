@@ -10,8 +10,9 @@ import type {
 import { PRIORITIES } from "./types.js";
 
 export function renderStatusValue(s: StatusValue): string {
-  if (s.tail.length === 0) return `${s.state} ${s.dtg}`;
-  return `${s.state} ${s.dtg} — ${s.tail}`;
+  const head = s.bold ? `**${s.state} ${s.dtg}**` : `${s.state} ${s.dtg}`;
+  if (s.tail.length === 0) return head;
+  return `${head} — ${s.tail}`;
 }
 
 export function renderFrontmatter(fm: Frontmatter): string {

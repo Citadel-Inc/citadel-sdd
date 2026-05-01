@@ -6,6 +6,7 @@ export interface StatusValue {
   state: SpecState;
   dtg: string;
   tail: string;
+  bold?: boolean;
 }
 
 export interface Frontmatter {

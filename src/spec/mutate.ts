@@ -20,8 +20,9 @@ export function mutateStatus(fm: Frontmatter, next: StatusValue): Frontmatter {
 }
 
 function formatStatusForFrontmatter(s: StatusValue): string {
-  if (s.tail.length === 0) return `${s.state} ${s.dtg}`;
-  return `${s.state} ${s.dtg} — ${s.tail}`;
+  const head = s.bold ? `**${s.state} ${s.dtg}**` : `${s.state} ${s.dtg}`;
+  if (s.tail.length === 0) return head;
+  return `${head} — ${s.tail}`;
 }
 
 export function mutateField(fm: Frontmatter, key: string, value: string): Frontmatter {
