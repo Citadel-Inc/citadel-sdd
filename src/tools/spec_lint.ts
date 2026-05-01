@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { selectRoots } from "../discovery/roots.js";
 import { CROSS_CUTTING_CATEGORIES, crossCutting } from "../lint/cross_cutting.js";
 import type { StrictCategory } from "../lint/strict.js";
 import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from "../lint/strict.js";
@@ -12,6 +13,9 @@ export interface SpecLintInput {
   include_done?: boolean;
   no_strict?: boolean;
   fail_on?: ReadonlyArray<string> | "all";
+  roots?: ReadonlyArray<string>;
+  scan_nested?: { parent: string; depth?: number };
+  stale_days?: number;
 }
 
 export type LintSeverity = "error" | "warning" | "info";
@@ -22,15 +26,52 @@ export interface SpecLintFinding {
   message: string;
   slug?: string;
   path?: string;
+  root?: string;
 }
 
 export interface SpecLintOutput {
   findings: SpecLintFinding[];
   exit_code: number;
+  roots?: string[];
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+}
+
+function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput): SpecLintFinding[] {
+  const findings: SpecLintFinding[] = [];
+  const noStrict = input.no_strict === true;
+
+  if (input.slug !== undefined) {
+    const loc = locateSpec(repo, input.slug);
+    if (!loc) {
+      findings.push({
+        severity: "error",
+        code: "spec_not_found",
+        message: `spec "${input.slug}" not found in active/ or done/`,
+        slug: input.slug,
+      });
+    } else {
+      findings.push(...lintSingle(loc, ctx));
+      findings.push(...lintStrict(loc, noStrict));
+    }
+  } else {
+    const scope = input.include_done === true ? "all" : "active";
+    for (const loc of listSpecs(repo, scope)) {
+      findings.push(...lintSingle(loc, ctx));
+      findings.push(...lintStrict(loc, noStrict));
+    }
+    for (const cc of crossCutting(repo)) {
+      findings.push({
+        severity: "warning",
+        code: cc.category,
+        message: cc.message,
+        slug: cc.slug,
+      });
+    }
+  }
+  return findings;
 }
 
 function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecLintFinding[] {
@@ -200,40 +241,40 @@ function resolveFailOn(input: SpecLintInput): Set<string> | null {
 }
 
 export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput {
-  const repo = repoCtx(ctx);
   const findings: SpecLintFinding[] = [];
-  const noStrict = input.no_strict === true;
 
-  if (input.slug !== undefined) {
-    const loc = locateSpec(repo, input.slug);
-    if (!loc) {
+  const useMultiRoot = input.roots !== undefined || input.scan_nested !== undefined;
+  if (useMultiRoot) {
+    const discovered = selectRoots({
+      rootDir: ctx.rootDir,
+      specDir: ctx.profile.spec_dir,
+      roots: input.roots,
+      scan_nested: input.scan_nested,
+    });
+    if (discovered.length === 0) {
       findings.push({
         severity: "error",
-        code: "spec_not_found",
-        message: `spec "${input.slug}" not found in active/ or done/`,
-        slug: input.slug,
+        code: "no_roots_found",
+        message: "no specs/active directories matched the requested roots / scan_nested parameters",
       });
-    } else {
-      findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, noStrict));
+      return { findings, exit_code: 1, roots: [] };
     }
-  } else {
-    const scope = input.include_done === true ? "all" : "active";
-    for (const loc of listSpecs(repo, scope)) {
-      findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, noStrict));
+    for (const d of discovered) {
+      const repo: RepoContext = { rootDir: d.metaRoot, specDir: ctx.profile.spec_dir };
+      const sub = lintOneRoot(repo, ctx, input);
+      for (const f of sub) findings.push({ ...f, root: d.key });
     }
-    for (const cc of crossCutting(repo)) {
-      findings.push({
-        severity: "warning",
-        code: cc.category,
-        message: cc.message,
-        slug: cc.slug,
-      });
-    }
+    const exit = computeExit(findings, resolveFailOn(input));
+    return { findings, exit_code: exit, roots: discovered.map((d) => d.key) };
   }
 
-  const failOn = resolveFailOn(input);
+  const repo = repoCtx(ctx);
+  findings.push(...lintOneRoot(repo, ctx, input));
+  const exit = computeExit(findings, resolveFailOn(input));
+  return { findings, exit_code: exit };
+}
+
+function computeExit(findings: ReadonlyArray<SpecLintFinding>, failOn: Set<string> | null): number {
   let exit_code = findings.some((f) => f.severity === "error") ? 1 : 0;
   if (failOn !== null) {
     const triggered = findings.some(
@@ -244,7 +285,7 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
     );
     exit_code = triggered ? 1 : 0;
   }
-  return { findings, exit_code };
+  return exit_code;
 }
 
 export type { StrictCategory };
