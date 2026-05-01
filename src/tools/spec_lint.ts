@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { CROSS_CUTTING_CATEGORIES, crossCutting } from "../lint/cross_cutting.js";
 import type { StrictCategory } from "../lint/strict.js";
 import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from "../lint/strict.js";
 import { checkSlugInCorrectDir, checkSpecTasksStatusAlign } from "../spec/invariants.js";
@@ -193,7 +194,7 @@ function lintStrict(loc: ReturnType<typeof locateSpec>, noStrict: boolean): Spec
 function resolveFailOn(input: SpecLintInput): Set<string> | null {
   if (input.fail_on === undefined) return null;
   if (input.fail_on === "all") {
-    return new Set<string>([...ALL_STRICT_CATEGORIES, "error"]);
+    return new Set<string>([...ALL_STRICT_CATEGORIES, ...CROSS_CUTTING_CATEGORIES, "error"]);
   }
   return new Set<string>(input.fail_on);
 }
@@ -221,6 +222,14 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
     for (const loc of listSpecs(repo, scope)) {
       findings.push(...lintSingle(loc, ctx));
       findings.push(...lintStrict(loc, noStrict));
+    }
+    for (const cc of crossCutting(repo)) {
+      findings.push({
+        severity: "warning",
+        code: cc.category,
+        message: cc.message,
+        slug: cc.slug,
+      });
     }
   }
 
