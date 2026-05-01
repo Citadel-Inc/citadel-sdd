@@ -116,14 +116,14 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
     } else {
       if (loc.state === "active") findings.push(...lintFilePresence(loc));
       findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, noStrict));
+      findings.push(...lintStrict(loc, ctx, noStrict));
     }
   } else {
     const scope = input.include_done === true ? "all" : "active";
     for (const loc of listSpecs(repo, scope)) {
       if (loc.state === "active") findings.push(...lintFilePresence(loc));
       findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, noStrict));
+      findings.push(...lintStrict(loc, ctx, noStrict));
     }
     for (const cc of crossCutting(repo)) {
       findings.push({
@@ -259,9 +259,36 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
   return findings;
 }
 
-function lintStrict(loc: ReturnType<typeof locateSpec>, noStrict: boolean): SpecLintFinding[] {
+function detectFrontmatterFormat(text: string): "pipe-table" | "inline" {
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    if (line.trim().startsWith("|")) return "pipe-table";
+    if (/^[A-Za-z][A-Za-z _-]*?:\s+/.test(line)) return "inline";
+  }
+  return "inline";
+}
+
+function applyLintRules(
+  findings: SpecLintFinding[],
+  rules: Record<string, "error" | "warn" | "off">,
+): SpecLintFinding[] {
+  return findings.flatMap((f) => {
+    const level = rules[f.code];
+    if (level === "off") return [];
+    if (level === "error") return [{ ...f, severity: "error" as LintSeverity }];
+    if (level === "warn") return [{ ...f, severity: "warning" as LintSeverity }];
+    return [f];
+  });
+}
+
+function lintStrict(
+  loc: ReturnType<typeof locateSpec>,
+  ctx: ToolContext,
+  noStrict: boolean,
+): SpecLintFinding[] {
   if (!loc || noStrict) return [];
   const findings: SpecLintFinding[] = [];
+  const fmtEnforcement = ctx.profile.frontmatter_format;
 
   for (const file of [
     { name: "spec.md", abs: loc.specMd },
@@ -294,9 +321,21 @@ function lintStrict(loc: ReturnType<typeof locateSpec>, noStrict: boolean): Spec
         });
       }
     }
+    if (fmtEnforcement !== "any") {
+      const actual = detectFrontmatterFormat(text);
+      if (actual !== fmtEnforcement) {
+        findings.push({
+          severity: "warning",
+          code: "strict-frontmatter-format",
+          message: `${file.name}:1: frontmatter is ${actual} but profile enforces ${fmtEnforcement}`,
+          slug: loc.slug,
+          path: loc.relDir,
+        });
+      }
+    }
   }
 
-  return findings;
+  return applyLintRules(findings, ctx.profile.lint_rules);
 }
 
 function resolveFailOn(input: SpecLintInput): Set<string> | null {

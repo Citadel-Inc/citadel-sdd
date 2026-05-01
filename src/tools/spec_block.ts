@@ -72,9 +72,10 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
   const updatedSpec = setStatusOnSpec(spec, newStatus);
   const updatedTasks = setStatusOnTasks(tasks, newStatus);
 
-  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter);
+  const fmt = ctx.profile.frontmatter_format;
+  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
   newSpecRaw = injectBlockingSection(newSpecRaw, input.reason);
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter);
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
 
   const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg };
   const after = { state: newStatus.state, dtg: newStatus.dtg };

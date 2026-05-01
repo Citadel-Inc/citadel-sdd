@@ -47,8 +47,9 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
   const updatedSpec = setStatusOnSpec(spec, newStatus);
   const updatedTasks = setStatusOnTasks(tasks, newStatus);
 
-  const newSpecRaw = spliceSpecFile(specRaw, updatedSpec);
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter);
+  const fmt = ctx.profile.frontmatter_format;
+  const newSpecRaw = spliceSpecFile(specRaw, updatedSpec, fmt);
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
 
   const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg };
   const after = { state: newStatus.state, dtg: newStatus.dtg };

@@ -36,7 +36,7 @@ export function specTaskAdd(input: SpecTaskAddInput, ctx: ToolContext): SpecTask
   const tasks = parseTasks(raw);
   const updated = addTaskItem(tasks, input.phase, input.text, input.blocker);
   const added_index = updated.phases[input.phase].length;
-  const newRaw = spliceTasksFile(raw, updated);
+  const newRaw = spliceTasksFile(raw, updated, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
     return { slug: loc.slug, added_index, commit_sha: null, dryRun: true };

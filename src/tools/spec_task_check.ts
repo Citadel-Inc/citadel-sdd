@@ -49,7 +49,7 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
     return found ? found.checked : false;
   })();
 
-  const newRaw = spliceTasksFile(raw, updated);
+  const newRaw = spliceTasksFile(raw, updated, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
     return {

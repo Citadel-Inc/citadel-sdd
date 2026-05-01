@@ -87,13 +87,14 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     ? spec.qTable.filter((r) => r.ratified.toLowerCase() === "tbd").length
     : 0;
 
-  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter);
+  const fmt = ctx.profile.frontmatter_format;
+  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
   if (ratifyEnabled && spec.qTable.length > 0) {
     newSpecRaw = spliceQTable(newSpecRaw, updatedSpec.qTable);
   } else {
-    newSpecRaw = spliceSpecFile(specRaw, updatedSpec);
+    newSpecRaw = spliceSpecFile(specRaw, updatedSpec, fmt);
   }
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter);
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
 
   const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg };
   const after = { state: newStatus.state, dtg: newStatus.dtg };

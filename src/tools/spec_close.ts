@@ -76,8 +76,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
 
   const updatedSpec = setStatusOnSpec(spec, newStatus);
 
-  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter);
-  const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks);
+  const fmt = ctx.profile.frontmatter_format;
+  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
+  const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt);
 
   const beforePath = loc.relDir;
   const afterRelDir = `${repo.specDir}/done/${loc.slug}`;

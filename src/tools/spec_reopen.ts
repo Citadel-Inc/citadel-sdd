@@ -56,8 +56,9 @@ export function specReopen(input: SpecReopenInput, ctx: ToolContext): SpecReopen
   const updatedSpec = setStatusOnSpec(spec, newStatus);
   const updatedTasks = setStatusOnTasks(tasks, newStatus);
 
-  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter);
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter);
+  const fmt = ctx.profile.frontmatter_format;
+  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
 
   const beforePath = loc.relDir;
   const afterRelDir = `${repo.specDir}/active/${loc.slug}`;

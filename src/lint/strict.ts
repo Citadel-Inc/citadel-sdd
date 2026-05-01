@@ -4,6 +4,7 @@ export type StrictCategory =
   | "strict-alt-state"
   | "strict-alt-marker"
   | "strict-frontmatter"
+  | "strict-frontmatter-format"
   | "strict-priority-heading"
   | "strict-priority-in-nontasks";
 
@@ -127,6 +128,7 @@ export const ALL_STRICT_CATEGORIES: ReadonlyArray<StrictCategory> = [
   "strict-alt-state",
   "strict-alt-marker",
   "strict-frontmatter",
+  "strict-frontmatter-format",
   "strict-priority-heading",
   "strict-priority-in-nontasks",
 ];

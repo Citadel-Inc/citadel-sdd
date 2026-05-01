@@ -1,6 +1,7 @@
-import { renderFrontmatter, renderQTable, renderTaskItem } from "./render.js";
+import { renderFrontmatter, renderFrontmatterInline, renderQTable, renderTaskItem } from "./render.js";
 import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from "./types.js";
 import { PRIORITIES } from "./types.js";
+import type { FrontmatterFormat } from "../profile/types.js";
 
 interface BlockRange {
   start: number;
@@ -52,14 +53,43 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
   return null;
 }
 
-export function spliceFrontmatter(rawMd: string, newFm: Frontmatter): string {
+export function spliceFrontmatter(
+  rawMd: string,
+  newFm: Frontmatter,
+  format: FrontmatterFormat = "any",
+): string {
   const lines = rawMd.split(/\r?\n/);
   const block = findFirstPipeBlock(lines);
-  if (block) {
+  const hasPipe = block !== null;
+
+  const targetPipe = format === "pipe-table" || (format === "any" && hasPipe);
+
+  if (targetPipe) {
+    if (hasPipe && block) {
+      // Replace existing pipe block.
+      const before = lines.slice(0, block.start);
+      const after = lines.slice(block.end);
+      return [...before, ...renderFrontmatter(newFm).split("\n"), ...after].join("\n");
+    }
+    // Convert inline → pipe-table: strip matching key-value lines, prepend pipe block.
+    const fieldKeys = new Set([
+      "status",
+      ...newFm.fields.map(([k]) => k.toLowerCase()),
+    ]);
+    const RE_INLINE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
+    const stripped = lines.filter((line) => {
+      const m = RE_INLINE.exec(line);
+      return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
+    });
+    return [...renderFrontmatter(newFm).split("\n"), ...stripped].join("\n");
+  }
+
+  // Target is inline (format === "inline" or format === "any" without pipe block).
+  if (hasPipe && block) {
+    // Convert pipe-table → inline: replace pipe block with key-value lines.
     const before = lines.slice(0, block.start);
     const after = lines.slice(block.end);
-    const renderedLines = renderFrontmatter(newFm).split("\n");
-    return [...before, ...renderedLines, ...after].join("\n");
+    return [...before, ...renderFrontmatterInline(newFm).split("\n"), ...after].join("\n");
   }
   // Inline frontmatter: replace each matching "Key: value" line in-place.
   const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]));
@@ -119,8 +149,12 @@ function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRang
   return { start, end };
 }
 
-export function spliceTasksFile(rawMd: string, parsed: ParsedTasks): string {
-  let out = spliceFrontmatter(rawMd, parsed.frontmatter);
+export function spliceTasksFile(
+  rawMd: string,
+  parsed: ParsedTasks,
+  format: FrontmatterFormat = "any",
+): string {
+  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format);
   for (const priority of PRIORITIES) {
     out = splicePhase(out, priority, parsed.phases[priority]);
   }
@@ -148,8 +182,12 @@ function splicePhase(
   return [...before, ...rendered, ...after].join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
-export function spliceSpecFile(rawMd: string, parsed: ParsedSpec): string {
-  let out = spliceFrontmatter(rawMd, parsed.frontmatter);
+export function spliceSpecFile(
+  rawMd: string,
+  parsed: ParsedSpec,
+  format: FrontmatterFormat = "any",
+): string {
+  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format);
   if (parsed.qTable.length > 0 || findQTableBlock(out.split(/\r?\n/)) !== null) {
     out = spliceQTable(out, parsed.qTable);
   }

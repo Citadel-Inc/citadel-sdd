@@ -38,7 +38,7 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   const before_owner = beforeOwnerField?.[1] ?? "";
 
   const updated = setOwner(spec, input.new_owner);
-  const newRaw = spliceFrontmatter(raw, updated.frontmatter);
+  const newRaw = spliceFrontmatter(raw, updated.frontmatter, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
     return {

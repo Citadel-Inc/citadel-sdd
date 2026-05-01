@@ -32,6 +32,23 @@ export function renderFrontmatter(fm: Frontmatter): string {
   return lines.join("\n");
 }
 
+export function renderFrontmatterInline(fm: Frontmatter): string {
+  const lines: string[] = [];
+  let statusEmitted = false;
+  for (const [key, value] of fm.fields) {
+    if (key.toLowerCase() === "status") {
+      lines.push(`Status: ${renderStatusValue(fm.status)}`);
+      statusEmitted = true;
+    } else {
+      lines.push(`${key}: ${value}`);
+    }
+  }
+  if (!statusEmitted) {
+    lines.unshift(`Status: ${renderStatusValue(fm.status)}`);
+  }
+  return lines.join("\n");
+}
+
 export function renderQTable(rows: readonly QTableRow[]): string {
   if (rows.length === 0) return "";
   const lines: string[] = [
