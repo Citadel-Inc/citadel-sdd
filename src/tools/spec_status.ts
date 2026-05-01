@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ClosureReason, computeClosureReason, readClosureCounts } from "../lint/closure.js";
+import { type ChecklistCounts, scanChecklist } from "../spec/checklist_scan.js";
 import { daysBetween, lastTouchedBulk, recentCommits } from "../spec/git_history.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -31,6 +32,7 @@ export interface SpecStatusOutput {
   last_touched?: string;
   days_since?: number;
   reason?: ClosureReason;
+  by_source?: Partial<Record<"tasks" | "plan" | "spec", ChecklistCounts>>;
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -97,6 +99,25 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
       out.reason = computeClosureReason(counts, { slug: loc.slug, indexedActive });
     }
   }
+
+  const bySource: Partial<Record<"tasks" | "plan" | "spec", ChecklistCounts>> = {};
+  for (const [key, abs] of [
+    ["tasks", loc.tasksMd],
+    ["plan", loc.planMd],
+    ["spec", loc.specMd],
+  ] as const) {
+    let text: string;
+    try {
+      text = readFileSync(abs, "utf8");
+    } catch {
+      continue;
+    }
+    const counts = scanChecklist(text);
+    if (counts.open > 0 || counts.done > 0) {
+      bySource[key] = counts;
+    }
+  }
+  if (Object.keys(bySource).length > 0) out.by_source = bySource;
 
   return out;
 }
