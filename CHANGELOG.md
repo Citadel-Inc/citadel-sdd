@@ -5,6 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-05-02
+
+User-feedback driven ergonomics pass. Closes five pain points reported from live close-out sequences: batch task checking, circular spec-close task dependency, opaque match errors, heavyweight reads, and dirty-state accumulation from `commit: false`.
+
+### Added
+
+- **`spec_task_list`** — new lightweight tool that reads `tasks.md` only and returns `[{ phase, index, text, checked, isHumanGate }]`. `index` is 1-based and usable directly as the `match` param in `spec_task_check`. Replaces the common pattern of calling `spec_read` just to discover task text.
+- **`spec_task_check` batch mode** — new `items: [{ phase, match, checked }][]` input param. Check/uncheck N tasks in a single MCP call with one file read, one write, and one commit. Flat `phase` + `match` + `checked` params still work (normalised to `items[0]` internally).
+- **`spec_task_check` output: `matched_text` + `matched_index`** — every response (including `dryRun: true`) now returns the resolved task text and 1-based index alongside `before`/`after`. Batch calls return a `results[]` array with per-item resolution; single-item calls keep backward-compat top-level aliases.
+
+### Fixed
+
+- **`spec_close` circular dependency** — closing a spec when the final task item is named something like "E4. Spec close." no longer requires manually pre-checking that item. Items whose text matches `/spec.?close/i` are skipped in the `tasks_open` guard; they are auto-checked during the close operation itself.
+- **`spec_task_check` opaque match error** — `task_not_found` now lists all available task text strings (up to 50 chars each) so callers can correct the `match` prefix without a follow-up read call.
+- **`parseStatusValue` — bold-only status** — `**DRAFT**` (bold, no DTG) previously threw `status_unparseable`. DTG is now optional in the regex. Fixes `spec_claim` and `spec_read` on hand-written specs that omit the timestamp.
+- **`renderStatusValue` + `formatStatusForFrontmatter` trailing space** — when `dtg` is empty (e.g. after parsing `**DRAFT**`), the rendered output previously included a trailing space (`DRAFT ` or `**DRAFT **`). Fixed to omit the space token when DTG is empty.
+- **`spliceFrontmatter` — insert instead of throw on missing frontmatter** — writing to a file with no existing frontmatter block previously threw `frontmatter_missing`. Now inserts a pipe-table after the title line. `format: "inline"` inserts inline key-value lines instead.
+- **`spliceFrontmatter` — inline→pipe-table insert position** — conversion from inline to pipe-table previously prepended the table before the document title. Now inserts after the title line using the new `insertAfterTitle` helper.
+
+### Stats
+
+- **292 tests** (was 281) across 39 files.
+- +7 `spec_task_list` tests, +4 `spec_task_check` batch/output tests, +6 `spliceFrontmatter` format tests, +3 `renderStatusValue` empty-DTG tests.
+
 ## [0.2.0] — 2026-05-01
 
 Tier 1+2 port of `spec-status.py` reporting + discovery features. Unblocks cross-repo / agent-fleet usage and exposes git-derived posture signals on `spec_status`. No breaking changes — all new params are optional.
