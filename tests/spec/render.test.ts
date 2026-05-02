@@ -35,6 +35,19 @@ describe("renderStatusValue", () => {
     const v = parseStatusValue(original);
     expect(renderStatusValue(v)).toBe(original);
   });
+
+  test("empty DTG — no trailing space (plain)", () => {
+    expect(renderStatusValue({ state: "DRAFT", dtg: "", tail: "" })).toBe("DRAFT");
+  });
+
+  test("empty DTG — no trailing space (bold)", () => {
+    expect(renderStatusValue({ state: "DRAFT", dtg: "", tail: "", bold: true })).toBe("**DRAFT**");
+  });
+
+  test("bold state-only round-trips through parseStatusValue", () => {
+    const v = parseStatusValue("**DRAFT**");
+    expect(renderStatusValue(v)).toBe("**DRAFT**");
+  });
 });
 
 describe("renderFrontmatter", () => {

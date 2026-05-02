@@ -8,6 +8,17 @@ interface BlockRange {
   end: number;
 }
 
+function insertAfterTitle(lines: readonly string[], block: string): string {
+  // Locate insertion point: after any leading blanks + the title line + its trailing blanks.
+  let i = 0;
+  while (i < lines.length && (lines[i] ?? "").trim() === "") i++;
+  if (i < lines.length) i++; // advance past title line
+  while (i < lines.length && (lines[i] ?? "").trim() === "") i++;
+  return [...lines.slice(0, i), ...block.split("\n"), "", ...lines.slice(i)]
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
 function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | null {
   let start = -1;
   for (let i = from; i < lines.length; i++) {
@@ -71,7 +82,7 @@ export function spliceFrontmatter(
       const after = lines.slice(block.end);
       return [...before, ...renderFrontmatter(newFm).split("\n"), ...after].join("\n");
     }
-    // Convert inline → pipe-table: strip matching key-value lines, prepend pipe block.
+    // Convert inline → pipe-table (or insert into file with no frontmatter): strip inline keys, insert pipe block after title.
     const fieldKeys = new Set([
       "status",
       ...newFm.fields.map(([k]) => k.toLowerCase()),
@@ -81,7 +92,7 @@ export function spliceFrontmatter(
       const m = RE_INLINE.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
-    return [...renderFrontmatter(newFm).split("\n"), ...stripped].join("\n");
+    return insertAfterTitle(stripped, renderFrontmatter(newFm));
   }
 
   // Target is inline (format === "inline" or format === "any" without pipe block).
@@ -104,7 +115,9 @@ export function spliceFrontmatter(
     return `${entry.key}: ${entry.value}`;
   });
   if (!found) {
-    throw new Error("frontmatter_missing");
+    // No existing frontmatter — insert after title using the canonical format for this mode.
+    const rendered = format === "inline" ? renderFrontmatterInline(newFm) : renderFrontmatter(newFm);
+    return insertAfterTitle(lines, rendered);
   }
   return newLines.join("\n");
 }
