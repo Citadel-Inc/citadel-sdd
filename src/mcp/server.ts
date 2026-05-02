@@ -15,6 +15,7 @@ import { specReopen } from "../tools/spec_reopen.js";
 import { specStatus } from "../tools/spec_status.js";
 import { specTaskAdd } from "../tools/spec_task_add.js";
 import { specTaskCheck } from "../tools/spec_task_check.js";
+import { specTaskList } from "../tools/spec_task_list.js";
 import { specUnblock } from "../tools/spec_unblock.js";
 import type { ToolContext } from "../tools/types.js";
 import {
@@ -34,6 +35,7 @@ import {
   SpecStatusShape,
   SpecTaskAddShape,
   SpecTaskCheckShape,
+  SpecTaskListShape,
   SpecUnblockShape,
 } from "./schemas.js";
 
@@ -156,6 +158,16 @@ export function buildServer(opts: BuildServerOptions): McpServer {
       inputSchema: SpecTaskCheckShape,
     },
     wrap(specTaskCheck, ctxFactory),
+  );
+
+  server.registerTool(
+    "spec_task_list",
+    {
+      description:
+        "Return lightweight [{phase, index, text, checked, isHumanGate}] for tasks.md. Cheaper than spec_read when you only need task item text or match strings.",
+      inputSchema: SpecTaskListShape,
+    },
+    wrap(specTaskList, ctxFactory),
   );
 
   server.registerTool(

@@ -74,6 +74,11 @@ export const SpecTaskCheckShape = {
   dryRun: z.boolean().optional(),
 } as const;
 
+export const SpecTaskListShape = {
+  slug: SlugSchema,
+  phases: z.array(PrioritySchema).optional(),
+} as const;
+
 export const SpecTaskAddShape = {
   slug: SlugSchema,
   phase: PrioritySchema,
