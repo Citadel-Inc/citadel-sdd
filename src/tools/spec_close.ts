@@ -60,7 +60,8 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   const allowOpen = new Set<Priority>(input.allow_open ?? []);
   for (const p of PRIORITIES) {
     if (allowOpen.has(p)) continue;
-    const open = tasksParsed.phases[p].filter((i) => !i.checked).length;
+    // Items matching /spec.?close/i are auto-checked during close — exclude from the guard.
+    const open = tasksParsed.phases[p].filter((i) => !i.checked && !/spec.?close/i.test(i.text)).length;
     if (open > 0) {
       throw new Error(`tasks_open: ${p} has ${open} unchecked item(s); use allow_open to bypass`);
     }
