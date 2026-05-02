@@ -23,8 +23,11 @@ describe("loadConfig", () => {
     expect(p.commit_style).toBe("freeform");
   });
 
-  test("loads extends:citadel and matches built-in", () => {
-    writeFileSync(join(workdir, "specs", "config.yaml"), "extends: citadel\n");
+  test("extends:bastion + push_policy:on_close (project-level override pattern)", () => {
+    writeFileSync(
+      join(workdir, "specs", "config.yaml"),
+      "extends: bastion\npush_policy: on_close\n",
+    );
     const p = loadConfig({ rootDir: workdir });
     expect(p.push_policy).toBe("on_close");
     expect(p.dtg_format).toBe("DDHHMMZMONYY");

@@ -11,8 +11,9 @@ Permanent canon for: profile config schema, inheritance, slug uniqueness, shippe
 ```
 default (vanilla SDD baseline)
   └── bastion (DTG injection, IRONLAW callouts, conventional commit + Bastion voice)
-        └── citadel (bastion + citadel paths/conventions + push: on_close)
 ```
+
+Consuming repos extend a built-in profile and add project-specific overrides in their own `specs/config.yaml`. The `citadel` project profile lives in the `Rethunk-Tech/citadel` repo (`specs/config.yaml: extends: bastion`), not here.
 
 `extends:` key declares the parent. Resolver walks the chain bottom-up, deep-merges parent → child, child overrides parent at leaf level.
 
@@ -21,7 +22,7 @@ Cycle detection is mandatory: a profile that (transitively) extends itself is re
 ## Config schema
 
 ```yaml
-extends: bastion           # default | bastion | citadel | (none, for fully-explicit configs)
+extends: bastion           # default | bastion | (none, for fully-explicit configs)
 spec_dir: specs            # canonical; rarely overridden
 states:
   - DRAFT
@@ -30,7 +31,7 @@ states:
   - BLOCKED
   - DONE
 priorities: [P0, P1, P2]
-dtg_format: DDHHMMZMONYY    # ISO-8601 for default profile; bastion+citadel use DDHHMMZMONYY
+dtg_format: DDHHMMZMONYY    # ISO-8601 for default profile; bastion uses DDHHMMZMONYY
 commit_style: conventional   # conventional | freeform
 push_policy: never           # never | on_close | always
 frontmatter_format: any      # pipe-table | inline | any (default: any)
@@ -91,14 +92,6 @@ commit_style: conventional
 # resolves to bastion or its descendants)
 ```
 
-### `citadel` (extends `bastion`)
-
-```yaml
-extends: bastion
-push_policy: on_close
-# (citadel paths inherited from spec_dir: specs; no override needed)
-```
-
 ## Slug uniqueness
 
 **Enforced forever, not configurable.** A slug used in `specs/active/` or `specs/done/` is held permanently; reuse rejected even after `spec_close`.
@@ -107,7 +100,7 @@ This rule is hard-coded in `src/spec/invariants.ts`. No profile can override. Ra
 
 ## Bastion-specific features
 
-When the resolved profile chain includes `bastion` (i.e., effective profile is `bastion` or `citadel`):
+When the resolved profile chain includes `bastion`:
 
 - **DTG format** = `DDHHMMZMONYY` (e.g. `011945ZMAY26`).
 - **Commit style** = conventional.

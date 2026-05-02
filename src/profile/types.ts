@@ -38,4 +38,4 @@ export const ProfileFragmentSchema = z
 
 export type ProfileFragment = z.infer<typeof ProfileFragmentSchema>;
 
-export const BUILT_IN_PROFILES: ReadonlySet<string> = new Set(["default", "bastion", "citadel"]);
+export const BUILT_IN_PROFILES: ReadonlySet<string> = new Set(["default", "bastion"]);

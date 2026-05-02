@@ -127,7 +127,7 @@ export const SpecIndexRebuildShape = {
 } as const;
 
 export const SpecInitShape = {
-  profile: z.enum(["default", "bastion", "citadel"]),
+  profile: z.enum(["default", "bastion"]),
   overrides: z.record(z.string(), z.unknown()).optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),

@@ -20,11 +20,8 @@ describe("resolveBuiltIn — shipped profiles", () => {
     expect(p.spec_dir).toBe("specs");
   });
 
-  test("citadel extends bastion; flips push_policy; inherits DTG + commit_style", () => {
-    const p = resolveBuiltIn("citadel");
-    expect(p.dtg_format).toBe("DDHHMMZMONYY");
-    expect(p.commit_style).toBe("conventional");
-    expect(p.push_policy).toBe("on_close");
+  test("built-in rejects 'citadel' — project-specific profiles live in consuming repo", () => {
+    expect(() => resolveBuiltIn("citadel")).toThrow("profile_unknown");
   });
 
   test("unknown built-in profile name rejected", () => {
@@ -40,10 +37,11 @@ describe("resolveProfile — extending", () => {
     expect(p.push_policy).toBe("always");
   });
 
-  test("extends:citadel without override matches resolveBuiltIn('citadel')", () => {
-    const fromExtend = resolveProfile({ extends: "citadel" });
-    const fromBuiltIn = resolveBuiltIn("citadel");
-    expect(fromExtend).toEqual(fromBuiltIn);
+  test("extends:bastion + push_policy:on_close replicates former citadel preset", () => {
+    const p = resolveProfile({ extends: "bastion", push_policy: "on_close" });
+    expect(p.dtg_format).toBe("DDHHMMZMONYY");
+    expect(p.commit_style).toBe("conventional");
+    expect(p.push_policy).toBe("on_close");
   });
 
   test("no extends; explicit fields use defaults for omitted keys", () => {
