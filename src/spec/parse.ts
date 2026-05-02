@@ -52,12 +52,17 @@ function extractPipeTable(lines: readonly string[], startIdx: number): PipeTable
 export function parseStatusValue(raw: string): StatusValue {
   let trimmed = raw.trim();
   let bold = false;
+
+  // Strip markdown bold from the whole value (**STATE DTG — tail**)
+  // or from the state word only (**STATE** DTG — tail).
   const boldMatch = /^\*\*([^*]+?)\*\*(.*)$/.exec(trimmed);
   if (boldMatch) {
     bold = true;
     trimmed = `${boldMatch[1] ?? ""}${boldMatch[2] ?? ""}`.trim();
   }
-  const match = /^([A-Z_]+)\s+(\S+)(?:\s+[—-]\s+(.*))?$/.exec(trimmed);
+
+  // DTG is optional — hand-written specs may omit it (e.g. "**DRAFT**" with no stamp).
+  const match = /^([A-Z_]+)(?:\s+(\S+)(?:\s+[—-]\s+(.*))?)?$/.exec(trimmed);
   if (!match) {
     throw new Error(`status_unparseable: "${raw}"`);
   }

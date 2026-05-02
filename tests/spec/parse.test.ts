@@ -29,6 +29,33 @@ describe("parseStatusValue", () => {
     expect(v.tail).toBe("all green");
   });
 
+  test("bold state only — no DTG (**DRAFT**)", () => {
+    const v = parseStatusValue("**DRAFT**");
+    expect(v.state).toBe("DRAFT");
+    expect(v.dtg).toBe("");
+    expect(v.bold).toBe(true);
+  });
+
+  test("bold state with DTG outside bold (**DRAFT** 011900ZMAY26)", () => {
+    const v = parseStatusValue("**DRAFT** 011900ZMAY26");
+    expect(v.state).toBe("DRAFT");
+    expect(v.dtg).toBe("011900ZMAY26");
+    expect(v.bold).toBe(true);
+  });
+
+  test("bold wraps whole value (**DRAFT 011900ZMAY26**)", () => {
+    const v = parseStatusValue("**DRAFT 011900ZMAY26**");
+    expect(v.state).toBe("DRAFT");
+    expect(v.dtg).toBe("011900ZMAY26");
+    expect(v.bold).toBe(true);
+  });
+
+  test("state only — no DTG, no bold (DRAFT)", () => {
+    const v = parseStatusValue("DRAFT");
+    expect(v.state).toBe("DRAFT");
+    expect(v.dtg).toBe("");
+  });
+
   test("rejects unknown state", () => {
     expect(() => parseStatusValue("FOO 011900ZMAY26")).toThrow("state_unknown");
   });
