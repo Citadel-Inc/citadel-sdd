@@ -1,14 +1,16 @@
 #!/usr/bin/env node
+import { fileURLToPath } from "node:url";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { RootsListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { loadConfig } from "./config/load.js";
 import { buildServer } from "./mcp/server.js";
 import { resolveBuiltIn } from "./profile/resolver.js";
 import { gitConfigUserName, gitRevParseShowToplevel } from "./spec/git.js";
 import type { ToolContext } from "./tools/types.js";
 
-const VERSION = "0.2.0";
+const VERSION = "0.3.0";
 
-function discoverRoot(): string {
+function discoverRootFallback(): string {
   const fromEnv = process.env.CITADEL_SDD_ROOT;
   if (fromEnv && fromEnv.length > 0) return fromEnv;
   try {
@@ -18,9 +20,18 @@ function discoverRoot(): string {
   }
 }
 
-function buildContextFactory(): () => ToolContext {
-  const rootDir = discoverRoot();
-  return () => {
+function rootUriToPath(uri: string): string {
+  try {
+    return fileURLToPath(uri);
+  } catch {
+    return uri;
+  }
+}
+
+async function main(): Promise<void> {
+  let rootDir = discoverRootFallback();
+
+  function buildContext(): ToolContext {
     let profile: ReturnType<typeof resolveBuiltIn>;
     try {
       profile = loadConfig({ rootDir });
@@ -33,15 +44,36 @@ function buildContextFactory(): () => ToolContext {
       profile,
       principal: principal.length > 0 ? principal : undefined,
     };
-  };
-}
+  }
 
-async function main(): Promise<void> {
   const server = buildServer({
-    contextFactory: buildContextFactory(),
+    contextFactory: buildContext,
     name: "@rethunk/citadel-sdd",
     version: VERSION,
   });
+
+  const refreshRoots = async (): Promise<void> => {
+    try {
+      const caps = server.server.getClientCapabilities();
+      if (!caps?.roots) return;
+      const result = await server.server.listRoots();
+      const first = result.roots[0];
+      if (first?.uri) {
+        rootDir = rootUriToPath(first.uri);
+      }
+    } catch {
+      // client doesn't support roots or request failed — keep current rootDir
+    }
+  };
+
+  server.server.oninitialized = () => {
+    void refreshRoots();
+  };
+
+  server.server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {
+    await refreshRoots();
+  });
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
 }
