@@ -4,7 +4,7 @@ import { gitAdd, gitCommit, gitConfigUserName } from "../spec/git.js";
 import { ratifySpec, setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { canTransition } from "../spec/transitions.js";
+import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter, spliceQTable, spliceSpecFile } from "../spec/writer.js";
 import type { ToolContext } from "./types.js";
@@ -31,6 +31,7 @@ function repoCtx(ctx: ToolContext): RepoContext {
 }
 
 function defaultClaimer(ctx: ToolContext): string {
+  if (ctx.profile.default_claimer.length > 0) return ctx.profile.default_claimer;
   const fromGit = gitConfigUserName({ rootDir: ctx.rootDir });
   if (fromGit.length > 0) return fromGit;
   return "Bastion";
@@ -55,6 +56,7 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     throw new Error(`owner_mismatch: held by ${author}; claimer ${claimer}`);
   }
 
+  assertTransitionEnabled("spec_claim", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_claim", {
     claimerIsAuthor: author === claimer,
   });

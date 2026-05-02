@@ -65,3 +65,12 @@ export function nextState(
   if (!result.ok) throw new Error(result.error);
   return result.to;
 }
+
+export function assertTransitionEnabled(
+  via: Transition,
+  disabledTransitions: readonly string[],
+): void {
+  if (disabledTransitions.includes(via)) {
+    throw new Error(`transition_disabled: ${via} is disabled by profile`);
+  }
+}

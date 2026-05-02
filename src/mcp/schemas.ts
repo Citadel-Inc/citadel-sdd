@@ -76,7 +76,7 @@ export const SpecTaskAddShape = {
 
 export const SpecHandoffShape = {
   slug: SlugSchema,
-  new_owner: z.string().min(1),
+  new_owner: z.string().min(1).optional(),
   note: z.string().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
@@ -92,7 +92,7 @@ export const SpecClaimShape = {
 
 export const SpecCloseShape = {
   slug: SlugSchema,
-  summary: z.string().min(1),
+  summary: z.string().min(1).optional(),
   allow_open: z.array(PrioritySchema).optional(),
   commit: z.boolean().optional(),
   push: z.boolean().optional(),
@@ -127,7 +127,7 @@ export const SpecIndexRebuildShape = {
 } as const;
 
 export const SpecInitShape = {
-  profile: z.enum(["default", "bastion"]),
+  profile: z.string().min(1),
   overrides: z.record(z.string(), z.unknown()).optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),

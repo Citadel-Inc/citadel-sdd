@@ -4,7 +4,7 @@ import { gitAdd, gitCommit } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { canTransition } from "../spec/transitions.js";
+import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter, spliceSpecFile } from "../spec/writer.js";
 import type { ToolContext } from "./types.js";
@@ -38,6 +38,7 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
   const spec = parseSpec(specRaw);
   const tasks = parseTasks(tasksRaw);
 
+  assertTransitionEnabled("spec_approve", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_approve");
   if (!transition.ok) throw new Error(transition.error);
 

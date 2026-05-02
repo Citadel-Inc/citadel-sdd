@@ -133,9 +133,10 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
         slug: cc.slug,
       });
     }
-    if (input.stale_days !== undefined && input.stale_days >= 0) {
+    const effectiveStaleDays = input.stale_days ?? ctx.profile.stale_days;
+    if (effectiveStaleDays !== undefined && effectiveStaleDays >= 0) {
       const today = ctx.clock ? ctx.clock() : new Date();
-      findings.push(...lintStaleDays(repo, input.stale_days, today));
+      findings.push(...lintStaleDays(repo, effectiveStaleDays, today));
     }
   }
   return findings;

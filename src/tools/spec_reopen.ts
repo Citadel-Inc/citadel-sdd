@@ -6,7 +6,7 @@ import { renderIndex } from "../spec/index_render.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { canTransition } from "../spec/transitions.js";
+import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter } from "../spec/writer.js";
 import type { ToolContext } from "./types.js";
@@ -43,6 +43,7 @@ export function specReopen(input: SpecReopenInput, ctx: ToolContext): SpecReopen
   const spec = parseSpec(specRaw);
   const tasks = parseTasks(tasksRaw);
 
+  assertTransitionEnabled("spec_reopen", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_reopen");
   if (!transition.ok) throw new Error(transition.error);
 

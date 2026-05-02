@@ -6,7 +6,7 @@ import { renderIndex } from "../spec/index_render.js";
 import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { canTransition } from "../spec/transitions.js";
+import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { Priority, SpecState } from "../spec/types.js";
 import { PRIORITIES } from "../spec/types.js";
 import { spliceFrontmatter, spliceTasksFile } from "../spec/writer.js";
@@ -14,7 +14,7 @@ import type { ToolContext } from "./types.js";
 
 export interface SpecCloseInput {
   slug: string;
-  summary: string;
+  summary?: string;
   allow_open?: Priority[];
   commit?: boolean;
   push?: boolean;
@@ -34,19 +34,26 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
+function renderSummaryTemplate(tpl: string, slug: string, dtg: string): string {
+  return tpl.replace(/\{slug\}/g, slug).replace(/\{dtg\}/g, dtg);
+}
+
 export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOutput {
-  if (!input.summary || input.summary.trim().length === 0) {
-    throw new Error("summary_missing: spec_close requires a non-empty summary");
-  }
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
   if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+
+  const hasSummary = input.summary && input.summary.trim().length > 0;
+  if (!hasSummary && !ctx.profile.summary_template) {
+    throw new Error("summary_missing: spec_close requires a non-empty summary or summary_template in profile");
+  }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
   const spec = parseSpec(specRaw);
   const tasksParsed = parseTasks(tasksRaw);
 
+  assertTransitionEnabled("spec_close", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_close");
   if (!transition.ok) throw new Error(transition.error);
 
@@ -60,7 +67,13 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   }
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
-  const newStatus = { state: transition.to, dtg, tail: input.summary };
+
+  const summary =
+    input.summary && input.summary.trim().length > 0
+      ? input.summary.trim()
+      : renderSummaryTemplate(ctx.profile.summary_template, loc.slug, dtg);
+
+  const newStatus = { state: transition.to, dtg, tail: summary };
 
   let updatedTasks = setStatusOnTasks(tasksParsed, newStatus);
   for (const p of PRIORITIES) {
@@ -112,8 +125,8 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   if (input.commit !== false) {
     const subject =
       ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): DONE — ${input.summary}`
-        : `Close ${loc.slug}: ${input.summary}`;
+        ? `spec(${loc.slug}): DONE — ${summary}`
+        : `Close ${loc.slug}: ${summary}`;
     gitAdd({ rootDir: ctx.rootDir }, [
       `${afterRelDir}/spec.md`,
       `${afterRelDir}/tasks.md`,

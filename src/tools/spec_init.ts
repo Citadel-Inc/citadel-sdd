@@ -7,7 +7,7 @@ import { type RepoContext, specsRoot } from "../spec/repo.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecInitInput {
-  profile: "default" | "bastion";
+  profile: string;
   overrides?: Record<string, unknown>;
   commit?: boolean;
   dryRun?: boolean;

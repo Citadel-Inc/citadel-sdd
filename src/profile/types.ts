@@ -18,6 +18,11 @@ export const ProfileSchema = z.object({
   push_policy: z.enum(PUSH_POLICIES).default("never"),
   frontmatter_format: z.enum(FRONTMATTER_FORMATS).default("any"),
   lint_rules: z.record(z.string(), z.enum(LINT_RULE_LEVELS)).default({}),
+  default_claimer: z.string().default(""),
+  default_owner: z.string().default(""),
+  stale_days: z.number().int().nonnegative().optional(),
+  summary_template: z.string().default(""),
+  disabled_transitions: z.array(z.string()).default([]),
 });
 
 export type Profile = z.infer<typeof ProfileSchema>;
@@ -33,6 +38,11 @@ export const ProfileFragmentSchema = z
     push_policy: z.enum(PUSH_POLICIES).optional(),
     frontmatter_format: z.enum(FRONTMATTER_FORMATS).optional(),
     lint_rules: z.record(z.string(), z.enum(LINT_RULE_LEVELS)).optional(),
+    default_claimer: z.string().optional(),
+    default_owner: z.string().optional(),
+    stale_days: z.number().int().nonnegative().optional(),
+    summary_template: z.string().optional(),
+    disabled_transitions: z.array(z.string()).optional(),
   })
   .strict();
 

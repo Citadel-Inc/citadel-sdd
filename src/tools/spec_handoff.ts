@@ -8,7 +8,7 @@ import type { ToolContext } from "./types.js";
 
 export interface SpecHandoffInput {
   slug: string;
-  new_owner: string;
+  new_owner?: string;
   note?: string;
   commit?: boolean;
   dryRun?: boolean;
@@ -37,14 +37,20 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   const beforeOwnerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
   const before_owner = beforeOwnerField?.[1] ?? "";
 
-  const updated = setOwner(spec, input.new_owner);
+  const new_owner = (() => {
+    if (input.new_owner && input.new_owner.trim().length > 0) return input.new_owner.trim();
+    if (ctx.profile.default_owner.length > 0) return ctx.profile.default_owner;
+    throw new Error("new_owner_missing: spec_handoff requires new_owner or default_owner in profile");
+  })();
+
+  const updated = setOwner(spec, new_owner);
   const newRaw = spliceFrontmatter(raw, updated.frontmatter, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
     return {
       slug: loc.slug,
       before_owner,
-      after_owner: input.new_owner,
+      after_owner: new_owner,
       commit_sha: null,
       dryRun: true,
     };
@@ -56,8 +62,8 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   if (input.commit !== false) {
     const subject =
       ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): handoff to ${input.new_owner}${input.note ? ` — ${input.note}` : ""}`
-        : `Handoff ${loc.slug} to ${input.new_owner}`;
+        ? `spec(${loc.slug}): handoff to ${new_owner}${input.note ? ` — ${input.note}` : ""}`
+        : `Handoff ${loc.slug} to ${new_owner}`;
     gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
     commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
   }
@@ -65,7 +71,7 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   return {
     slug: loc.slug,
     before_owner,
-    after_owner: input.new_owner,
+    after_owner: new_owner,
     commit_sha,
     dryRun: false,
   };
