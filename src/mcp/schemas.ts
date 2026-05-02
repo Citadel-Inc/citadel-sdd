@@ -56,11 +56,20 @@ export const SpecRatifyShape = {
   dryRun: z.boolean().optional(),
 } as const;
 
-export const SpecTaskCheckShape = {
-  slug: SlugSchema,
+const TaskCheckItemSchema = z.object({
   phase: PrioritySchema,
   match: z.union([z.string(), z.number().int().min(1)]),
   checked: z.boolean(),
+});
+
+export const SpecTaskCheckShape = {
+  slug: SlugSchema,
+  /** Batch form — check/uncheck multiple items in one call. */
+  items: z.array(TaskCheckItemSchema).optional(),
+  /** Flat single-item form (backward compat). */
+  phase: PrioritySchema.optional(),
+  match: z.union([z.string(), z.number().int().min(1)]).optional(),
+  checked: z.boolean().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
 } as const;

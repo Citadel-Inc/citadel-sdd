@@ -84,16 +84,31 @@ export function findTaskIndex(tasks: ParsedTasks, m: TaskMatch): number {
   return -1;
 }
 
-export function setTaskChecked(tasks: ParsedTasks, m: TaskMatch, checked: boolean): ParsedTasks {
+export function resolveTaskMatch(
+  tasks: ParsedTasks,
+  m: TaskMatch,
+): { idx: number; text: string } | null {
   const idx = findTaskIndex(tasks, m);
-  if (idx === -1) {
-    throw new Error(`task_not_found: phase=${m.phase} match=${String(m.match)}`);
+  if (idx === -1) return null;
+  const item = tasks.phases[m.phase][idx];
+  return item ? { idx, text: item.text } : null;
+}
+
+export function setTaskChecked(tasks: ParsedTasks, m: TaskMatch, checked: boolean): ParsedTasks {
+  const resolved = resolveTaskMatch(tasks, m);
+  if (!resolved) {
+    const items = tasks.phases[m.phase];
+    const preview = items.map((i) => `"${i.text.slice(0, 50)}"`).join(", ");
+    throw new Error(
+      `task_not_found: phase=${m.phase} match=${JSON.stringify(String(m.match))}` +
+        (preview ? `; available: [${preview}]` : ""),
+    );
   }
   const phase = m.phase;
   const items = tasks.phases[phase].slice();
-  const target = items[idx];
+  const target = items[resolved.idx];
   if (!target) throw new Error("task_not_found: index resolved to undefined");
-  items[idx] = { ...target, checked };
+  items[resolved.idx] = { ...target, checked };
   const phases: PhaseMap = { ...tasks.phases, [phase]: items };
   return { ...tasks, phases };
 }

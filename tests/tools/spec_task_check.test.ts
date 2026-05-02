@@ -65,11 +65,16 @@ describe("specTaskCheck", () => {
     expect(readFileSync(path, "utf8")).toBe(before);
   });
 
-  test("task_not_found throws when match misses", () => {
+  test("task_not_found error includes available task text", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    expect(() =>
-      specTaskCheck({ slug: "draft-minimal", phase: "P0", match: "ZZZ", checked: true }, ctx()),
-    ).toThrow("task_not_found");
+    let msg = "";
+    try {
+      specTaskCheck({ slug: "draft-minimal", phase: "P0", match: "ZZZ", checked: true }, ctx());
+    } catch (e) {
+      msg = (e as Error).message;
+    }
+    expect(msg).toContain("task_not_found");
+    expect(msg).toContain("available");
   });
 
   test("out-of-range index throws", () => {
@@ -93,6 +98,80 @@ describe("specTaskCheck", () => {
     );
     expect(tasks).toContain("- [x] Land renderer");
     expect(tasks).toMatch(/^Status:/m);
+  });
+
+  test("output includes matched_text and matched_index", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const out = specTaskCheck(
+      { slug: "draft-minimal", phase: "P0", match: 2, checked: true },
+      ctx(),
+    );
+    expect(out.matched_index).toBe(2);
+    expect(typeof out.matched_text).toBe("string");
+    expect(out.matched_text.length).toBeGreaterThan(0);
+    expect(out.results).toHaveLength(1);
+    expect(out.results[0]?.matched_index).toBe(2);
+  });
+
+  test("batch items — checks multiple tasks in one call, one commit", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const out = specTaskCheck(
+      {
+        slug: "draft-minimal",
+        items: [
+          { phase: "P0", match: 1, checked: true },
+          { phase: "P0", match: 2, checked: true },
+        ],
+        commit: false,
+      },
+      ctx(),
+    );
+    expect(out.results).toHaveLength(2);
+    expect(out.results[0]?.after.checked).toBe(true);
+    expect(out.results[1]?.after.checked).toBe(true);
+    const tasks = readFileSync(
+      join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md"),
+      "utf8",
+    );
+    expect(tasks).toContain("- [x]");
+  });
+
+  test("batch dryRun — returns results without writing", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const path = join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md");
+    const before = readFileSync(path, "utf8");
+    const out = specTaskCheck(
+      {
+        slug: "draft-minimal",
+        items: [
+          { phase: "P0", match: 1, checked: true },
+          { phase: "P1", match: 1, checked: true },
+        ],
+        dryRun: true,
+      },
+      ctx(),
+    );
+    expect(out.dryRun).toBe(true);
+    expect(out.results).toHaveLength(2);
+    expect(out.results[0]?.matched_text.length).toBeGreaterThan(0);
+    expect(readFileSync(path, "utf8")).toBe(before);
+  });
+
+  test("batch stops on first task_not_found", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    expect(() =>
+      specTaskCheck(
+        {
+          slug: "draft-minimal",
+          items: [
+            { phase: "P0", match: 1, checked: true },
+            { phase: "P0", match: "NO_SUCH_TASK", checked: true },
+          ],
+          commit: false,
+        },
+        ctx(),
+      ),
+    ).toThrow("task_not_found");
   });
 
   test("inline-format tasks.md: dryRun does not throw and does not write", () => {
