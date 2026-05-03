@@ -50,8 +50,11 @@ describe("lastTouchedBulk", () => {
       });
       expect(map.has("alpha")).toBe(true);
       expect(map.has("beta")).toBe(true);
-      const today = new Date().toISOString().slice(0, 10);
-      expect(map.get("alpha")).toBe(today);
+      const expected = execFileSync("git", ["-C", t.root, "log", "-1", "--format=%cs"], {
+        encoding: "utf8",
+      }).trim();
+      expect(map.get("alpha")).toBe(expected);
+      expect(map.get("beta")).toBe(expected);
     } finally {
       t.cleanup();
     }

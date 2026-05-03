@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { parseFrontmatter } from "../../src/spec/parse.js";
 import { spliceFrontmatter } from "../../src/spec/writer.js";
 
-const MINIMAL_FM = parseFrontmatter("| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |");
+const MINIMAL_FM = parseFrontmatter(
+  "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |",
+);
 
 describe("spliceFrontmatter — pipe-table file", () => {
   test("replaces existing pipe-table in place", () => {
@@ -64,7 +66,8 @@ describe("spliceFrontmatter — format conversion", () => {
   });
 
   test("pipe-table→inline: replaces pipe block with key-value lines", () => {
-    const raw = "# Tasks\n\n| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |\n\n## P0\n";
+    const raw =
+      "# Tasks\n\n| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |\n\n## P0\n";
     const out = spliceFrontmatter(raw, MINIMAL_FM, "inline");
     expect(out).toContain("Status: DRAFT 011900ZMAY26");
     expect(out).not.toContain("| Status |");

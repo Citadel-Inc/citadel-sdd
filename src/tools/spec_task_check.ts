@@ -50,9 +50,7 @@ function normalizeItems(input: SpecTaskCheckInput): TaskCheckItem[] {
   if (input.phase !== undefined && input.match !== undefined && input.checked !== undefined) {
     return [{ phase: input.phase, match: input.match, checked: input.checked }];
   }
-  throw new Error(
-    "spec_task_check: provide either items[] or flat phase+match+checked",
-  );
+  throw new Error("spec_task_check: provide either items[] or flat phase+match+checked");
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -73,9 +71,7 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
   for (const item of items) {
     const resolved = resolveTaskMatch(tasks, { phase: item.phase, match: item.match });
     if (!resolved) {
-      const available = tasks.phases[item.phase]
-        .map((i) => `"${i.text.slice(0, 50)}"`)
-        .join(", ");
+      const available = tasks.phases[item.phase].map((i) => `"${i.text.slice(0, 50)}"`).join(", ");
       throw new Error(
         `task_not_found: phase=${item.phase} match=${JSON.stringify(String(item.match))}` +
           (available ? `; available: [${available}]` : ""),

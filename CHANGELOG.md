@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Dependencies
+
+- Routine `bun update` refresh (notably `yaml`, `zod`).
+
+### Fixed
+
+- **`lastTouchedBulk` test** — assert against `git log --format=%cs` instead of UTC calendar `toISOString()`, avoiding local/UTC date skew near midnight.
+
 ## [0.3.0] — 2026-05-02
 
 User-feedback driven ergonomics pass. Closes five pain points reported from live close-out sequences: batch task checking, circular spec-close task dependency, opaque match errors, heavyweight reads, and dirty-state accumulation from `commit: false`.

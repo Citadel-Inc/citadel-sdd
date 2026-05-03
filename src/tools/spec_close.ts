@@ -45,7 +45,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
 
   const hasSummary = input.summary && input.summary.trim().length > 0;
   if (!hasSummary && !ctx.profile.summary_template) {
-    throw new Error("summary_missing: spec_close requires a non-empty summary or summary_template in profile");
+    throw new Error(
+      "summary_missing: spec_close requires a non-empty summary or summary_template in profile",
+    );
   }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
@@ -61,7 +63,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   for (const p of PRIORITIES) {
     if (allowOpen.has(p)) continue;
     // Items matching /spec.?close/i are auto-checked during close — exclude from the guard.
-    const open = tasksParsed.phases[p].filter((i) => !i.checked && !/spec.?close/i.test(i.text)).length;
+    const open = tasksParsed.phases[p].filter(
+      (i) => !i.checked && !/spec.?close/i.test(i.text),
+    ).length;
     if (open > 0) {
       throw new Error(`tasks_open: ${p} has ${open} unchecked item(s); use allow_open to bypass`);
     }

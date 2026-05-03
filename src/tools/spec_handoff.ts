@@ -40,7 +40,9 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   const new_owner = (() => {
     if (input.new_owner && input.new_owner.trim().length > 0) return input.new_owner.trim();
     if (ctx.profile.default_owner.length > 0) return ctx.profile.default_owner;
-    throw new Error("new_owner_missing: spec_handoff requires new_owner or default_owner in profile");
+    throw new Error(
+      "new_owner_missing: spec_handoff requires new_owner or default_owner in profile",
+    );
   })();
 
   const updated = setOwner(spec, new_owner);

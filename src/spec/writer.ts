@@ -1,7 +1,12 @@
-import { renderFrontmatter, renderFrontmatterInline, renderQTable, renderTaskItem } from "./render.js";
+import type { FrontmatterFormat } from "../profile/types.js";
+import {
+  renderFrontmatter,
+  renderFrontmatterInline,
+  renderQTable,
+  renderTaskItem,
+} from "./render.js";
 import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from "./types.js";
 import { PRIORITIES } from "./types.js";
-import type { FrontmatterFormat } from "../profile/types.js";
 
 interface BlockRange {
   start: number;
@@ -83,10 +88,7 @@ export function spliceFrontmatter(
       return [...before, ...renderFrontmatter(newFm).split("\n"), ...after].join("\n");
     }
     // Convert inline → pipe-table (or insert into file with no frontmatter): strip inline keys, insert pipe block after title.
-    const fieldKeys = new Set([
-      "status",
-      ...newFm.fields.map(([k]) => k.toLowerCase()),
-    ]);
+    const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
     const RE_INLINE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
     const stripped = lines.filter((line) => {
       const m = RE_INLINE.exec(line);
@@ -116,7 +118,8 @@ export function spliceFrontmatter(
   });
   if (!found) {
     // No existing frontmatter — insert after title using the canonical format for this mode.
-    const rendered = format === "inline" ? renderFrontmatterInline(newFm) : renderFrontmatter(newFm);
+    const rendered =
+      format === "inline" ? renderFrontmatterInline(newFm) : renderFrontmatter(newFm);
     return insertAfterTitle(lines, rendered);
   }
   return newLines.join("\n");
