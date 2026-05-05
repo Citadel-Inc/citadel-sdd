@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { CITADEL_SDD_REPO_URL } from "./constants.js";
+import { dtgToRecencySortKey } from "./dtg.js";
 import { parseSpec } from "./parse.js";
 import { listSpecs, type RepoContext, type SpecLocation } from "./repo.js";
 
@@ -34,8 +35,12 @@ function buildRow(loc: SpecLocation): IndexRow | null {
   };
 }
 
-function sortDesc(a: IndexRow, b: IndexRow): number {
-  return b.dtg.localeCompare(a.dtg);
+/** Newest (largest recency key) first; tie-break by slug for stable diffs. */
+function sortByRecencyDesc(a: IndexRow, b: IndexRow): number {
+  const kb = dtgToRecencySortKey(b.dtg);
+  const ka = dtgToRecencySortKey(a.dtg);
+  if (kb !== ka) return kb - ka;
+  return a.slug.localeCompare(b.slug);
 }
 
 export function buildIndex(ctx: RepoContext): {
@@ -46,15 +51,15 @@ export function buildIndex(ctx: RepoContext): {
   const active = listSpecs(ctx, "active")
     .map(buildRow)
     .filter((r): r is IndexRow => r !== null)
-    .sort(sortDesc);
+    .sort(sortByRecencyDesc);
   const done = listSpecs(ctx, "done")
     .map(buildRow)
     .filter((r): r is IndexRow => r !== null)
-    .sort(sortDesc);
+    .sort(sortByRecencyDesc);
   const parked = listSpecs(ctx, "parked")
     .map(buildRow)
     .filter((r): r is IndexRow => r !== null)
-    .sort(sortDesc);
+    .sort(sortByRecencyDesc);
   return { active, done, parked };
 }
 

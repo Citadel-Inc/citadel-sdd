@@ -2,7 +2,7 @@ import type { Profile } from "../profile/types.js";
 
 export type DtgFormat = Profile["dtg_format"];
 
-const MONTHS_UPPER: ReadonlyArray<string> = [
+export const MONTHS_UPPER: ReadonlyArray<string> = [
   "JAN",
   "FEB",
   "MAR",
@@ -37,4 +37,47 @@ export function formatDTG(d: Date, format: DtgFormat): string {
 
 export function nowDTG(format: DtgFormat, clock: () => Date = () => new Date()): string {
   return formatDTG(clock(), format);
+}
+
+/** Slugs with no parseable DTG sort last (oldest-at-bottom in descending recency order). */
+const DTG_SORT_UNKNOWN = Number.NEGATIVE_INFINITY;
+
+/**
+ * Maps a status DTG string to a numeric recency key (UTC ms) for sorting.
+ * Supports Bastion `DDHHMMZMONYY` and any `Date.parse`-accepted string (e.g. ISO-8601).
+ * Empty or unparseable values return a sentinel so they sort after real timestamps.
+ */
+export function dtgToRecencySortKey(dtg: string): number {
+  const s = dtg.trim();
+  if (!s) return DTG_SORT_UNKNOWN;
+
+  const bastion = /^(\d{2})(\d{2})(\d{2})Z([A-Z]{3})(\d{2})$/.exec(s);
+  if (bastion) {
+    const day = Number.parseInt(bastion[1] ?? "", 10);
+    const hour = Number.parseInt(bastion[2] ?? "", 10);
+    const minute = Number.parseInt(bastion[3] ?? "", 10);
+    const monStr = bastion[4] ?? "";
+    const yy = Number.parseInt(bastion[5] ?? "", 10);
+    const month = MONTHS_UPPER.indexOf(monStr);
+    if (
+      month < 0 ||
+      !Number.isFinite(day) ||
+      !Number.isFinite(hour) ||
+      !Number.isFinite(minute) ||
+      !Number.isFinite(yy) ||
+      day < 1 ||
+      day > 31 ||
+      hour > 23 ||
+      minute > 59
+    ) {
+      return DTG_SORT_UNKNOWN;
+    }
+    const year = yy >= 70 ? 1900 + yy : 2000 + yy;
+    return Date.UTC(year, month, day, hour, minute, 0, 0);
+  }
+
+  const parsed = Date.parse(s);
+  if (!Number.isNaN(parsed)) return parsed;
+
+  return DTG_SORT_UNKNOWN;
 }
