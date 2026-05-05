@@ -1,8 +1,10 @@
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { gitAdd, gitCommit } from "../spec/git.js";
 import { buildIndex, renderIndex } from "../spec/index_render.js";
 import type { RepoContext } from "../spec/repo.js";
+import { specsRoot } from "../spec/repo.js";
+import { ensureSpecBucketDirs } from "../spec/scaffold.js";
 import type { ToolContext } from "./types.js";
 
 export type SpecIndexRebuildInput = {
@@ -17,6 +19,8 @@ export interface SpecIndexRebuildOutput {
   commit_sha: string | null;
   dryRun: boolean;
   rendered: string;
+  /** Repo-relative paths created while ensuring active/done/parked buckets (empty if unchanged). */
+  scaffold_repairs: string[];
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -40,9 +44,12 @@ export function specIndexRebuild(
       commit_sha: null,
       dryRun: true,
       rendered,
+      scaffold_repairs: [],
     };
   }
 
+  mkdirSync(specsRoot(repo), { recursive: true });
+  const scaffold_repairs = ensureSpecBucketDirs(repo);
   writeFileSync(path, rendered);
 
   let commit_sha: string | null = null;
@@ -51,7 +58,8 @@ export function specIndexRebuild(
       ctx.profile.commit_style === "conventional"
         ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
         : `Rebuild specs/README.md`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${repo.specDir}/README.md`]);
+    const staged = [`${repo.specDir}/README.md`, ...scaffold_repairs];
+    gitAdd({ rootDir: ctx.rootDir }, staged);
     try {
       commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
     } catch {
@@ -66,5 +74,6 @@ export function specIndexRebuild(
     commit_sha,
     dryRun: false,
     rendered,
+    scaffold_repairs,
   };
 }

@@ -35,6 +35,9 @@ describe("specInit", () => {
     expect(existsSync(join(workdir, "specs", "active", ".gitkeep"))).toBe(true);
     expect(existsSync(join(workdir, "specs", "parked", ".gitkeep"))).toBe(true);
 
+    const readme = readFileSync(join(workdir, "specs", "README.md"), "utf8");
+    expect(readme).toContain("github.com/Rethunk-AI/citadel-sdd");
+
     const config = readFileSync(join(workdir, "specs", "config.yaml"), "utf8");
     expect(config).toContain("extends: default");
   });

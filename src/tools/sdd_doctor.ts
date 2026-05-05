@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parse as parseYaml } from "yaml";
-import { listSpecs, type RepoContext } from "../spec/repo.js";
+import { listSpecs, type RepoContext, specsRoot } from "../spec/repo.js";
+import { ensureSpecBucketDirs } from "../spec/scaffold.js";
 import type { SpecLintFinding } from "./spec_lint.js";
 import { specLint } from "./spec_lint.js";
 import type { ToolContext } from "./types.js";
@@ -13,6 +14,8 @@ export interface SddDoctorOutput {
   findings: SpecLintFinding[];
   drift: boolean;
   recommendations: string[];
+  /** Repo-relative paths created while repairing the active/done/parked bucket layout (empty if nothing changed). */
+  scaffold_repairs: string[];
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -38,6 +41,11 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
   const repo = repoCtx(ctx);
   const inferred = inferProfile(repo.rootDir, repo.specDir);
 
+  let scaffold_repairs: string[] = [];
+  if (existsSync(specsRoot(repo))) {
+    scaffold_repairs = ensureSpecBucketDirs(repo);
+  }
+
   const lint = specLint({ include_done: true, include_parked: true }, ctx);
 
   const recommendations: string[] = [];
@@ -61,6 +69,12 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
     );
   }
 
+  if (scaffold_repairs.length > 0) {
+    recommendations.push(
+      `Repaired missing spec bucket paths: ${scaffold_repairs.join(", ")}. Commit if you want them tracked.`,
+    );
+  }
+
   return {
     inferred_profile: inferred,
     findings: lint.findings,
@@ -68,5 +82,6 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
       (f) => f.severity === "error" || f.code === "status_drift" || f.code === "path_mismatch",
     ),
     recommendations,
+    scaffold_repairs,
   };
 }

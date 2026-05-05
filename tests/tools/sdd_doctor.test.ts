@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { sddDoctor } from "../../src/tools/sdd_doctor.js";
@@ -19,11 +19,21 @@ function ctx(): ToolContext {
 }
 
 describe("sddDoctor", () => {
+  test("repairs missing parked/ directory", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    rmSync(join(temp.rootDir, "specs", "parked"), { recursive: true, force: true });
+    const out = sddDoctor({}, ctx());
+    expect(existsSync(join(temp.rootDir, "specs", "parked"))).toBe(true);
+    expect(out.scaffold_repairs.length).toBeGreaterThan(0);
+    expect(out.recommendations.some((r) => r.includes("Repaired missing spec bucket"))).toBe(true);
+  });
+
   test("clean repo: no drift, inferred profile from extends", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal", "approved-ratified"] });
     const out = sddDoctor({}, ctx());
     expect(out.inferred_profile).toBe("default");
     expect(out.drift).toBe(false);
+    expect(out.scaffold_repairs).toEqual([]);
   });
 
   test("empty repo recommends spec_init", () => {

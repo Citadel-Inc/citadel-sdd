@@ -4,6 +4,7 @@ import { stringify as stringifyYaml } from "yaml";
 import { gitAdd, gitCommit } from "../spec/git.js";
 import { renderIndex } from "../spec/index_render.js";
 import { type RepoContext, specsRoot } from "../spec/repo.js";
+import { ensureSpecBucketDirs } from "../spec/scaffold.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecInitInput {
@@ -73,9 +74,8 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
     };
   }
 
-  mkdirSync(join(root, "active"), { recursive: true });
-  mkdirSync(join(root, "done"), { recursive: true });
-  mkdirSync(join(root, "parked"), { recursive: true });
+  mkdirSync(root, { recursive: true });
+  ensureSpecBucketDirs(repo);
   writeFileSync(configPath, yamlText);
   created_files.push(`${repo.specDir}/config.yaml`);
   writeFileSync(activeKeep, "");

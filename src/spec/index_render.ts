@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { CITADEL_SDD_REPO_URL } from "./constants.js";
 import { parseSpec } from "./parse.js";
 import { listSpecs, type RepoContext, type SpecLocation } from "./repo.js";
 
@@ -57,9 +58,23 @@ export function buildIndex(ctx: RepoContext): {
   return { active, done, parked };
 }
 
+function introActive(): string {
+  return `*In-flight specifications (DRAFT through BLOCKED) under \`specs/active/\`. Claim, block, unblock, park, and close via [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+}
+
+function introDone(): string {
+  return `*Completed work (**DONE**) after \`spec_close\`; directories live under \`specs/done/\`. Lifecycle semantics and tools: [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+}
+
+function introParked(): string {
+  return `*Deliberately not pursued (**PARKED**); superseded or withdrawn specs under \`specs/parked/\`. Use \`spec_park\` from [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+}
+
 function renderActiveTable(rows: readonly IndexRow[]): string {
   const lines: string[] = [
     "## Active",
+    "",
+    introActive(),
     "",
     "| Slug | State | DTG | Owner |",
     "|------|-------|-----|-------|",
@@ -75,7 +90,14 @@ function renderActiveTable(rows: readonly IndexRow[]): string {
 }
 
 function renderDoneTable(rows: readonly IndexRow[]): string {
-  const lines: string[] = ["## Done", "", "| Slug | DTG | Note |", "|------|-----|------|"];
+  const lines: string[] = [
+    "## Done",
+    "",
+    introDone(),
+    "",
+    "| Slug | DTG | Note |",
+    "|------|-----|------|",
+  ];
   if (rows.length === 0) {
     lines.push("| _(none)_ | | |");
   } else {
@@ -87,7 +109,14 @@ function renderDoneTable(rows: readonly IndexRow[]): string {
 }
 
 function renderParkedTable(rows: readonly IndexRow[]): string {
-  const lines: string[] = ["## Parked", "", "| Slug | DTG | Note |", "|------|-----|------|"];
+  const lines: string[] = [
+    "## Parked",
+    "",
+    introParked(),
+    "",
+    "| Slug | DTG | Note |",
+    "|------|-----|------|",
+  ];
   if (rows.length === 0) {
     lines.push("| _(none)_ | | |");
   } else {
