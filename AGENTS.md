@@ -4,7 +4,7 @@ LLM + dev orientation. **This file is intentionally thin** — it points at the 
 
 ## Status
 
-`v0.4.1` — doctor / index rebuild repair spec bucket dirs; README section intros link upstream.
+`v0.4.2` — README index tables sort rows by chronological status DTG (newest first).
 
 ## Canon pointers
 

@@ -72,7 +72,7 @@ Transition rules:
 | `specs/active/<slug>/tasks.md` | ✓ | ✓ | Status line + checkbox state. |
 | `specs/done/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | Same shape; `done/` location. |
 | `specs/parked/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | PARKED state; intentionally not pursued. |
-| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Auto-generated rows plus a one-line intro per section (links to [`citadel-sdd`](https://github.com/Rethunk-AI/citadel-sdd)). |
+| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Auto-generated rows; per-section rows sorted by **status DTG recency** (newest first, ISO or Bastion), then slug. Short intro per section links to [`citadel-sdd`](https://github.com/Rethunk-AI/citadel-sdd). |
 | `HUMAN_BLOCKERS.md` | ✓ | ✓ | Optional; created on first `spec_block` if absent. |
 
 ## Write invariants

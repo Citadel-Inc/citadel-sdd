@@ -192,7 +192,7 @@ Regenerate `specs/README.md` from per-spec frontmatter + summaries. Used to reco
 
 **Output:** `{ active_count, done_count, parked_count, commit_sha, dryRun, rendered, scaffold_repairs: string[] }`.
 
-**Behavior:** Creates `specs/` (the configured `spec_dir` root) if missing, then ensures `active/`, `done/`, and `parked/` exist (new buckets get an empty `.gitkeep`). Stages `README.md` plus any repaired paths when committing. `dryRun` does not touch the filesystem.
+**Behavior:** Creates `specs/` (the configured `spec_dir` root) if missing, then ensures `active/`, `done/`, and `parked/` exist (new buckets get an empty `.gitkeep`). Stages `README.md` plus any repaired paths when committing. `dryRun` does not touch the filesystem. Within each section, table rows are ordered by **parsed status DTG** (newest first; supports Bastion `DDHHMMZMONYY` and ISO-8601), then slug when timestamps tie — so new activity stays near the section header and diffs stay localized.
 
 ### `spec_init`
 

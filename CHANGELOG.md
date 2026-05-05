@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] — 2026-05-05
+
+### Changed
+
+- **`specs/README.md` index** — Active, Done, and Parked table rows are sorted by **chronological** status DTG (newest at the top of each table), using Bastion `DDHHMMZMONYY` or `Date.parse`-accepted stamps (e.g. ISO-8601). Empty or unparseable DTGs sort last; slug breaks ties. Same ordering applies everywhere `renderIndex` / `buildIndex` runs (`spec_index_rebuild`, `spec_close`, `spec_park`, etc.).
+
+### Stats
+
+- **311 tests** across 43 files.
+
 ## [0.4.1] — 2026-05-05
 
 ### Added
