@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-05-05
+
+### Added
+
+- **`ensureSpecBucketDirs`** — `sdd_doctor` and non-dry `spec_index_rebuild` create missing `specs/<active|done|parked>/` directories; new buckets include `.gitkeep`. Doctor returns `scaffold_repairs`; index rebuild returns the same and stages repaired paths on commit.
+- **README section intros** — generated `specs/README.md` includes a short italic line under each of **Active**, **Done**, and **Parked** linking to [`@rethunk/citadel-sdd`](https://github.com/Rethunk-AI/citadel-sdd) and summarizing that bucket.
+
+### Stats
+
+- **306 tests** across 41 files.
+
 ## [0.4.0] — 2026-05-05
 
 ### Added

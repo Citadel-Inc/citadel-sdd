@@ -4,7 +4,7 @@ LLM + dev orientation. **This file is intentionally thin** — it points at the 
 
 ## Status
 
-`v0.4.0` — adds `specs/parked/`, `spec_park`, and `spec_lint.include_parked`.
+`v0.4.1` — doctor / index rebuild repair spec bucket dirs; README section intros link upstream.
 
 ## Canon pointers
 

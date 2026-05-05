@@ -70,9 +70,9 @@ Diagnose existing repo, infer best-match profile, flag drift.
 
 **Inputs:** `{}` (or empty).
 
-**Output:** `{ inferred_profile, findings: [{severity, message, path}], drift: boolean, recommendations: string[] }`.
+**Output:** `{ inferred_profile, findings: [{severity, message, path}], drift: boolean, recommendations: string[], scaffold_repairs: string[] }`. `scaffold_repairs` lists repo-relative paths created when missing `specs/<active|done|parked>/` buckets were repaired (empty `.gitkeep` in new dirs); empty when the layout was already complete.
 
-Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked and archived specs participate in the health rollup.
+Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked and archived specs participate in the health rollup. Does not create `specs/` itself when absent (use `spec_init`).
 
 ---
 
@@ -190,7 +190,9 @@ Regenerate `specs/README.md` from per-spec frontmatter + summaries. Used to reco
 
 **Inputs:** `{}` (or empty).
 
-**Output:** `{ active_count, done_count, parked_count, commit_sha, dryRun, rendered }`.
+**Output:** `{ active_count, done_count, parked_count, commit_sha, dryRun, rendered, scaffold_repairs: string[] }`.
+
+**Behavior:** Creates `specs/` (the configured `spec_dir` root) if missing, then ensures `active/`, `done/`, and `parked/` exist (new buckets get an empty `.gitkeep`). Stages `README.md` plus any repaired paths when committing. `dryRun` does not touch the filesystem.
 
 ### `spec_init`
 
