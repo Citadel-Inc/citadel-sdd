@@ -4,7 +4,7 @@ LLM + dev orientation. **This file is intentionally thin** — it points at the 
 
 ## Status
 
-`v0.1.0` shipped. Maintenance phase. Canon is distributed across permanent files per the table below.
+`v0.4.0` — adds `specs/parked/`, `spec_park`, and `spec_lint.include_parked`.
 
 ## Canon pointers
 

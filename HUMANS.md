@@ -8,7 +8,7 @@ Drop the ~15 mechanical tool calls per spec claim/close cycle (status flips, dec
 
 ## Scope
 
-**In:** spec lifecycle (claim, approve, close, reopen, block, unblock, ratify, handoff, task ops, lint, init, doctor), profile system (`default → bastion → citadel`), TS port of archived `spec-status.py`.
+**In:** spec lifecycle (claim, approve, close, park, reopen, block, unblock, ratify, handoff, task ops, lint, init, doctor), profile system (`default → bastion → citadel`), TS port of archived `spec-status.py`.
 
 **Out:** GitHub/GitLab API, spec authoring AI, multi-repo coordination, Q-table reasoning, CI/deploy hooks, web UI, telemetry.
 
@@ -27,7 +27,8 @@ specs/
 ├── config.yaml
 ├── README.md
 ├── active/.gitkeep
-└── done/.gitkeep
+├── done/.gitkeep
+└── parked/.gitkeep
 ```
 
 Choose a different profile by editing `specs/config.yaml`. See [docs/profile-system.md](docs/profile-system.md).
@@ -50,6 +51,7 @@ Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-too
 | Reassign owner | `spec_handoff` |
 | Claim (DRAFT/APPROVED → IN_PROGRESS) | `spec_claim` |
 | Close (IN_PROGRESS → DONE) | `spec_close` |
+| Park (abandon / supersede — → PARKED) | `spec_park` |
 | Reopen (DONE → IN_PROGRESS) | `spec_reopen` |
 | Block / unblock | `spec_block` / `spec_unblock` |
 | Regenerate `specs/README.md` | `spec_index_rebuild` |

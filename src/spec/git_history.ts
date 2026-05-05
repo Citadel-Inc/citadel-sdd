@@ -3,7 +3,7 @@ import { execFileSync } from "node:child_process";
 export interface GitHistoryOptions {
   metaRoot: string;
   specsRoot: string;
-  section: "active" | "done";
+  section: "active" | "done" | "parked";
   since?: string;
 }
 

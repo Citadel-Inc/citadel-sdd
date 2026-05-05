@@ -9,6 +9,7 @@ const ALL_STATES: ReadonlyArray<SpecState> = [
   "IN_PROGRESS",
   "BLOCKED",
   "DONE",
+  "PARKED",
 ];
 
 const ALL_TRANSITIONS: ReadonlyArray<Transition> = [
@@ -18,6 +19,7 @@ const ALL_TRANSITIONS: ReadonlyArray<Transition> = [
   "spec_block",
   "spec_unblock",
   "spec_reopen",
+  "spec_park",
 ];
 
 describe("canTransition — legal moves", () => {
@@ -57,10 +59,21 @@ describe("canTransition — legal moves", () => {
     if (r.ok) expect(r.to).toBe("IN_PROGRESS");
   });
 
-  test("spec_reopen: DONE → IN_PROGRESS", () => {
-    const r = canTransition("DONE", "spec_reopen");
+  test("spec_park: DRAFT → PARKED", () => {
+    const r = canTransition("DRAFT", "spec_park");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
+    if (r.ok) expect(r.to).toBe("PARKED");
+  });
+
+  test("spec_park: IN_PROGRESS → PARKED", () => {
+    const r = canTransition("IN_PROGRESS", "spec_park");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.to).toBe("PARKED");
+  });
+
+  test("spec_park: DONE rejected", () => {
+    const r = canTransition("DONE", "spec_park");
+    expect(r.ok).toBe(false);
   });
 });
 
@@ -128,6 +141,10 @@ describe("canTransition — exhaustive matrix", () => {
       "IN_PROGRESS|spec_block",
       "BLOCKED|spec_unblock",
       "DONE|spec_reopen",
+      "DRAFT|spec_park",
+      "APPROVED|spec_park",
+      "IN_PROGRESS|spec_park",
+      "BLOCKED|spec_park",
     ]);
 
     for (const state of ALL_STATES) {
@@ -151,6 +168,7 @@ describe("nextState (throwing variant)", () => {
     expect(nextState("APPROVED", "spec_claim")).toBe("IN_PROGRESS");
     expect(nextState("IN_PROGRESS", "spec_close")).toBe("DONE");
     expect(nextState("DONE", "spec_reopen")).toBe("IN_PROGRESS");
+    expect(nextState("BLOCKED", "spec_park")).toBe("PARKED");
   });
 
   test("throws on illegal transition", () => {

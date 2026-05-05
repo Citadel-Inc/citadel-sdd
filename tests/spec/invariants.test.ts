@@ -43,6 +43,28 @@ describe("checkSlugInCorrectDir", () => {
     expect(v[0]?.code).toBe("path_mismatch");
   });
 
+  test("PARKED spec in parked/ passes", () => {
+    const fix = loadFixture("parked-minimal");
+    const spec = parseSpec(fix.spec);
+    expect(checkSlugInCorrectDir(spec, "parked")).toEqual([]);
+  });
+
+  test("PARKED spec in active/ flagged", () => {
+    const fix = loadFixture("parked-minimal");
+    const spec = parseSpec(fix.spec);
+    const v = checkSlugInCorrectDir(spec, "active");
+    expect(v).toHaveLength(1);
+    expect(v[0]?.code).toBe("path_mismatch");
+  });
+
+  test("DRAFT spec in parked/ flagged", () => {
+    const fix = loadFixture("draft-minimal");
+    const spec = parseSpec(fix.spec);
+    const v = checkSlugInCorrectDir(spec, "parked");
+    expect(v).toHaveLength(1);
+    expect(v[0]?.code).toBe("path_mismatch");
+  });
+
   test("non-DONE spec found in done/ flagged", () => {
     const fix = loadFixture("draft-minimal");
     const spec = parseSpec(fix.spec);

@@ -43,9 +43,10 @@ function readIndex(
 ): {
   active: Set<string>;
   done: Set<string>;
+  parked: Set<string>;
 } {
   const path = join(rootDir, specDir, "README.md");
-  const out = { active: new Set<string>(), done: new Set<string>() };
+  const out = { active: new Set<string>(), done: new Set<string>(), parked: new Set<string>() };
   if (!existsSync(path)) return out;
   let text: string;
   try {
@@ -54,7 +55,7 @@ function readIndex(
     return out;
   }
   const lines = text.split(/\r?\n/);
-  let section: "active" | "done" | null = null;
+  let section: "active" | "done" | "parked" | null = null;
   for (const raw of lines) {
     const line = raw.trim();
     if (/^##\s+Active\b/i.test(line)) {
@@ -63,6 +64,10 @@ function readIndex(
     }
     if (/^##\s+Done\b/i.test(line)) {
       section = "done";
+      continue;
+    }
+    if (/^##\s+Parked\b/i.test(line)) {
+      section = "parked";
       continue;
     }
     if (/^##\s+/.test(line)) {
@@ -92,6 +97,7 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
 
   const active = listSpecs(repo, "active");
   const done = listSpecs(repo, "done");
+  const parked = listSpecs(repo, "parked");
   const activeSummaries = active.map(summarize).filter((s): s is SpecSummary => s !== null);
 
   for (const s of activeSummaries) {
@@ -105,10 +111,19 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
   }
 
   const index = readIndex(repo.rootDir, repo.specDir);
-  if (index.active.size > 0 || index.done.size > 0) {
-    const activeNames = new Set(active.map((l) => l.slug));
-    const doneNames = new Set(done.map((l) => l.slug));
+  const activeNames = new Set(active.map((l) => l.slug));
+  const doneNames = new Set(done.map((l) => l.slug));
+  const parkedNames = new Set(parked.map((l) => l.slug));
 
+  const runIndexParity =
+    activeNames.size > 0 ||
+    doneNames.size > 0 ||
+    parkedNames.size > 0 ||
+    index.active.size > 0 ||
+    index.done.size > 0 ||
+    index.parked.size > 0;
+
+  if (runIndexParity) {
     for (const slug of activeNames) {
       if (!index.active.has(slug)) {
         findings.push({
@@ -142,6 +157,24 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
           category: "orphan-done",
           slug,
           message: `${slug}: listed in specs/README.md Done but not in specs/done/`,
+        });
+      }
+    }
+    for (const slug of parkedNames) {
+      if (!index.parked.has(slug)) {
+        findings.push({
+          category: "orphan-parked",
+          slug,
+          message: `${slug}: in specs/parked/ but missing from specs/README.md Parked table`,
+        });
+      }
+    }
+    for (const slug of index.parked) {
+      if (!parkedNames.has(slug)) {
+        findings.push({
+          category: "orphan-parked",
+          slug,
+          message: `${slug}: listed in specs/README.md Parked but not in specs/parked/`,
         });
       }
     }
@@ -179,6 +212,7 @@ export const CROSS_CUTTING_CATEGORIES: ReadonlyArray<string> = [
   "not-indexed",
   "orphan-indexed",
   "orphan-done",
+  "orphan-parked",
   "human-uncrossed",
   ...BLOCKER_CATEGORIES,
 ];

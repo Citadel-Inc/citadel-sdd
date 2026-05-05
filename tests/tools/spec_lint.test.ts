@@ -74,10 +74,12 @@ describe("specLint", () => {
     expect(out.findings.every((f) => f.slug !== "done")).toBe(true);
   });
 
-  test("include_done covers done/", () => {
-    temp = makeTempRepo({ doneFixtures: ["done"] });
-    const out = specLint({ include_done: true }, ctx());
-    expect(out.findings.filter((f) => f.severity === "error")).toEqual([]);
+  test("include_parked covers parked/", () => {
+    temp = makeTempRepo({ parkedFixtures: ["parked-minimal"] });
+    const out = specLint({ include_parked: true }, ctx());
+    const errors = out.findings.filter((f) => f.severity === "error");
+    expect(errors).toEqual([]);
+    expect(out.exit_code).toBe(0);
   });
 
   test("unknown slug yields spec_not_found error", () => {

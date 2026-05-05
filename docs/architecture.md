@@ -28,10 +28,10 @@ src/
 │   └── citadel.yaml
 ├── config/
 │   └── load.ts             # specs/config.yaml loader + Zod validation
-└── tools/                  # one file per MCP tool (16 + sdd_doctor)
+└── tools/                  # one file per MCP tool (18 + sdd_doctor)
     ├── spec_list.ts
     ├── spec_read.ts
-    ├── ... (16 files)
+    ├── ... (remaining tools)
     └── sdd_doctor.ts
 ```
 
@@ -42,13 +42,16 @@ Tests mirror `src/` under `tests/`. Synthetic fixtures live in `tests/spec-fixtu
 ```
 DRAFT ──spec_approve──► APPROVED ──spec_claim──► IN_PROGRESS ──spec_close──► DONE
    │                                    │              │
+   │                                    │              ├──spec_park──► PARKED (terminal bucket under specs/parked/)
    │                                    │              ├─spec_block─► BLOCKED ─spec_unblock─► IN_PROGRESS
-   │                                    │
+   │                                    │              │
    └──────spec_claim (allowed if claimer = author)─────┘
                                                      ▲
                                                      │
                                               DONE ──spec_reopen──┘
 ```
+
+`PARKED` is for specs that are **deliberately not pursued** (superseded, withdrawn). Reachable from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED via `spec_park` (moves `specs/active/<slug>/` → `specs/parked/<slug>/`). There is no automated `spec_unpark` in v1 — recover manually if needed.
 
 Transition rules:
 
@@ -56,6 +59,7 @@ Transition rules:
 - BLOCKED reachable only from IN_PROGRESS.
 - DRAFT → DONE direct: invalid.
 - DONE → DRAFT: invalid; use `spec_reopen` then iterate.
+- PARKED: terminal for abandoned specs; not a stepping stone to DONE.
 - Each transition appends a row to `## History` in `spec.md` (DTG + actor + transition).
 
 ## File-system contract
@@ -67,7 +71,8 @@ Transition rules:
 | `specs/active/<slug>/plan.md` | ✓ | — | Edited by humans/agents; MCP does not write. |
 | `specs/active/<slug>/tasks.md` | ✓ | ✓ | Status line + checkbox state. |
 | `specs/done/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | Same shape; `done/` location. |
-| `specs/README.md` | ✓ | ✓ | Two-table index: active + done. Auto-generated rows. |
+| `specs/parked/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | PARKED state; intentionally not pursued. |
+| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Auto-generated rows. |
 | `HUMAN_BLOCKERS.md` | ✓ | ✓ | Optional; created on first `spec_block` if absent. |
 
 ## Write invariants
@@ -75,7 +80,7 @@ Transition rules:
 Every write tool enforces these on completion. Failure → restore pre-call state (atomicity per [docs/decisions.md D-14](decisions.md)).
 
 1. `spec.md` status table matches `tasks.md` status line.
-2. Spec directory location matches state (active/ for non-DONE, done/ for DONE).
+2. Spec directory location matches state (`active/` for in-flight, `done/` for DONE, `parked/` for PARKED).
 3. `specs/README.md` index mirrors disk (no orphan rows; no missing rows).
 4. Conventional-commit subject for every commit-emitting tool (when `commit_style: conventional`).
 5. Deterministic file ordering for stable diffs.
@@ -88,7 +93,7 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 |-------|:---:|-------|
 | Read | 5 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `sdd_doctor` |
 | Write atomic | 5 | `spec_approve`, `spec_ratify`, `spec_task_check`, `spec_task_add`, `spec_handoff` |
-| Write composite | 5 | `spec_claim`, `spec_close`, `spec_reopen`, `spec_block`, `spec_unblock` |
+| Write composite | 6 | `spec_claim`, `spec_close`, `spec_park`, `spec_reopen`, `spec_block`, `spec_unblock` |
 | Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
 
 All write tools support `dryRun: true`. Composite tools emit a single conventional commit by default. Per-tool inputs / outputs / failure modes: [docs/mcp-tools.md](mcp-tools.md).

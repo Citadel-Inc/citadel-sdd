@@ -19,7 +19,7 @@ function ctx(): ToolContext {
 }
 
 describe("specIndexRebuild", () => {
-  test("rebuilds with active + done tables", () => {
+  test("rebuilds with active, done, and parked tables", () => {
     temp = makeTempRepo({
       activeFixtures: ["draft-minimal", "approved-ratified"],
       doneFixtures: ["done"],
@@ -27,22 +27,25 @@ describe("specIndexRebuild", () => {
     const out = specIndexRebuild({}, ctx());
     expect(out.active_count).toBe(2);
     expect(out.done_count).toBe(1);
+    expect(out.parked_count).toBe(0);
 
     const path = join(temp.rootDir, "specs", "README.md");
     const md = readFileSync(path, "utf8");
     expect(md).toContain("## Active");
     expect(md).toContain("## Done");
+    expect(md).toContain("## Parked");
     expect(md).toContain("draft-minimal");
     expect(md).toContain("approved-ratified");
     expect(md).toContain("done");
   });
 
-  test("empty repo emits both tables with placeholder", () => {
+  test("empty repo emits all tables with placeholders", () => {
     temp = makeTempRepo();
     const out = specIndexRebuild({}, ctx());
     expect(out.active_count).toBe(0);
     expect(out.done_count).toBe(0);
-    expect(out.rendered).toContain("_(none)_");
+    expect(out.parked_count).toBe(0);
+    expect(out.rendered).toContain("## Parked");
   });
 
   test("dryRun does not write", () => {

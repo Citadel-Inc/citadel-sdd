@@ -29,6 +29,13 @@ describe("parseStatusValue", () => {
     expect(v.tail).toBe("all green");
   });
 
+  test("PARKED with em-dash tail", () => {
+    const v = parseStatusValue("PARKED 011945ZMAY26 — superseded by other-spec");
+    expect(v.state).toBe("PARKED");
+    expect(v.dtg).toBe("011945ZMAY26");
+    expect(v.tail).toBe("superseded by other-spec");
+  });
+
   test("bold state only — no DTG (**DRAFT**)", () => {
     const v = parseStatusValue("**DRAFT**");
     expect(v.state).toBe("DRAFT");

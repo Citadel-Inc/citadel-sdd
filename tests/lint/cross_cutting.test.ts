@@ -61,6 +61,18 @@ describe("crossCutting", () => {
     ).toBe(true);
   });
 
+  test("orphan-parked flags spec on disk missing from README Parked table", () => {
+    temp = makeTempRepo({ parkedFixtures: ["parked-minimal"] });
+    writeFileSync(
+      join(temp.rootDir, "specs", "README.md"),
+      "# Specs\n\n## Active\n\n| Slug | State |\n|------|-------|\n\n## Done\n\n## Parked\n\n| Slug | DTG | Note |\n|------|-----|------|\n",
+    );
+    const findings = crossCutting(repo());
+    expect(
+      findings.some((f) => f.category === "orphan-parked" && f.slug === "parked-minimal"),
+    ).toBe(true);
+  });
+
   test("clean repo with empty index emits zero parity findings", () => {
     temp = makeTempRepo();
     const findings = crossCutting(repo()).filter(

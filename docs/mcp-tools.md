@@ -18,7 +18,7 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 | Code | Trigger |
 |------|---------|
 | `state_invalid` | Requested transition not legal per [docs/architecture.md § State machine](architecture.md#state-machine). |
-| `slug_collision` | Slug already used in `active/` or `done/`. Slugs are unique forever ([D-9](decisions.md)). |
+| `slug_collision` | Slug already used under `active/`, `done/`, or `parked/`. Slugs are unique forever ([D-9](decisions.md)). |
 | `slug_invalid` | Slug fails canonical pattern (lowercase kebab-case, no path separators). |
 | `working_tree_dirty` | Unrelated dirty paths in tree; commit refused unless `--allow-dirty`. |
 | `ratify_required` | Q-table has `TBD` rows and `ratify=false`. |
@@ -36,7 +36,7 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 
 List specs by state, optionally filtered to caller.
 
-**Inputs:** `{ state?: "active"|"done"|"blocked"|"all", mine?: boolean, format?: "compact"|"table"|"json" }`. Defaults: `state="active"`, `mine=false`, `format="compact"`.
+**Inputs:** `{ state?: "active"|"done"|"parked"|"blocked"|"all", mine?: boolean, format?: "compact"|"table"|"json" }`. Defaults: `state="active"`, `mine=false`, `format="compact"`.
 
 **Output:** ordered array of `{ slug, state, dtg, owner, approved_dtg, ratified, p0_remaining, p1_remaining, p2_remaining, blockers }`. Sort by DTG descending unless `mine=true` (then by remaining-task count ascending).
 
@@ -60,7 +60,7 @@ Single-spec status summary.
 
 Run strict-mode validation. Wraps the TypeScript port of archived `spec-status.py`.
 
-**Inputs:** `{ slug?, include_done?: boolean }`. Without slug, lints the whole tree.
+**Inputs:** `{ slug?, include_done?: boolean, include_parked?: boolean }`. Without slug, lints the whole tree. Default scans `specs/active/` only; `include_done` adds `specs/done/`; `include_parked` adds `specs/parked/` (flags compose). Per-spec `slug` lint resolves the slug wherever it lives.
 
 **Output:** `{ findings: [{severity, message, path, slug?}], exit_code }`. Exit-code parity with archived Python script is enforced ([D-4](decisions.md)).
 
@@ -71,6 +71,8 @@ Diagnose existing repo, infer best-match profile, flag drift.
 **Inputs:** `{}` (or empty).
 
 **Output:** `{ inferred_profile, findings: [{severity, message, path}], drift: boolean, recommendations: string[] }`.
+
+Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked and archived specs participate in the health rollup.
 
 ---
 
@@ -144,6 +146,16 @@ IN_PROGRESS → DONE + `git mv` active→done + `specs/README.md` index splice +
 
 **Failure modes:** `state_invalid`, `tasks_open`, `working_tree_dirty`, `summary_missing`.
 
+### `spec_park`
+
+DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + `git mv` active→`specs/parked/` + `specs/README.md` index splice + commit.
+
+**Inputs:** `{ slug, resolution, commit?: boolean, dryRun?: boolean }`. `resolution` is required (non-empty); recorded in status tail and `## History`.
+
+**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, dryRun }`.
+
+**Failure modes:** `state_invalid`, `spec_not_found`, `spec_not_active` (slug not under `specs/active/`), `resolution_missing`, `working_tree_dirty` (when applicable).
+
 ### `spec_reopen`
 
 DONE → IN_PROGRESS + reverse `git mv` + index splice + commit.
@@ -178,11 +190,11 @@ Regenerate `specs/README.md` from per-spec frontmatter + summaries. Used to reco
 
 **Inputs:** `{}` (or empty).
 
-**Output:** `{ active_count, done_count, commit_sha }`.
+**Output:** `{ active_count, done_count, parked_count, commit_sha, dryRun, rendered }`.
 
 ### `spec_init`
 
-Bootstrap fresh repo: writes `specs/config.yaml` + `specs/README.md` + `specs/active/.gitkeep` + `specs/done/.gitkeep`.
+Bootstrap fresh repo: writes `specs/config.yaml` + `specs/README.md` + `specs/active/.gitkeep` + `specs/done/.gitkeep` + `specs/parked/.gitkeep`.
 
 **Inputs:** `{ profile: "default"|"bastion"|"citadel"|"custom", overrides?: object }`.
 

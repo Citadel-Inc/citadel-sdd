@@ -16,7 +16,7 @@ function git(rootDir: string, args: readonly string[]): void {
 }
 
 export function makeTempRepo(
-  opts: { activeFixtures?: string[]; doneFixtures?: string[] } = {},
+  opts: { activeFixtures?: string[]; doneFixtures?: string[]; parkedFixtures?: string[] } = {},
 ): TempRepo {
   const rootDir = mkdtempSync(join(tmpdir(), "citadel-sdd-test-"));
   execFileSync("git", ["-C", rootDir, "init", "--initial-branch=main"], { stdio: "ignore" });
@@ -26,12 +26,16 @@ export function makeTempRepo(
 
   mkdirSync(join(rootDir, "specs", "active"), { recursive: true });
   mkdirSync(join(rootDir, "specs", "done"), { recursive: true });
+  mkdirSync(join(rootDir, "specs", "parked"), { recursive: true });
 
   for (const slug of opts.activeFixtures ?? []) {
     cpSync(join(FIXTURES_ROOT, slug), join(rootDir, "specs", "active", slug), { recursive: true });
   }
   for (const slug of opts.doneFixtures ?? []) {
     cpSync(join(FIXTURES_ROOT, slug), join(rootDir, "specs", "done", slug), { recursive: true });
+  }
+  for (const slug of opts.parkedFixtures ?? []) {
+    cpSync(join(FIXTURES_ROOT, slug), join(rootDir, "specs", "parked", slug), { recursive: true });
   }
 
   writeFileSync(join(rootDir, "specs", "config.yaml"), "extends: default\n");

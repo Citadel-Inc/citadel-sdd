@@ -13,6 +13,7 @@ export type SpecIndexRebuildInput = {
 export interface SpecIndexRebuildOutput {
   active_count: number;
   done_count: number;
+  parked_count: number;
   commit_sha: string | null;
   dryRun: boolean;
   rendered: string;
@@ -27,7 +28,7 @@ export function specIndexRebuild(
   ctx: ToolContext,
 ): SpecIndexRebuildOutput {
   const repo = repoCtx(ctx);
-  const { active, done } = buildIndex(repo);
+  const { active, done, parked } = buildIndex(repo);
   const rendered = renderIndex(repo);
   const path = join(repo.rootDir, repo.specDir, "README.md");
 
@@ -35,6 +36,7 @@ export function specIndexRebuild(
     return {
       active_count: active.length,
       done_count: done.length,
+      parked_count: parked.length,
       commit_sha: null,
       dryRun: true,
       rendered,
@@ -47,7 +49,7 @@ export function specIndexRebuild(
   if (input.commit !== false) {
     const subject =
       ctx.profile.commit_style === "conventional"
-        ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done)`
+        ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
         : `Rebuild specs/README.md`;
     gitAdd({ rootDir: ctx.rootDir }, [`${repo.specDir}/README.md`]);
     try {
@@ -60,6 +62,7 @@ export function specIndexRebuild(
   return {
     active_count: active.length,
     done_count: done.length,
+    parked_count: parked.length,
     commit_sha,
     dryRun: false,
     rendered,

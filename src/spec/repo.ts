@@ -8,7 +8,7 @@ export interface RepoContext {
   specDir: string;
 }
 
-export type SpecLifecycleState = "active" | "done";
+export type SpecLifecycleState = "active" | "done" | "parked";
 
 export interface SpecLocation {
   slug: string;
@@ -38,7 +38,7 @@ function buildLocation(ctx: RepoContext, state: SpecLifecycleState, slug: string
 }
 
 export function locateSpec(ctx: RepoContext, slug: string): SpecLocation | null {
-  for (const state of ["active", "done"] as const) {
+  for (const state of ["active", "done", "parked"] as const) {
     const dir = join(specsRoot(ctx), state, slug);
     if (existsSync(dir) && statSync(dir).isDirectory()) {
       return buildLocation(ctx, state, slug);
@@ -52,7 +52,7 @@ export function listSpecs(
   scope: SpecLifecycleState | "all" = "all",
 ): SpecLocation[] {
   const out: SpecLocation[] = [];
-  const states: SpecLifecycleState[] = scope === "all" ? ["active", "done"] : [scope];
+  const states: SpecLifecycleState[] = scope === "all" ? ["active", "done", "parked"] : [scope];
   for (const state of states) {
     const dir = join(specsRoot(ctx), state);
     if (!existsSync(dir)) continue;

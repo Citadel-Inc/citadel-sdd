@@ -4,7 +4,7 @@ const SlugSchema = z.string().min(1);
 const PrioritySchema = z.enum(["P0", "P1", "P2"]);
 
 export const SpecListShape = {
-  state: z.enum(["active", "done", "blocked", "all"]).optional(),
+  state: z.enum(["active", "done", "parked", "blocked", "all"]).optional(),
   mine: z.boolean().optional(),
 } as const;
 
@@ -22,6 +22,7 @@ export const SpecStatusShape = {
 export const SpecLintShape = {
   slug: SlugSchema.optional(),
   include_done: z.boolean().optional(),
+  include_parked: z.boolean().optional(),
   no_strict: z.boolean().optional(),
   fail_on: z.union([z.array(z.string()), z.literal("all")]).optional(),
   roots: z.array(z.string()).optional(),
@@ -116,6 +117,13 @@ export const SpecCloseShape = {
 export const SpecReopenShape = {
   slug: SlugSchema,
   reason: z.string().min(1),
+  commit: z.boolean().optional(),
+  dryRun: z.boolean().optional(),
+} as const;
+
+export const SpecParkShape = {
+  slug: SlugSchema,
+  resolution: z.string().min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
 } as const;

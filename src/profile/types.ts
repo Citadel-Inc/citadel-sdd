@@ -11,7 +11,9 @@ export type LintRuleLevel = (typeof LINT_RULE_LEVELS)[number];
 
 export const ProfileSchema = z.object({
   spec_dir: z.string().default("specs"),
-  states: z.array(z.string()).default(["DRAFT", "APPROVED", "IN_PROGRESS", "BLOCKED", "DONE"]),
+  states: z
+    .array(z.string())
+    .default(["DRAFT", "APPROVED", "IN_PROGRESS", "BLOCKED", "DONE", "PARKED"]),
   priorities: z.array(z.string()).default(["P0", "P1", "P2"]),
   dtg_format: z.enum(DTG_FORMATS).default("ISO-8601"),
   commit_style: z.enum(COMMIT_STYLES).default("freeform"),

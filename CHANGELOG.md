@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-05-05
+
+### Added
+
+- **`specs/parked/`** lifecycle bucket and **PARKED** state (superseded / withdrawn specs).
+- **`spec_park`** — legal from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED; `git mv` from `specs/active/<slug>/` to `specs/parked/<slug>/`; requires non-empty `resolution`; refreshes `specs/README.md` (three tables: Active, Done, Parked).
+- **`spec_lint.include_parked`** — optional inclusion of `specs/parked/` in tree-wide scans; composes with `include_done`.
+- **`spec_list` state `parked`** and cross-cutting **orphan-parked** index parity when the Parked table is present.
+- **`spec_init`** creates `specs/parked/.gitkeep`; **`spec_index_rebuild`** returns `parked_count`.
+
 ### Dependencies
 
 - Routine `bun update` refresh (notably `yaml`, `zod`).
@@ -14,6 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`lastTouchedBulk` test** — assert against `git log --format=%cs` instead of UTC calendar `toISOString()`, avoiding local/UTC date skew near midnight.
+
+### Stats
+
+- **301 tests** across 40 files.
 
 ## [0.3.0] — 2026-05-02
 

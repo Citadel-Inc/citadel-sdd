@@ -5,7 +5,7 @@ import type { SpecState } from "../spec/types.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecListInput {
-  state?: "active" | "done" | "blocked" | "all";
+  state?: "active" | "done" | "parked" | "blocked" | "all";
   mine?: boolean;
 }
 
@@ -28,7 +28,8 @@ function repoCtx(ctx: ToolContext): RepoContext {
 
 export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[] {
   const requested = input.state ?? "active";
-  const dirScope = requested === "blocked" || requested === "all" ? "all" : requested;
+  const dirScope: "active" | "done" | "parked" | "all" =
+    requested === "blocked" || requested === "all" ? "all" : requested;
   const locations = listSpecs(repoCtx(ctx), dirScope);
   const entries: SpecListEntry[] = [];
 

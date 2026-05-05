@@ -13,7 +13,7 @@ export interface SpecReadInput {
 
 export interface SpecReadOutput {
   slug: string;
-  state: "active" | "done";
+  state: "active" | "done" | "parked";
   spec_md: string | null;
   plan_md: string | null;
   tasks_md: string | null;

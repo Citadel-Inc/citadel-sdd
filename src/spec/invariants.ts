@@ -25,13 +25,30 @@ export function checkSlugInCorrectDir(
   spec: ParsedSpec,
   state: SpecLifecycleState,
 ): InvariantViolation[] {
-  const isDone = spec.frontmatter.status.state === "DONE";
+  const st = spec.frontmatter.status.state;
   const inDoneDir = state === "done";
-  if (isDone !== inDoneDir) {
+  const inParkedDir = state === "parked";
+  if (st === "DONE" && !inDoneDir) {
     return [
       {
         code: "path_mismatch",
-        message: `state=${spec.frontmatter.status.state} but lives in ${state}/`,
+        message: `state=${st} but not under done/`,
+      },
+    ];
+  }
+  if (st === "PARKED" && !inParkedDir) {
+    return [
+      {
+        code: "path_mismatch",
+        message: `state=${st} but not under parked/`,
+      },
+    ];
+  }
+  if (st !== "DONE" && st !== "PARKED" && (inDoneDir || inParkedDir)) {
+    return [
+      {
+        code: "path_mismatch",
+        message: `state=${st} but lives in ${state}/`,
       },
     ];
   }

@@ -33,7 +33,7 @@ describe("specInit", () => {
     expect(existsSync(join(workdir, "specs", "config.yaml"))).toBe(true);
     expect(existsSync(join(workdir, "specs", "README.md"))).toBe(true);
     expect(existsSync(join(workdir, "specs", "active", ".gitkeep"))).toBe(true);
-    expect(existsSync(join(workdir, "specs", "done", ".gitkeep"))).toBe(true);
+    expect(existsSync(join(workdir, "specs", "parked", ".gitkeep"))).toBe(true);
 
     const config = readFileSync(join(workdir, "specs", "config.yaml"), "utf8");
     expect(config).toContain("extends: default");

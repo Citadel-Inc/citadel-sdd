@@ -1,4 +1,4 @@
-export type SpecState = "DRAFT" | "APPROVED" | "IN_PROGRESS" | "BLOCKED" | "DONE";
+export type SpecState = "DRAFT" | "APPROVED" | "IN_PROGRESS" | "BLOCKED" | "DONE" | "PARKED";
 
 export type Priority = "P0" | "P1" | "P2";
 
@@ -51,6 +51,7 @@ export const SPEC_STATES: ReadonlySet<SpecState> = new Set([
   "IN_PROGRESS",
   "BLOCKED",
   "DONE",
+  "PARKED",
 ]);
 
 export const PRIORITIES: ReadonlyArray<Priority> = ["P0", "P1", "P2"];

@@ -56,6 +56,7 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
   const readmePath = join(root, "README.md");
   const activeKeep = join(root, "active", ".gitkeep");
   const doneKeep = join(root, "done", ".gitkeep");
+  const parkedKeep = join(root, "parked", ".gitkeep");
 
   if (input.dryRun === true) {
     return {
@@ -64,6 +65,7 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
         `${repo.specDir}/README.md`,
         `${repo.specDir}/active/.gitkeep`,
         `${repo.specDir}/done/.gitkeep`,
+        `${repo.specDir}/parked/.gitkeep`,
       ],
       profile_resolved: input.profile,
       commit_sha: null,
@@ -73,12 +75,15 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
 
   mkdirSync(join(root, "active"), { recursive: true });
   mkdirSync(join(root, "done"), { recursive: true });
+  mkdirSync(join(root, "parked"), { recursive: true });
   writeFileSync(configPath, yamlText);
   created_files.push(`${repo.specDir}/config.yaml`);
   writeFileSync(activeKeep, "");
   created_files.push(`${repo.specDir}/active/.gitkeep`);
   writeFileSync(doneKeep, "");
   created_files.push(`${repo.specDir}/done/.gitkeep`);
+  writeFileSync(parkedKeep, "");
+  created_files.push(`${repo.specDir}/parked/.gitkeep`);
   writeFileSync(readmePath, renderIndex(repo));
   created_files.push(`${repo.specDir}/README.md`);
 

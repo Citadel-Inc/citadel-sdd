@@ -37,7 +37,11 @@ function sortDesc(a: IndexRow, b: IndexRow): number {
   return b.dtg.localeCompare(a.dtg);
 }
 
-export function buildIndex(ctx: RepoContext): { active: IndexRow[]; done: IndexRow[] } {
+export function buildIndex(ctx: RepoContext): {
+  active: IndexRow[];
+  done: IndexRow[];
+  parked: IndexRow[];
+} {
   const active = listSpecs(ctx, "active")
     .map(buildRow)
     .filter((r): r is IndexRow => r !== null)
@@ -46,7 +50,11 @@ export function buildIndex(ctx: RepoContext): { active: IndexRow[]; done: IndexR
     .map(buildRow)
     .filter((r): r is IndexRow => r !== null)
     .sort(sortDesc);
-  return { active, done };
+  const parked = listSpecs(ctx, "parked")
+    .map(buildRow)
+    .filter((r): r is IndexRow => r !== null)
+    .sort(sortDesc);
+  return { active, done, parked };
 }
 
 function renderActiveTable(rows: readonly IndexRow[]): string {
@@ -78,7 +86,19 @@ function renderDoneTable(rows: readonly IndexRow[]): string {
   return lines.join("\n");
 }
 
+function renderParkedTable(rows: readonly IndexRow[]): string {
+  const lines: string[] = ["## Parked", "", "| Slug | DTG | Note |", "|------|-----|------|"];
+  if (rows.length === 0) {
+    lines.push("| _(none)_ | | |");
+  } else {
+    for (const r of rows) {
+      lines.push(`| ${r.slug} | ${r.dtg} | ${r.note} |`);
+    }
+  }
+  return lines.join("\n");
+}
+
 export function renderIndex(ctx: RepoContext): string {
-  const { active, done } = buildIndex(ctx);
-  return `# Specs\n\n${renderActiveTable(active)}\n\n${renderDoneTable(done)}\n`;
+  const { active, done, parked } = buildIndex(ctx);
+  return `# Specs\n\n${renderActiveTable(active)}\n\n${renderDoneTable(done)}\n\n${renderParkedTable(parked)}\n`;
 }

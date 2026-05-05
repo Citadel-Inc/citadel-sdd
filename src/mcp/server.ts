@@ -9,6 +9,7 @@ import { specIndexRebuild } from "../tools/spec_index_rebuild.js";
 import { specInit } from "../tools/spec_init.js";
 import { specLint } from "../tools/spec_lint.js";
 import { specList } from "../tools/spec_list.js";
+import { specPark } from "../tools/spec_park.js";
 import { specRatify } from "../tools/spec_ratify.js";
 import { specRead } from "../tools/spec_read.js";
 import { specReopen } from "../tools/spec_reopen.js";
@@ -29,6 +30,7 @@ import {
   SpecInitShape,
   SpecLintShape,
   SpecListShape,
+  SpecParkShape,
   SpecRatifyShape,
   SpecReadShape,
   SpecReopenShape,
@@ -214,6 +216,16 @@ export function buildServer(opts: BuildServerOptions): McpServer {
       inputSchema: SpecReopenShape,
     },
     wrap(specReopen, ctxFactory),
+  );
+
+  server.registerTool(
+    "spec_park",
+    {
+      description:
+        "DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + git mv active→parked + index rebuild + commit. Intentionally not pursuing a spec.",
+      inputSchema: SpecParkShape,
+    },
+    wrap(specPark, ctxFactory),
   );
 
   server.registerTool(

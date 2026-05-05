@@ -6,7 +6,8 @@ export type Transition =
   | "spec_close"
   | "spec_block"
   | "spec_unblock"
-  | "spec_reopen";
+  | "spec_reopen"
+  | "spec_park";
 
 export interface TransitionContext {
   claimerIsAuthor?: boolean;
@@ -53,6 +54,15 @@ export function canTransition(
     case "spec_reopen":
       if (from === "DONE") return { ok: true, to: "IN_PROGRESS" };
       return { ok: false, error: `state_invalid: spec_reopen requires DONE, got ${from}` };
+
+    case "spec_park":
+      if (from === "DRAFT" || from === "APPROVED" || from === "IN_PROGRESS" || from === "BLOCKED") {
+        return { ok: true, to: "PARKED" };
+      }
+      return {
+        ok: false,
+        error: `state_invalid: spec_park requires DRAFT, APPROVED, IN_PROGRESS, or BLOCKED, got ${from}`,
+      };
   }
 }
 

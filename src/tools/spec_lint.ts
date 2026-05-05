@@ -7,12 +7,20 @@ import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from ".
 import { daysBetween, lastTouchedBulk } from "../spec/git_history.js";
 import { checkSlugInCorrectDir, checkSpecTasksStatusAlign } from "../spec/invariants.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
-import { listSpecs, locateSpec, type RepoContext, slugLooksValid } from "../spec/repo.js";
+import {
+  listSpecs,
+  locateSpec,
+  type RepoContext,
+  type SpecLifecycleState,
+  slugLooksValid,
+} from "../spec/repo.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecLintInput {
   slug?: string;
   include_done?: boolean;
+  /** When true, include `specs/parked/` in repo-wide scans (no slug). */
+  include_parked?: boolean;
   no_strict?: boolean;
   fail_on?: ReadonlyArray<string> | "all";
   roots?: ReadonlyArray<string>;
@@ -35,6 +43,13 @@ export interface SpecLintOutput {
   findings: SpecLintFinding[];
   exit_code: number;
   roots?: string[];
+}
+
+function treeScanDirs(input: SpecLintInput): SpecLifecycleState[] {
+  const dirs: SpecLifecycleState[] = ["active"];
+  if (input.include_done === true) dirs.push("done");
+  if (input.include_parked === true) dirs.push("parked");
+  return dirs;
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -110,20 +125,22 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
       findings.push({
         severity: "error",
         code: "spec_not_found",
-        message: `spec "${input.slug}" not found in active/ or done/`,
+        message: `spec "${input.slug}" not found in active/, done/, or parked/`,
         slug: input.slug,
       });
     } else {
-      if (loc.state === "active") findings.push(...lintFilePresence(loc));
+      if (loc.state === "active" || loc.state === "parked") findings.push(...lintFilePresence(loc));
       findings.push(...lintSingle(loc, ctx));
       findings.push(...lintStrict(loc, ctx, noStrict));
     }
   } else {
-    const scope = input.include_done === true ? "all" : "active";
-    for (const loc of listSpecs(repo, scope)) {
-      if (loc.state === "active") findings.push(...lintFilePresence(loc));
-      findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, ctx, noStrict));
+    for (const section of treeScanDirs(input)) {
+      for (const loc of listSpecs(repo, section)) {
+        if (loc.state === "active" || loc.state === "parked")
+          findings.push(...lintFilePresence(loc));
+        findings.push(...lintSingle(loc, ctx));
+        findings.push(...lintStrict(loc, ctx, noStrict));
+      }
     }
     for (const cc of crossCutting(repo)) {
       findings.push({
@@ -232,6 +249,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
 
   if (
     spec.frontmatter.status.state !== "DRAFT" &&
+    spec.frontmatter.status.state !== "PARKED" &&
     spec.qTable.some((r) => r.ratified.toLowerCase() === "tbd")
   ) {
     findings.push({

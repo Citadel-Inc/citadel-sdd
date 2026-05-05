@@ -38,7 +38,7 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
   const repo = repoCtx(ctx);
   const inferred = inferProfile(repo.rootDir, repo.specDir);
 
-  const lint = specLint({ include_done: true }, ctx);
+  const lint = specLint({ include_done: true, include_parked: true }, ctx);
 
   const recommendations: string[] = [];
   const specsCount = listSpecs(repo, "all").length;
@@ -57,7 +57,7 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
 
   if (lint.findings.some((f) => f.code === "path_mismatch")) {
     recommendations.push(
-      "path_mismatch detected; specs in wrong directory for their state. Check active/ vs done/.",
+      "path_mismatch detected; specs in wrong directory for their state. Check active/ vs done/ vs parked/.",
     );
   }
 
