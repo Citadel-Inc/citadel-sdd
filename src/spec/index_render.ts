@@ -12,7 +12,21 @@ export interface IndexRow {
   note: string;
 }
 
-function buildRow(loc: SpecLocation): IndexRow | null {
+export const SPEC_README_ACTIVE_HEADER = "| Slug | State | DTG | Owner |";
+export const SPEC_README_DONE_OR_PARKED_HEADER = "| Slug | DTG | Note |";
+
+export const SPEC_README_ACTIVE_PLACEHOLDER = "| _(none)_ | | | |";
+export const SPEC_README_DONE_OR_PARKED_PLACEHOLDER = "| _(none)_ | | |";
+
+export function formatActiveIndexRow(r: IndexRow): string {
+  return `| ${r.slug} | ${r.state} | ${r.dtg} | ${r.owner} |`;
+}
+
+export function formatDoneOrParkedIndexRow(r: IndexRow): string {
+  return `| ${r.slug} | ${r.dtg} | ${r.note} |`;
+}
+
+export function buildRow(loc: SpecLocation): IndexRow | null {
   let raw: string;
   try {
     raw = readFileSync(loc.specMd, "utf8");
@@ -81,14 +95,14 @@ function renderActiveTable(rows: readonly IndexRow[]): string {
     "",
     introActive(),
     "",
-    "| Slug | State | DTG | Owner |",
+    SPEC_README_ACTIVE_HEADER,
     "|------|-------|-----|-------|",
   ];
   if (rows.length === 0) {
-    lines.push("| _(none)_ | | | |");
+    lines.push(SPEC_README_ACTIVE_PLACEHOLDER);
   } else {
     for (const r of rows) {
-      lines.push(`| ${r.slug} | ${r.state} | ${r.dtg} | ${r.owner} |`);
+      lines.push(formatActiveIndexRow(r));
     }
   }
   return lines.join("\n");
@@ -100,14 +114,14 @@ function renderDoneTable(rows: readonly IndexRow[]): string {
     "",
     introDone(),
     "",
-    "| Slug | DTG | Note |",
+    SPEC_README_DONE_OR_PARKED_HEADER,
     "|------|-----|------|",
   ];
   if (rows.length === 0) {
-    lines.push("| _(none)_ | | |");
+    lines.push(SPEC_README_DONE_OR_PARKED_PLACEHOLDER);
   } else {
     for (const r of rows) {
-      lines.push(`| ${r.slug} | ${r.dtg} | ${r.note} |`);
+      lines.push(formatDoneOrParkedIndexRow(r));
     }
   }
   return lines.join("\n");
@@ -119,14 +133,14 @@ function renderParkedTable(rows: readonly IndexRow[]): string {
     "",
     introParked(),
     "",
-    "| Slug | DTG | Note |",
+    SPEC_README_DONE_OR_PARKED_HEADER,
     "|------|-----|------|",
   ];
   if (rows.length === 0) {
-    lines.push("| _(none)_ | | |");
+    lines.push(SPEC_README_DONE_OR_PARKED_PLACEHOLDER);
   } else {
     for (const r of rows) {
-      lines.push(`| ${r.slug} | ${r.dtg} | ${r.note} |`);
+      lines.push(formatDoneOrParkedIndexRow(r));
     }
   }
   return lines.join("\n");
