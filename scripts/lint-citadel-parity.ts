@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { resolveBuiltIn } from "../src/profile/resolver.js";
+import { loadConfig } from "../src/config/load.js";
 import { specLint } from "../src/tools/spec_lint.js";
 import type { ToolContext } from "../src/tools/types.js";
 
@@ -33,9 +33,16 @@ if (!existsSync(`${citadelRoot}/specs/active`)) {
 
 process.stdout.write(`citadel-parity: rootDir=${citadelRoot}\n`);
 
+let profile;
+try {
+  profile = loadConfig({ rootDir: citadelRoot });
+} catch (e) {
+  fail(`could not load profile from ${citadelRoot}/specs/config.yaml: ${(e as Error).message}`);
+}
+
 const ctx: ToolContext = {
   rootDir: citadelRoot,
-  profile: resolveBuiltIn("citadel"),
+  profile,
 };
 
 const ours = specLint({ include_done: true }, ctx);
