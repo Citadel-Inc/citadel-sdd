@@ -45,7 +45,21 @@ jobs:
 
       - name: Unit tests with coverage
         if: steps.phase.outputs.ready == 'true'
-        run: bun run test:coverage
+        run: |
+          set -o pipefail
+          bun run test:coverage 2>&1 | tee /tmp/bun-coverage.txt
+
+      - name: Coverage summary
+        if: always() && steps.phase.outputs.ready == 'true'
+        run: |
+          [[ -f /tmp/bun-coverage.txt ]] || exit 0
+          {
+            echo "## Coverage"
+            echo ""
+            echo '```'
+            awk '/^[[:space:]]*---/{p=1} p' /tmp/bun-coverage.txt | head -80
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Assert Node.js version
         if: steps.phase.outputs.ready == 'true'
