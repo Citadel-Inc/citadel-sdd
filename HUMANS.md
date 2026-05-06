@@ -4,7 +4,7 @@ MCP server wrapping **Spec-Driven Development** lifecycle for Bastion, Citadel o
 
 ## Mission
 
-Drop the ~15 mechanical tool calls per spec claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, `specs/README.md` index splice, conventional-commit authoring) into **one atomic MCP call per lifecycle event**.
+Drop the ~15 mechanical tool calls per spec claim/close cycle (status flips, decision-log ratify, tasks.md sync, `git mv` active→done, targeted `specs/README.md` index rows, conventional-commit authoring) into **one atomic MCP call per lifecycle event**.
 
 ## Scope
 

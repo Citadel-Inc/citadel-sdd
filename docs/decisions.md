@@ -26,7 +26,7 @@ Permanent canon. Each decision is append-only — do not edit history. To revers
 | D-20 | Documentation canon | PRD.md is transient (deleted at v0.1.0); permanent canon distributes across `AGENTS.md`, `HUMANS.md`, `CONTRIBUTING.md`, `SECURITY.md`, `README.md`, `docs/*` | 012005ZMAY26 |
 | D-21 | Conformance flexibility | Profile gains `frontmatter_format` (`pipe-table` / `inline` / `any`; default `any`) and `lint_rules` (per-rule `error`/`warn`/`off` map; default `{}`). Allows teams to enforce a canonical frontmatter format on writes and to suppress or escalate specific lint categories without the blunt `no_strict` bypass. Backward-compat: all defaults preserve prior behavior. | 012353ZMAY26 |
 | D-22 | Remove citadel built-in preset | The `citadel` profile was project-specific config leaked into the library. Consuming repos own their overrides in `specs/config.yaml`. Built-in profiles henceforth: `default` (neutral) and `bastion` (Bastion voice). | 012353ZMAY26 |
-| D-23 | Config-system flexibility round 2 | Profile gains: `default_claimer` (spec_claim fallback), `stale_days` (lint default), `summary_template` (`{slug}`/`{dtg}` tokens for spec_close), `default_owner` (spec_handoff fallback), `disabled_transitions` (block specific transitions at profile level). spec_init `profile` param widened from enum to `string`. All defaults are empty/undefined — no behavior change for existing profiles. | 020026ZMAY26 |
+| D-24 | `specs/README.md` write policy | Full-file regeneration only in `spec_init` and `spec_index_rebuild`. All other index mutators use targeted table-row edits (`spec_readme`); strict global DTG sort of every row is restored only by `spec_index_rebuild`. | 051945ZMAY26 |
 
 ## Adding a decision
 

@@ -72,7 +72,7 @@ Transition rules:
 | `specs/active/<slug>/tasks.md` | ✓ | ✓ | Status line + checkbox state. |
 | `specs/done/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | Same shape; `done/` location. |
 | `specs/parked/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | PARKED state; intentionally not pursued. |
-| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Auto-generated rows; per-section rows sorted by **status DTG recency** (newest first, ISO or Bastion), then slug. Short intro per section links to [`citadel-sdd`](https://github.com/Rethunk-AI/citadel-sdd). |
+| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Rows are derived from each spec’s `spec.md` frontmatter. **`spec_init` and `spec_index_rebuild` alone** replace the entire file from `renderIndex`. **All other writers** apply targeted markdown table edits (see [docs/mcp-tools.md](mcp-tools.md)) so prose after the Parked table is preserved. Per bucket, the **mutated** slug is written as the first data row after the table separator; strict global DTG ordering of every row is restored only by `spec_index_rebuild`. |
 | `HUMAN_BLOCKERS.md` | ✓ | ✓ | Optional; created on first `spec_block` if absent. |
 
 ## Write invariants
@@ -81,7 +81,7 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 
 1. `spec.md` status table matches `tasks.md` status line.
 2. Spec directory location matches state (`active/` for in-flight, `done/` for DONE, `parked/` for PARKED).
-3. `specs/README.md` index mirrors disk (no orphan rows; no missing rows).
+3. `specs/README.md` index mirrors disk (no orphan rows; no missing rows). Targeted README edits guarantee the mutated slug appears in the correct bucket table; run `spec_index_rebuild` to normalize full-file sort and recover from a malformed index.
 4. Conventional-commit subject for every commit-emitting tool (when `commit_style: conventional`).
 5. Deterministic file ordering for stable diffs.
 6. Slug never reused (see [docs/profile-system.md](profile-system.md#slug-uniqueness)).

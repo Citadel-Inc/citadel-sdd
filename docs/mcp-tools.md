@@ -76,6 +76,12 @@ Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked 
 
 ---
 
+### `specs/README.md` index edits
+
+Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_claim`, `spec_approve`, `spec_block`, `spec_unblock`, `spec_handoff`, `spec_close`, `spec_park`, `spec_reopen`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
+
+---
+
 ## Write atomic tools
 
 ### `spec_approve`
@@ -86,7 +92,7 @@ DRAFT → APPROVED. Sole legal use; all other transitions covered by composites.
 
 **Output:** `{ slug, before, after, commit_sha }`.
 
-**Behavior:** flip status, append history row, conventional commit `spec(<slug>): APPROVED — <note?>`.
+**Behavior:** flip status, append history row, targeted `${spec_dir}/README.md` row update, conventional commit `spec(<slug>): APPROVED — <note?>`.
 
 ### `spec_ratify`
 
@@ -120,7 +126,7 @@ Reassign owner without state flip.
 
 **Inputs:** `{ slug, new_owner, note? }`.
 
-**Output:** `{ slug, before_owner, after_owner, commit_sha }`.
+**Output:** `{ slug, before_owner, after_owner, commit_sha }`. Updates the Active table row in `${spec_dir}/README.md` when committing.
 
 ---
 
@@ -138,17 +144,17 @@ DRAFT/APPROVED → IN_PROGRESS + optional ratify + commit.
 
 ### `spec_close`
 
-IN_PROGRESS → DONE + `git mv` active→done + `specs/README.md` index splice + commit + optional push.
+IN_PROGRESS → DONE + `git mv` active→done + targeted `${spec_dir}/README.md` row update + commit + optional push.
 
 **Inputs:** `{ slug, summary, allow_open?: ("p0"|"p1"|"p2")[], commit?: boolean, push?: boolean, dryRun?: boolean }`. `push` defaults to profile's `push_policy`.
 
-**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, pushed: boolean, readme_diff: string }`.
+**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, pushed: boolean, dryRun: boolean }`.
 
 **Failure modes:** `state_invalid`, `tasks_open`, `working_tree_dirty`, `summary_missing`.
 
 ### `spec_park`
 
-DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + `git mv` active→`specs/parked/` + `specs/README.md` index splice + commit.
+DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + `git mv` active→`specs/parked/` + targeted `${spec_dir}/README.md` row update + commit.
 
 **Inputs:** `{ slug, resolution, commit?: boolean, dryRun?: boolean }`. `resolution` is required (non-empty); recorded in status tail and `## History`.
 
@@ -158,7 +164,7 @@ DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + `git mv` active→`specs/parked/
 
 ### `spec_reopen`
 
-DONE → IN_PROGRESS + reverse `git mv` + index splice + commit.
+DONE → IN_PROGRESS + reverse `git mv` + targeted `${spec_dir}/README.md` row update + commit.
 
 **Inputs:** `{ slug, reason }`.
 
@@ -192,7 +198,7 @@ Regenerate `specs/README.md` from per-spec frontmatter + summaries. Used to reco
 
 **Output:** `{ active_count, done_count, parked_count, commit_sha, dryRun, rendered, scaffold_repairs: string[] }`.
 
-**Behavior:** Creates `specs/` (the configured `spec_dir` root) if missing, then ensures `active/`, `done/`, and `parked/` exist (new buckets get an empty `.gitkeep`). Stages `README.md` plus any repaired paths when committing. `dryRun` does not touch the filesystem. Within each section, table rows are ordered by **parsed status DTG** (newest first; supports Bastion `DDHHMMZMONYY` and ISO-8601), then slug when timestamps tie — so new activity stays near the section header and diffs stay localized.
+**Behavior:** Creates `specs/` (the configured `spec_dir` root) if missing, then ensures `active/`, `done/`, and `parked/` exist (new buckets get an empty `.gitkeep`). Writes a **fresh** `${spec_dir}/README.md` from `renderIndex` (full three-table regenerate). Stages `README.md` plus any repaired paths when committing. `dryRun` does not touch the filesystem. Within each section, table rows are ordered by **parsed status DTG** (newest first; supports Bastion `DDHHMMZMONYY` and ISO-8601), then slug when timestamps tie.
 
 ### `spec_init`
 
