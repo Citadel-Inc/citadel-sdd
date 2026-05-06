@@ -4,6 +4,7 @@ import { gitAdd, gitCommit } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
+import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter } from "../spec/writer.js";
@@ -74,13 +75,19 @@ export function specUnblock(input: SpecUnblockInput, ctx: ToolContext): SpecUnbl
   writeFileSync(loc.specMd, newSpecRaw);
   writeFileSync(loc.tasksMd, newTasksRaw);
 
+  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+
   let commit_sha: string | null = null;
   if (input.commit !== false) {
     const subject =
       ctx.profile.commit_style === "conventional"
         ? `spec(${loc.slug}): UNBLOCK — ${input.resolution}`
         : `Unblock ${loc.slug}: ${input.resolution}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, `${loc.relDir}/tasks.md`]);
+    gitAdd({ rootDir: ctx.rootDir }, [
+      `${loc.relDir}/spec.md`,
+      `${loc.relDir}/tasks.md`,
+      readmeRel,
+    ]);
     commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
   }
 

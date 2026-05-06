@@ -3,6 +3,7 @@ import { gitAdd, gitCommit } from "../spec/git.js";
 import { setOwner } from "../spec/mutate.js";
 import { parseSpec } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
+import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { spliceFrontmatter } from "../spec/writer.js";
 import type { ToolContext } from "./types.js";
 
@@ -60,13 +61,15 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
 
   writeFileSync(loc.specMd, newRaw);
 
+  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+
   let commit_sha: string | null = null;
   if (input.commit !== false) {
     const subject =
       ctx.profile.commit_style === "conventional"
         ? `spec(${loc.slug}): handoff to ${new_owner}${input.note ? ` — ${input.note}` : ""}`
         : `Handoff ${loc.slug} to ${new_owner}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
+    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel]);
     commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
   }
 

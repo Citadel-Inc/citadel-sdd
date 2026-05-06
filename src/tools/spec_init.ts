@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
 import { gitAdd, gitCommit } from "../spec/git.js";
-import { renderIndex } from "../spec/index_render.js";
 import { type RepoContext, specsRoot } from "../spec/repo.js";
 import { ensureSpecBucketDirs } from "../spec/scaffold.js";
+import { writeSpecReadmeFull } from "../spec/spec_readme.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecInitInput {
@@ -54,7 +54,6 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
 
   const created_files: string[] = [];
   const configPath = join(root, "config.yaml");
-  const readmePath = join(root, "README.md");
   const activeKeep = join(root, "active", ".gitkeep");
   const doneKeep = join(root, "done", ".gitkeep");
   const parkedKeep = join(root, "parked", ".gitkeep");
@@ -84,7 +83,7 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
   created_files.push(`${repo.specDir}/done/.gitkeep`);
   writeFileSync(parkedKeep, "");
   created_files.push(`${repo.specDir}/parked/.gitkeep`);
-  writeFileSync(readmePath, renderIndex(repo));
+  writeSpecReadmeFull(repo);
   created_files.push(`${repo.specDir}/README.md`);
 
   let commit_sha: string | null = null;

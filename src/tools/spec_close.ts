@@ -1,11 +1,10 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { nowDTG } from "../spec/dtg.js";
 import { gitAdd, gitCommit, gitMv, gitPush } from "../spec/git.js";
-import { renderIndex } from "../spec/index_render.js";
 import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
+import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { Priority, SpecState } from "../spec/types.js";
 import { PRIORITIES } from "../spec/types.js";
@@ -123,8 +122,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
   }
 
-  const indexPath = join(repo.rootDir, repo.specDir, "README.md");
-  writeFileSync(indexPath, renderIndex(repo));
+  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
 
   let commit_sha: string | null = null;
   if (input.commit !== false) {
@@ -135,7 +133,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     gitAdd({ rootDir: ctx.rootDir }, [
       `${afterRelDir}/spec.md`,
       `${afterRelDir}/tasks.md`,
-      `${repo.specDir}/README.md`,
+      readmeRel,
     ]);
     commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
   }

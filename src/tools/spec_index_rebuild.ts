@@ -1,10 +1,10 @@
-import { mkdirSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { mkdirSync } from "node:fs";
 import { gitAdd, gitCommit } from "../spec/git.js";
 import { buildIndex, renderIndex } from "../spec/index_render.js";
 import type { RepoContext } from "../spec/repo.js";
 import { specsRoot } from "../spec/repo.js";
 import { ensureSpecBucketDirs } from "../spec/scaffold.js";
+import { writeSpecReadmeFull } from "../spec/spec_readme.js";
 import type { ToolContext } from "./types.js";
 
 export type SpecIndexRebuildInput = {
@@ -34,7 +34,6 @@ export function specIndexRebuild(
   const repo = repoCtx(ctx);
   const { active, done, parked } = buildIndex(repo);
   const rendered = renderIndex(repo);
-  const path = join(repo.rootDir, repo.specDir, "README.md");
 
   if (input.dryRun === true) {
     return {
@@ -50,7 +49,7 @@ export function specIndexRebuild(
 
   mkdirSync(specsRoot(repo), { recursive: true });
   const scaffold_repairs = ensureSpecBucketDirs(repo);
-  writeFileSync(path, rendered);
+  writeSpecReadmeFull(repo);
 
   let commit_sha: string | null = null;
   if (input.commit !== false) {
