@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const SlugSchema = z.string().min(1);
+const SlugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const PrioritySchema = z.enum(["P0", "P1", "P2"]);
 
 export const SpecListShape = {

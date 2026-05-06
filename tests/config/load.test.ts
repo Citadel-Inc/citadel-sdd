@@ -53,4 +53,9 @@ describe("loadConfig", () => {
     writeFileSync(join(workdir, "specs", "config.yaml"), "just-a-string\n");
     expect(() => loadConfig({ rootDir: workdir })).toThrow("config_invalid");
   });
+
+  test("spec_dir must stay inside the repo", () => {
+    writeFileSync(join(workdir, "specs", "config.yaml"), "extends: default\nspec_dir: ../escape\n");
+    expect(() => loadConfig({ rootDir: workdir })).toThrow("config_invalid");
+  });
 });

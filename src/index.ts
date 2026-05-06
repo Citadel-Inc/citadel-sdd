@@ -35,7 +35,10 @@ async function main(): Promise<void> {
     let profile: ReturnType<typeof resolveBuiltIn>;
     try {
       profile = loadConfig({ rootDir });
-    } catch {
+    } catch (e) {
+      if (!(e instanceof Error) || !e.message.startsWith("config_missing:")) {
+        throw e;
+      }
       profile = resolveBuiltIn("default");
     }
     const principal = gitConfigUserName({ rootDir });

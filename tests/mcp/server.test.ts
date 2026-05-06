@@ -128,4 +128,17 @@ describe("MCP server wiring", () => {
     expect(res.isError).toBe(true);
     await close();
   });
+
+  test("callTool rejects invalid slug strings", async () => {
+    temp = makeTempRepo();
+    const { client, close } = await dial();
+    const res = await client.callTool({
+      name: "spec_status",
+      arguments: { slug: "../escape" },
+    });
+    expect(res.isError).toBe(true);
+    const content = res.content as Array<{ type: string; text: string }>;
+    expect(content[0]?.text ?? "").toContain("Invalid arguments for tool spec_status");
+    await close();
+  });
 });

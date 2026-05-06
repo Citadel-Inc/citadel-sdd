@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { symlinkSync } from "node:fs";
 import {
   listSpecs,
   locateSpec,
@@ -49,6 +50,21 @@ describe("locateSpec", () => {
   test("returns null for unknown slug", () => {
     temp = makeTempRepo();
     expect(locateSpec(ctx(), "nonexistent")).toBeNull();
+  });
+
+  test("rejects invalid slug input", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    expect(locateSpec(ctx(), "../draft-minimal")).toBeNull();
+  });
+
+  test("does not follow symlinked spec directories", () => {
+    temp = makeTempRepo({ doneFixtures: ["done"] });
+    symlinkSync(
+      `${temp.rootDir}/specs/done/done`,
+      `${temp.rootDir}/specs/active/sneaky-done`,
+      "dir",
+    );
+    expect(locateSpec(ctx(), "sneaky-done")).toBeNull();
   });
 });
 

@@ -1,5 +1,5 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseSpec, parseTasks } from "./parse.js";
 import type { ParsedSpec, ParsedTasks } from "./types.js";
 
@@ -20,8 +20,18 @@ export interface SpecLocation {
   relDir: string;
 }
 
+export function resolveRepoSubdir(rootDir: string, subdir: string): string {
+  const resolvedRoot = resolve(rootDir);
+  const resolvedPath = resolve(resolvedRoot, subdir);
+  const rel = relative(resolvedRoot, resolvedPath);
+  if (rel.length === 0 || rel.startsWith("..") || isAbsolute(rel)) {
+    throw new Error(`path_outside_repo: ${subdir}`);
+  }
+  return resolvedPath;
+}
+
 export function specsRoot(ctx: RepoContext): string {
-  return join(ctx.rootDir, ctx.specDir);
+  return resolveRepoSubdir(ctx.rootDir, ctx.specDir);
 }
 
 function buildLocation(ctx: RepoContext, state: SpecLifecycleState, slug: string): SpecLocation {
@@ -38,11 +48,13 @@ function buildLocation(ctx: RepoContext, state: SpecLifecycleState, slug: string
 }
 
 export function locateSpec(ctx: RepoContext, slug: string): SpecLocation | null {
+  if (!slugLooksValid(slug)) return null;
   for (const state of ["active", "done", "parked"] as const) {
     const dir = join(specsRoot(ctx), state, slug);
-    if (existsSync(dir) && statSync(dir).isDirectory()) {
-      return buildLocation(ctx, state, slug);
-    }
+    if (!existsSync(dir)) continue;
+    const stat = lstatSync(dir);
+    if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
+    return buildLocation(ctx, state, slug);
   }
   return null;
 }
@@ -57,7 +69,7 @@ export function listSpecs(
     const dir = join(specsRoot(ctx), state);
     if (!existsSync(dir)) continue;
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
+      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
       out.push(buildLocation(ctx, state, entry.name));
     }
   }
