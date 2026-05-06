@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { gitAdd, gitCommit, gitMv } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit, gitMv } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -75,6 +75,14 @@ export function specReopen(input: SpecReopenInput, ctx: ToolContext): SpecReopen
       commit_sha: null,
       dryRun: true,
     };
+  }
+
+  if (input.commit !== false) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
+      beforePath,
+      afterRelDir,
+      `${repo.specDir}/README.md`,
+    ]);
   }
 
   writeFileSync(loc.specMd, newSpecRaw);

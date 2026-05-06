@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { gitStatusPorcelain } from "../../src/spec/git.js";
@@ -90,5 +90,11 @@ describe("specApprove", () => {
   test("unknown slug throws", () => {
     temp = makeTempRepo();
     expect(() => specApprove({ slug: "missing" }, ctx())).toThrow("spec_not_found");
+  });
+
+  test("commit rejects unrelated dirty files", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
+    expect(() => specApprove({ slug: "draft-minimal" }, ctx())).toThrow("working_tree_dirty");
   });
 });

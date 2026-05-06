@@ -32,6 +32,13 @@ export function gitWorkingTreeDirty(
   return { dirty: files.length > 0, files };
 }
 
+export function assertWorkingTreeClean(ctx: GitContext, ignorePaths: readonly string[] = []): void {
+  const dirty = gitWorkingTreeDirty(ctx, ignorePaths);
+  if (dirty.dirty) {
+    throw new Error(`working_tree_dirty: ${dirty.files.join(", ")}`);
+  }
+}
+
 export function gitAdd(ctx: GitContext, files: readonly string[]): void {
   if (files.length === 0) return;
   git(ctx, ["add", "--", ...files], { silent: true });

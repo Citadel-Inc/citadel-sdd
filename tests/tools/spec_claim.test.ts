@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
@@ -61,6 +62,7 @@ describe("specClaim", () => {
       join(dir, "tasks.md"),
       "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n",
     );
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fixture`);
 
     const out = specClaim({ slug: "draft-mine", claimer: "TestAgent" }, ctx());
     expect(out.after.state).toBe("IN_PROGRESS");

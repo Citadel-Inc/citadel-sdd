@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { gitAdd, gitCommit } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
 import { buildIndex, renderIndex } from "../spec/index_render.js";
 import type { RepoContext } from "../spec/repo.js";
 import { specsRoot } from "../spec/repo.js";
@@ -49,6 +49,12 @@ export function specIndexRebuild(
 
   mkdirSync(specsRoot(repo), { recursive: true });
   const scaffold_repairs = ensureSpecBucketDirs(repo);
+  if (input.commit !== false) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
+      `${repo.specDir}/README.md`,
+      ...scaffold_repairs,
+    ]);
+  }
   writeSpecReadmeFull(repo);
 
   let commit_sha: string | null = null;

@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { gitAdd, gitCommit } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
 import { type RatifyDecision, ratifySpec } from "../spec/mutate.js";
 import { parseSpec } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -51,6 +51,10 @@ export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatify
 
   if (input.dryRun === true) {
     return { slug: loc.slug, ratified_q_count, commit_sha: null, dryRun: true };
+  }
+
+  if (input.commit !== false && ratified_q_count > 0) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
   }
 
   writeFileSync(loc.specMd, newRaw);

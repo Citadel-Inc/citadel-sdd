@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { gitAdd, gitCommit } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
 import { resolveTaskMatch, setTaskChecked } from "../spec/mutate.js";
 import { parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -109,6 +109,10 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
       commit_sha: null,
       dryRun: true,
     };
+  }
+
+  if (input.commit !== false) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
   }
 
   writeFileSync(loc.tasksMd, newRaw);

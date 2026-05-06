@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specClose } from "../../src/tools/spec_close.js";
@@ -160,5 +160,36 @@ describe("specClose", () => {
     expect(out.commit_sha).toBeNull();
     expect(existsSync(join(temp.rootDir, "specs", "active", "in-progress-midway"))).toBe(true);
     expect(existsSync(join(temp.rootDir, "specs", "done", "in-progress-midway"))).toBe(false);
+  });
+
+  test("commit rejects unrelated dirty files", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+    const fs = require("node:fs") as typeof import("node:fs");
+    fs.writeFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
+      `# T
+
+| | |
+|---|---|
+| Status | IN_PROGRESS 011920ZMAY26 |
+
+## P0
+
+- [x] done
+
+## P1
+
+- [x] done
+
+## P2
+
+- [x] done
+`,
+    );
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
+    writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
+    expect(() =>
+      specClose({ slug: "in-progress-midway", summary: "implementation landed" }, ctx()),
+    ).toThrow("working_tree_dirty");
   });
 });

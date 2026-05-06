@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { gitAdd, gitCommit } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
 import { setOwner } from "../spec/mutate.js";
 import { parseSpec } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -57,6 +57,13 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
       commit_sha: null,
       dryRun: true,
     };
+  }
+
+  if (input.commit !== false) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
+      `${loc.relDir}/spec.md`,
+      `${repo.specDir}/README.md`,
+    ]);
   }
 
   writeFileSync(loc.specMd, newRaw);

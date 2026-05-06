@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  assertWorkingTreeClean,
   gitAdd,
   gitCommit,
   gitConfigUserEmail,
@@ -49,6 +50,20 @@ describe("gitWorkingTreeDirty", () => {
     writeFileSync(join(temp.rootDir, "specs", "scratch.md"), "x");
     const r = gitWorkingTreeDirty({ rootDir: temp.rootDir }, ["specs"]);
     expect(r.dirty).toBe(false);
+  });
+});
+
+describe("assertWorkingTreeClean", () => {
+  test("throws when unrelated files are dirty", () => {
+    temp = makeTempRepo();
+    writeFileSync(join(temp.rootDir, "extra.txt"), "x");
+    expect(() => assertWorkingTreeClean({ rootDir: temp.rootDir })).toThrow("working_tree_dirty");
+  });
+
+  test("permits ignored dirty paths", () => {
+    temp = makeTempRepo();
+    writeFileSync(join(temp.rootDir, "specs", "scratch.md"), "x");
+    expect(() => assertWorkingTreeClean({ rootDir: temp.rootDir }, ["specs"])).not.toThrow();
   });
 });
 

@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { stringify as stringifyYaml } from "yaml";
-import { gitAdd, gitCommit } from "../spec/git.js";
+import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
 import { type RepoContext, specsRoot } from "../spec/repo.js";
 import { ensureSpecBucketDirs } from "../spec/scaffold.js";
 import { writeSpecReadmeFull } from "../spec/spec_readme.js";
@@ -71,6 +71,16 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
       commit_sha: null,
       dryRun: true,
     };
+  }
+
+  if (input.commit !== false) {
+    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
+      `${repo.specDir}/config.yaml`,
+      `${repo.specDir}/README.md`,
+      `${repo.specDir}/active/.gitkeep`,
+      `${repo.specDir}/done/.gitkeep`,
+      `${repo.specDir}/parked/.gitkeep`,
+    ]);
   }
 
   mkdirSync(root, { recursive: true });
