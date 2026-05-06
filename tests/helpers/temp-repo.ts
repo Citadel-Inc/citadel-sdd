@@ -3,6 +3,7 @@ import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { renderIndex } from "../../src/spec/index_render.js";
 
 const FIXTURES_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "spec-fixtures");
 
@@ -39,7 +40,7 @@ export function makeTempRepo(
   }
 
   writeFileSync(join(rootDir, "specs", "config.yaml"), "extends: default\n");
-  writeFileSync(join(rootDir, "specs", "README.md"), "# Specs\n");
+  writeFileSync(join(rootDir, "specs", "README.md"), renderIndex({ rootDir, specDir: "specs" }));
   git(rootDir, ["add", "."]);
   git(rootDir, ["commit", "-m", "initial fixture state"]);
 
