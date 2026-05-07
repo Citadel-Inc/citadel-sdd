@@ -44,7 +44,7 @@ function parseDtgUtc(dtg: string): Date | null {
   const mon = MONTHS_MIL[m[4] ?? ""];
   const yy = Number.parseInt(m[5] ?? "", 10);
   if (Number.isNaN(dd) || Number.isNaN(hh) || mon === undefined || Number.isNaN(yy)) return null;
-  return new Date(Date.UTC(2000 + yy, mon, dd, hh, mm, 0));
+  return new Date(Date.UTC(yy >= 70 ? 1900 + yy : 2000 + yy, mon, dd, hh, mm, 0));
 }
 
 function daysSince(then: Date, now: Date): number {
@@ -96,7 +96,7 @@ function buildEntry(
 
 function extractReferencedSpecs(body: string): string[] {
   const out = new Set<string>();
-  const re = /\b(?:fe|go|docs|cli)-[a-z0-9-]+/g;
+  const re = /\b[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/g;
   for (const m of body.matchAll(re)) {
     if (m[0]) out.add(m[0]);
   }

@@ -57,6 +57,19 @@ describe("parseBlockers", () => {
     expect(refs).toContain("fe-account-export");
     expect(refs).toContain("go-mcp-oauth");
   });
+
+  test("extracts slugs with any prefix, not just known ones", () => {
+    temp = makeTempRepo();
+    writeFileSync(
+      join(temp.rootDir, "HUMAN_BLOCKERS.md"),
+      "# B\n\n### 011900ZMAY26 — X\n\nBlocked on auth-service and sso-login landing.\n",
+    );
+    const b = parseBlockers(temp.rootDir);
+    if (!b) throw new Error("expected blockers");
+    const refs = b.entries[0]?.referencedSpecs ?? [];
+    expect(refs).toContain("auth-service");
+    expect(refs).toContain("sso-login");
+  });
 });
 
 describe("blockerLint", () => {
