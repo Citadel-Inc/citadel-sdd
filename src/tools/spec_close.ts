@@ -26,6 +26,7 @@ export interface SpecCloseOutput {
   after: { state: SpecState; dtg: string; path: string };
   commit_sha: string | null;
   pushed: boolean;
+  push_error?: string;
   dryRun: boolean;
 }
 
@@ -147,14 +148,15 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   }
 
   let pushed = false;
+  let push_error: string | undefined;
   const wantPush =
     input.push ?? (ctx.profile.push_policy === "on_close" || ctx.profile.push_policy === "always");
   if (wantPush && commit_sha !== null) {
     try {
       gitPush({ rootDir: ctx.rootDir });
       pushed = true;
-    } catch {
-      pushed = false;
+    } catch (e) {
+      push_error = e instanceof Error ? e.message : String(e);
     }
   }
 
@@ -168,6 +170,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     after: { state: newStatus.state, dtg: newStatus.dtg, path: afterRelDir },
     commit_sha,
     pushed,
+    ...(push_error !== undefined && { push_error }),
     dryRun: false,
   };
 }
