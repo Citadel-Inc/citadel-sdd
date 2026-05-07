@@ -1,9 +1,15 @@
 #!/usr/bin/env node
-import { fileURLToPath } from "node:url";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { RootsListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import { loadConfig } from "./config/load.js";
 import { buildServer } from "./mcp/server.js";
+import {
+  normalizeProjectRoot,
+  resolveWorkspaceRoot,
+  rootUriToPath,
+  type WorkspaceRootPick,
+} from "./mcp/workspace.js";
 import { resolveBuiltIn } from "./profile/resolver.js";
 import { gitConfigUserName, gitRevParseShowToplevel } from "./spec/git.js";
 import type { ToolContext } from "./tools/types.js";
@@ -12,26 +18,35 @@ const VERSION = "0.4.2";
 
 function discoverRootFallback(): string {
   const fromEnv = process.env.CITADEL_SDD_ROOT;
-  if (fromEnv && fromEnv.length > 0) return fromEnv;
+  if (fromEnv && fromEnv.length > 0) return normalizeProjectRoot(fromEnv);
   try {
-    return gitRevParseShowToplevel(process.cwd());
+    return normalizeProjectRoot(gitRevParseShowToplevel(process.cwd()));
   } catch {
-    return process.cwd();
-  }
-}
-
-function rootUriToPath(uri: string): string {
-  try {
-    return fileURLToPath(uri);
-  } catch {
-    return uri;
+    return normalizeProjectRoot(process.cwd());
   }
 }
 
 async function main(): Promise<void> {
-  let rootDir = discoverRootFallback();
+  const fallbackRootDir = discoverRootFallback();
+  let server: McpServer;
+  let cachedFileRoots: string[] = [];
 
-  function buildContext(): ToolContext {
+  const listClientRootPaths = async (): Promise<string[]> => {
+    try {
+      const caps = server.server.getClientCapabilities();
+      if (!caps?.roots) return cachedFileRoots;
+      const result = await server.server.listRoots();
+      cachedFileRoots = result.roots
+        .map((root) => rootUriToPath(root.uri))
+        .filter((path): path is string => path !== null);
+      return cachedFileRoots;
+    } catch {
+      return cachedFileRoots;
+    }
+  };
+
+  async function buildContext(input?: WorkspaceRootPick): Promise<ToolContext> {
+    const rootDir = resolveWorkspaceRoot(input, await listClientRootPaths(), fallbackRootDir);
     let profile: ReturnType<typeof resolveBuiltIn>;
     try {
       profile = loadConfig({ rootDir });
@@ -49,24 +64,14 @@ async function main(): Promise<void> {
     };
   }
 
-  const server = buildServer({
+  server = buildServer({
     contextFactory: buildContext,
     name: "@rethunk/citadel-sdd",
     version: VERSION,
   });
 
   const refreshRoots = async (): Promise<void> => {
-    try {
-      const caps = server.server.getClientCapabilities();
-      if (!caps?.roots) return;
-      const result = await server.server.listRoots();
-      const first = result.roots[0];
-      if (first?.uri) {
-        rootDir = rootUriToPath(first.uri);
-      }
-    } catch {
-      // client doesn't support roots or request failed — keep current rootDir
-    }
+    await listClientRootPaths();
   };
 
   server.server.oninitialized = () => {

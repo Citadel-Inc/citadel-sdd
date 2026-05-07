@@ -9,7 +9,7 @@ src/
 ├── index.ts                # entrypoint (MCP stdio server)
 ├── mcp/
 │   ├── server.ts           # JSON-RPC dispatch
-│   ├── tools.ts            # tool registration
+│   ├── workspace.ts         # per-call MCP workspace root resolution
 │   └── schemas.ts          # Zod-derived JSONSchema per tool
 ├── spec/
 │   ├── types.ts            # shared types
@@ -97,3 +97,5 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 | Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
 
 All write tools support `dryRun: true`. Composite tools emit a single conventional commit by default. Per-tool inputs / outputs / failure modes: [docs/mcp-tools.md](mcp-tools.md).
+
+Every tool resolves the target project root per call. Resolution order is: explicit `workspaceRoot`, `rootIndex` into MCP client file roots, primary MCP client file root, then process fallback (`CITADEL_SDD_ROOT`, git top-level of `cwd`, `cwd`). Roots are normalized to the containing `specs/active` tree when present, otherwise to the git top-level when available.

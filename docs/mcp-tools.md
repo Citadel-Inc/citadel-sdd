@@ -8,10 +8,14 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 
 | Field | Default | Notes |
 |-------|---------|-------|
+| `workspaceRoot` | first MCP file root | Highest-priority project-root override. Usually omit it: MCP clients that support roots provide the active workspace automatically. |
+| `rootIndex` | `0` | 0-based index into the MCP file roots list; ignored when `workspaceRoot` is set. Useful in multi-root clients. |
 | `dryRun` | `false` | Preview only — no FS writes, no commits. Returns same diff as live call. |
 | `commit` | profile-default | When `false`, leaves edits staged but does not commit. |
 | `push` | profile-default | Push policy: `never` / `on_close` / `always`. |
 | `format` | `"json"` | `"markdown"` for human-readable rollup. |
+
+All tools resolve their project root at call time from `workspaceRoot`, `rootIndex`, MCP client roots, then process fallback. The fallback still honors `CITADEL_SDD_ROOT` for clients that do not support MCP roots, but normal client wiring does not require an environment variable.
 
 ## Common failure codes
 

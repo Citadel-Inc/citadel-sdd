@@ -40,8 +40,9 @@ import {
   SpecTaskListShape,
   SpecUnblockShape,
 } from "./schemas.js";
+import type { WorkspaceRootPick } from "./workspace.js";
 
-export type ToolContextFactory = () => ToolContext;
+export type ToolContextFactory = (input?: WorkspaceRootPick) => ToolContext | Promise<ToolContext>;
 
 interface CallResult {
   [x: string]: unknown;
@@ -63,10 +64,13 @@ function err(e: unknown): CallResult {
   };
 }
 
-function wrap<I, O>(fn: (input: I, ctx: ToolContext) => O, factory: ToolContextFactory) {
-  return async (input: I): Promise<CallResult> => {
+function wrap<I extends object, O>(
+  fn: (input: I, ctx: ToolContext) => O,
+  factory: ToolContextFactory,
+) {
+  return async (input: I & WorkspaceRootPick): Promise<CallResult> => {
     try {
-      return ok(fn(input, factory()));
+      return ok(fn(input, await factory(input)));
     } catch (e) {
       return err(e);
     }

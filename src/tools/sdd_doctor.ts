@@ -7,7 +7,7 @@ import type { SpecLintFinding } from "./spec_lint.js";
 import { specLint } from "./spec_lint.js";
 import type { ToolContext } from "./types.js";
 
-export type SddDoctorInput = Record<string, never>;
+export type SddDoctorInput = Record<string, unknown>;
 
 export interface SddDoctorOutput {
   inferred_profile: string;

@@ -82,6 +82,38 @@ describe("MCP server wiring", () => {
     await close();
   });
 
+  test("callTool workspaceRoot is passed to an async context factory", async () => {
+    const first = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const second = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    const server = buildServer({
+      contextFactory: async (input) => ({
+        rootDir: input?.workspaceRoot === second.rootDir ? second.rootDir : first.rootDir,
+        profile: resolveBuiltIn("bastion"),
+        clock: CLOCK,
+      }),
+    });
+    const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
+    const client = new Client({ name: "test-client", version: "0.0.0" }, { capabilities: {} });
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+
+      const res = await client.callTool({
+        name: "spec_list",
+        arguments: { workspaceRoot: second.rootDir },
+      });
+      expect(res.isError).not.toBe(true);
+      const content = res.content as Array<{ type: string; text: string }>;
+      const data = JSON.parse(content[0]?.text ?? "[]") as Array<{ slug: string }>;
+      expect(data.map((d) => d.slug)).toEqual(["approved-ratified"]);
+    } finally {
+      await client.close();
+      await server.close();
+      first.cleanup();
+      second.cleanup();
+    }
+  });
+
   test("callTool spec_status returns expected snapshot", async () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
     const { client, close } = await dial();

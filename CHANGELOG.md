@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Workspace root resolution** — Tools now resolve the target project at call time from `workspaceRoot`, `rootIndex`, or MCP client roots before falling back to process state. Normal client wiring no longer requires `CITADEL_SDD_ROOT`; the env var remains only as a compatibility fallback for clients without MCP roots support.
+
 ### Changed
 
 - **`specs/README.md`** — Only `spec_init` and `spec_index_rebuild` perform a full-file `renderIndex` write. All other tools that touch the index apply **targeted** table-row updates through `src/spec/spec_readme.ts` (strip slug from all three tables, insert refreshed row after the separator in the correct bucket, restore `| _(none)_ |` when a table is empty). Trailing markdown after the Parked table is preserved. Full chronological sort of every row remains the job of **`spec_index_rebuild`**; malformed READMEs surface `readme_unparseable` until rebuild.

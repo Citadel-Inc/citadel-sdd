@@ -59,6 +59,8 @@ Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-too
 
 All write tools support `dryRun: true` for preview.
 
+Tools automatically target the active MCP workspace root. In multi-root clients, pass `rootIndex` or `workspaceRoot` to select a different project; environment variables are only a fallback for clients without MCP roots support.
+
 ## Where to go next
 
 - Install detail → [docs/install.md](docs/install.md)

@@ -60,6 +60,7 @@ export function gitMv(ctx: GitContext, from: string, to: string): void {
 export function gitRevParseShowToplevel(cwd: string): string {
   return execFileSync("git", ["-C", cwd, "rev-parse", "--show-toplevel"], {
     encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
   }).trim();
 }
 

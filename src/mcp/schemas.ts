@@ -2,24 +2,39 @@ import { z } from "zod";
 
 const SlugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const PrioritySchema = z.enum(["P0", "P1", "P2"]);
+const WorkspacePickShape = {
+  workspaceRoot: z.string().optional().describe("Highest-priority workspace root override."),
+  rootIndex: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("0-based index into the MCP file roots list; ignored when workspaceRoot is set."),
+} as const;
 
-export const SpecListShape = {
+function withWorkspacePick<T extends Record<string, z.ZodType>>(
+  shape: T,
+): T & typeof WorkspacePickShape {
+  return { ...WorkspacePickShape, ...shape };
+}
+
+export const SpecListShape = withWorkspacePick({
   state: z.enum(["active", "done", "parked", "blocked", "all"]).optional(),
   mine: z.boolean().optional(),
-} as const;
+});
 
-export const SpecReadShape = {
+export const SpecReadShape = withWorkspacePick({
   slug: SlugSchema,
   parts: z.array(z.enum(["spec", "plan", "tasks"])).optional(),
-} as const;
+});
 
-export const SpecStatusShape = {
+export const SpecStatusShape = withWorkspacePick({
   slug: SlugSchema,
   recent_limit: z.number().int().min(0).optional(),
   since: z.string().optional(),
-} as const;
+});
 
-export const SpecLintShape = {
+export const SpecLintShape = withWorkspacePick({
   slug: SlugSchema.optional(),
   include_done: z.boolean().optional(),
   include_parked: z.boolean().optional(),
@@ -33,29 +48,29 @@ export const SpecLintShape = {
     })
     .optional(),
   stale_days: z.number().int().min(0).optional(),
-} as const;
+});
 
-export const SddDoctorShape = {} as const;
+export const SddDoctorShape = withWorkspacePick({});
 
-export const SpecApproveShape = {
+export const SpecApproveShape = withWorkspacePick({
   slug: SlugSchema,
   note: z.string().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
 const RatifyDecisionSchema = z.object({
   text: z.string(),
   as_of_dtg: z.string().optional(),
 });
 
-export const SpecRatifyShape = {
+export const SpecRatifyShape = withWorkspacePick({
   slug: SlugSchema,
   decisions: z.record(z.string(), RatifyDecisionSchema).optional(),
   default_disposition: z.string().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
 const TaskCheckItemSchema = z.object({
   phase: PrioritySchema,
@@ -63,7 +78,7 @@ const TaskCheckItemSchema = z.object({
   checked: z.boolean(),
 });
 
-export const SpecTaskCheckShape = {
+export const SpecTaskCheckShape = withWorkspacePick({
   slug: SlugSchema,
   /** Batch form — check/uncheck multiple items in one call. */
   items: z.array(TaskCheckItemSchema).optional(),
@@ -73,84 +88,84 @@ export const SpecTaskCheckShape = {
   checked: z.boolean().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecTaskListShape = {
+export const SpecTaskListShape = withWorkspacePick({
   slug: SlugSchema,
   phases: z.array(PrioritySchema).optional(),
-} as const;
+});
 
-export const SpecTaskAddShape = {
+export const SpecTaskAddShape = withWorkspacePick({
   slug: SlugSchema,
   phase: PrioritySchema,
   text: z.string().min(1),
   blocker: z.boolean().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecHandoffShape = {
+export const SpecHandoffShape = withWorkspacePick({
   slug: SlugSchema,
   new_owner: z.string().min(1).optional(),
   note: z.string().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecClaimShape = {
+export const SpecClaimShape = withWorkspacePick({
   slug: SlugSchema,
   claimer: z.string().optional(),
   ratify: z.boolean().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecCloseShape = {
+export const SpecCloseShape = withWorkspacePick({
   slug: SlugSchema,
   summary: z.string().min(1).optional(),
   allow_open: z.array(PrioritySchema).optional(),
   commit: z.boolean().optional(),
   push: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecReopenShape = {
+export const SpecReopenShape = withWorkspacePick({
   slug: SlugSchema,
   reason: z.string().min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecParkShape = {
+export const SpecParkShape = withWorkspacePick({
   slug: SlugSchema,
   resolution: z.string().min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecBlockShape = {
+export const SpecBlockShape = withWorkspacePick({
   slug: SlugSchema,
   reason: z.string().min(1),
   blocker_path: z.string().optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecUnblockShape = {
+export const SpecUnblockShape = withWorkspacePick({
   slug: SlugSchema,
   resolution: z.string().min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecIndexRebuildShape = {
+export const SpecIndexRebuildShape = withWorkspacePick({
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
 
-export const SpecInitShape = {
+export const SpecInitShape = withWorkspacePick({
   profile: z.string().min(1),
   overrides: z.record(z.string(), z.unknown()).optional(),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
-} as const;
+});
