@@ -44,4 +44,16 @@ describe("specHandoff", () => {
     temp = makeTempRepo();
     expect(() => specHandoff({ slug: "missing", new_owner: "x" }, ctx())).toThrow("spec_not_found");
   });
+
+  test("falls back to profile default_owner when new_owner omitted", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+    const profile = { ...resolveBuiltIn("bastion"), default_owner: "FleetCaptain" };
+    const out = specHandoff({ slug: "in-progress-midway" }, { rootDir: temp.rootDir, profile });
+    expect(out.after_owner).toBe("FleetCaptain");
+  });
+
+  test("throws new_owner_missing when neither new_owner nor default_owner present", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+    expect(() => specHandoff({ slug: "in-progress-midway" }, ctx())).toThrow("new_owner_missing");
+  });
 });
