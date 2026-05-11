@@ -95,10 +95,12 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 
 | Class | Count | Tools |
 |-------|:---:|-------|
-| Read | 5 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `sdd_doctor` |
+| Read | 6 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `spec_task_list`, `sdd_doctor` |
 | Write atomic | 5 | `spec_approve`, `spec_ratify`, `spec_task_check`, `spec_task_add`, `spec_handoff` |
 | Write composite | 7 | `spec_claim`, `spec_close`, `spec_park`, `spec_unpark`, `spec_reopen`, `spec_block`, `spec_unblock` |
 | Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
+
+Total: **20** (matches `server.registerTool` calls; asserted by `tests/mcp/server.test.ts`).
 
 All write tools support `dryRun: true`. Composite tools emit a single conventional commit by default. Per-tool inputs / outputs / failure modes: [docs/mcp-tools.md](mcp-tools.md).
 

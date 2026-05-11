@@ -10,7 +10,7 @@ MCP server wrapping the **Spec-Driven Development** lifecycle. One atomic MCP ca
 
 ## Highlights
 
-- **16 MCP tools** + 1 diagnostic, covering every lifecycle event from DRAFT through DONE (and back).
+- **19 MCP tools** + 1 diagnostic, covering every lifecycle event from DRAFT through DONE — and back via `spec_reopen` (DONE → IN_PROGRESS), `spec_unblock` (BLOCKED → IN_PROGRESS), and `spec_unpark` (PARKED → IN_PROGRESS).
 - **Three shipped profiles** with inheritance: `default → bastion → citadel`.
 - **Atomic by default** — all-or-nothing edits; failed mid-operation tools restore pre-call state.
 - **Drift-impossible invariants** — `spec.md` status, `tasks.md` status, on-disk path, and `specs/README.md` index always agree after any tool's success.

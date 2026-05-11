@@ -37,7 +37,6 @@ export interface SpecListSlimEntry {
   tasks: { checked: number; total: number };
 }
 
-
 function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }

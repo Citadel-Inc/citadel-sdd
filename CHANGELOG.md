@@ -7,17 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`spec_unpark`** — PARKED → IN_PROGRESS (mirror of `spec_park`, reverse `git mv` parked→active, status tail `unparked — <resolution>`, README row update, single conventional commit). Closes the missing PARKED exit transition; hand-editing frontmatter `status` is forbidden by the SDD discipline rule, so the only acceptable wake path is a dedicated tool. ([#1](https://github.com/Rethunk-AI/citadel-sdd/issues/1), [D-25](docs/decisions.md))
+- **`spec_close` accepts PARKED** — `git mv` parked→done as the "abandon parked spec" path when a wake trigger is permanently obsolete. ([#1](https://github.com/Rethunk-AI/citadel-sdd/issues/1), [D-25](docs/decisions.md))
+- **`spec_list` slim mode + pagination** — new `slim: boolean` returns compact rows `{slug,state,dtg,owner,p0,p1,p2,tasks}` (~80 bytes/row; 211 specs ≈ 17 kB, well under typical MCP token caps). `limit` + `offset` cursor-style pagination after sort. Default row also gains `tasks: { checked, total }` so callers can render progress bars without fanning out to `spec_task_list` per slug. ([#2](https://github.com/Rethunk-AI/citadel-sdd/issues/2), [D-26](docs/decisions.md))
+
 ### Fixed
 
+- **`spec_close` error from BLOCKED** now names `spec_unblock` explicitly, so the next agent does not run an exhaustive tool search to discover the missing transition.
 - **Workspace root resolution** — Tools now resolve the target project at call time from `workspaceRoot`, `rootIndex`, or MCP client roots before falling back to process state. Normal client wiring no longer requires `CITADEL_SDD_ROOT`; the env var remains only as a compatibility fallback for clients without MCP roots support.
 
 ### Changed
 
+- **MCP tool roster** — 19 → 20 (`spec_unpark` added).
+- **Composite tool taxonomy** — 6 → 7 in `docs/architecture.md § Tool taxonomy`.
 - **`specs/README.md`** — Only `spec_init` and `spec_index_rebuild` perform a full-file `renderIndex` write. All other tools that touch the index apply **targeted** table-row updates through `src/spec/spec_readme.ts` (strip slug from all three tables, insert refreshed row after the separator in the correct bucket, restore `| _(none)_ |` when a table is empty). Trailing markdown after the Parked table is preserved. Full chronological sort of every row remains the job of **`spec_index_rebuild`**; malformed READMEs surface `readme_unparseable` until rebuild.
 
 ### Stats
 
-- **317 tests** across 44 files.
+- **344 tests** across 46 files. Coverage: 97.45% functions / 96.11% lines (gate: 80%).
 
 ## [0.4.2] — 2026-05-05
 

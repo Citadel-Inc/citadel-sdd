@@ -37,10 +37,7 @@ describe("specUnpark", () => {
 
   test("happy path: PARKED -> IN_PROGRESS + git mv parked->active", () => {
     temp = makeTempRepo({ parkedFixtures: ["parked-minimal"] });
-    const out = specUnpark(
-      { slug: "parked-minimal", resolution: "trigger reached" },
-      ctx(),
-    );
+    const out = specUnpark({ slug: "parked-minimal", resolution: "trigger reached" }, ctx());
     expect(out.before.state).toBe("PARKED");
     expect(out.after.state).toBe("IN_PROGRESS");
     expect(out.after.path).toContain("active");
