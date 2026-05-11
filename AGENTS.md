@@ -4,7 +4,7 @@ LLM + dev orientation. **This file is intentionally thin** — it points at the 
 
 ## Status
 
-`v0.4.2` — README index tables sort rows by chronological status DTG (newest first).
+`v0.5.0` — PARKED gains `spec_unpark` + `spec_close` (abandon) exits; `spec_list` slim mode + pagination + `tasks:{checked,total}`; 20-tool roster.
 
 ## Canon pointers
 

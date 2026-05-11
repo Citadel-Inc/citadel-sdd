@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] — 2026-05-10
+
 ### Added
 
 - **`spec_unpark`** — PARKED → IN_PROGRESS (mirror of `spec_park`, reverse `git mv` parked→active, status tail `unparked — <resolution>`, README row update, single conventional commit). Closes the missing PARKED exit transition; hand-editing frontmatter `status` is forbidden by the SDD discipline rule, so the only acceptable wake path is a dedicated tool. ([#1](https://github.com/Rethunk-AI/citadel-sdd/issues/1), [D-25](docs/decisions.md))
@@ -22,11 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **MCP tool roster** — 19 → 20 (`spec_unpark` added).
 - **Composite tool taxonomy** — 6 → 7 in `docs/architecture.md § Tool taxonomy`.
+- **TypeScript config split** — `tsconfig.json` now covers `src/` + `tests/` for editor / type-check, with a separate `tsconfig.build.json` for production emission (`rimraf dist && tsc -p tsconfig.build.json`). Tests get full LSP/typecheck without leaking `*.test.ts` into the published `dist/`. New `bun run typecheck` script.
 - **`specs/README.md`** — Only `spec_init` and `spec_index_rebuild` perform a full-file `renderIndex` write. All other tools that touch the index apply **targeted** table-row updates through `src/spec/spec_readme.ts` (strip slug from all three tables, insert refreshed row after the separator in the correct bucket, restore `| _(none)_ |` when a table is empty). Trailing markdown after the Parked table is preserved. Full chronological sort of every row remains the job of **`spec_index_rebuild`**; malformed READMEs surface `readme_unparseable` until rebuild.
 
 ### Stats
 
-- **344 tests** across 46 files. Coverage: 97.45% functions / 96.11% lines (gate: 80%).
+- **374 tests** across 47 files. Coverage: **99.64% functions / 97.70% lines** (gate: 80%) — up from 97.45 / 96.11.
 
 ## [0.4.2] — 2026-05-05
 
