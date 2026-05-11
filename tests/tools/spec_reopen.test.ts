@@ -43,4 +43,18 @@ describe("specReopen", () => {
       "state_invalid",
     );
   });
+
+  test("dryRun: no mutation, no commit", () => {
+    temp = makeTempRepo({ doneFixtures: ["done"] });
+    const out = specReopen({ slug: "done", reason: "preview", dryRun: true }, ctx());
+    expect(out.dryRun).toBe(true);
+    expect(out.commit_sha).toBeNull();
+    expect(existsSync(join(temp.rootDir, "specs", "done", "done"))).toBe(true);
+    expect(existsSync(join(temp.rootDir, "specs", "active", "done"))).toBe(false);
+  });
+
+  test("rejects unknown slug", () => {
+    temp = makeTempRepo();
+    expect(() => specReopen({ slug: "ghost", reason: "x" }, ctx())).toThrow("spec_not_found");
+  });
 });

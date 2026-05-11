@@ -39,6 +39,17 @@ describe("specPark", () => {
     );
   });
 
+  test("dryRun: no mutation, no commit", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const out = specPark({ slug: "draft-minimal", resolution: "preview", dryRun: true }, ctx());
+    expect(out.dryRun).toBe(true);
+    expect(out.commit_sha).toBeNull();
+    expect(out.before.state).toBe("DRAFT");
+    expect(out.after.state).toBe("PARKED");
+    expect(existsSync(join(temp.rootDir, "specs", "active", "draft-minimal"))).toBe(true);
+    expect(existsSync(join(temp.rootDir, "specs", "parked", "draft-minimal"))).toBe(false);
+  });
+
   test("happy path parks DRAFT spec", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const out = specPark({ slug: "draft-minimal", resolution: "superseded by HTTPS MCP" }, ctx());
