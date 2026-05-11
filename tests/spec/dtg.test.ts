@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { formatBastionDTG, formatDTG, nowDTG } from "../../src/spec/dtg.js";
+import { dtgToRecencySortKey, formatBastionDTG, formatDTG, nowDTG } from "../../src/spec/dtg.js";
 
 describe("formatBastionDTG", () => {
   test("01 May 2026 19:45 UTC -> 011945ZMAY26", () => {
@@ -40,5 +40,37 @@ describe("nowDTG", () => {
     const fixed = new Date(Date.UTC(2026, 4, 1, 19, 45, 0));
     expect(nowDTG("DDHHMMZMONYY", () => fixed)).toBe("011945ZMAY26");
     expect(nowDTG("ISO-8601", () => fixed)).toBe("2026-05-01T19:45:00.000Z");
+  });
+
+  test("default clock when none provided returns ISO-8601 parseable string", () => {
+    const stamp = nowDTG("ISO-8601");
+    expect(Number.isNaN(Date.parse(stamp))).toBe(false);
+  });
+});
+
+describe("dtgToRecencySortKey", () => {
+  test("parses Bastion DDHHMMZMONYY with two-digit-year epoch flip at yy >= 70", () => {
+    expect(dtgToRecencySortKey("011945ZMAY26")).toBe(Date.UTC(2026, 4, 1, 19, 45));
+    expect(dtgToRecencySortKey("011945ZMAY69")).toBe(Date.UTC(2069, 4, 1, 19, 45));
+    expect(dtgToRecencySortKey("011945ZMAY70")).toBe(Date.UTC(1970, 4, 1, 19, 45));
+  });
+
+  test("falls through to Date.parse for ISO-8601 strings", () => {
+    expect(dtgToRecencySortKey("2026-05-01T19:45:00Z")).toBe(Date.UTC(2026, 4, 1, 19, 45));
+  });
+
+  test("returns sentinel for empty, malformed Bastion, out-of-range, or unparseable inputs", () => {
+    const sentinel = Number.NEGATIVE_INFINITY;
+    for (const s of [
+      "",
+      "   ",
+      "011945ZXXX26", // bogus month token
+      "001945ZMAY26", // day 0
+      "322400ZMAY26", // day 32 + hour 24
+      "012460ZMAY26", // minute 60
+      "not a dtg",
+    ]) {
+      expect(dtgToRecencySortKey(s)).toBe(sentinel);
+    }
   });
 });
