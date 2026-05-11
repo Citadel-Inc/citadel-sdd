@@ -186,4 +186,11 @@ describe("specTaskCheck", () => {
     ).not.toThrow();
     expect(readFileSync(path, "utf8")).toBe(before);
   });
+
+  test("throws when neither items[] nor flat phase+match+checked supplied", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    expect(() => specTaskCheck({ slug: "draft-minimal" }, ctx())).toThrow(
+      "provide either items[] or flat",
+    );
+  });
 });
