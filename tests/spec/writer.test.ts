@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { parseFrontmatter } from "../../src/spec/parse.js";
-import { spliceFrontmatter } from "../../src/spec/writer.js";
+import { spliceFrontmatter, spliceQTable } from "../../src/spec/writer.js";
 
 const MINIMAL_FM = parseFrontmatter(
   "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |",
@@ -83,5 +83,33 @@ describe("spliceFrontmatter — empty DTG", () => {
     expect(out).toContain("| Status | **DRAFT** |");
     expect(out).not.toContain("| Status | **DRAFT ** |");
     expect(out).not.toContain("| Status | **DRAFT**  |");
+  });
+});
+
+describe("spliceQTable", () => {
+  const row = {
+    id: "Q1",
+    question: "Use TS?",
+    proposedDefault: "Yes",
+    ratified: "Ratified 011945ZMAY26",
+  };
+
+  test("replaces Q-table rows in place", () => {
+    const raw =
+      "# S\n\n## Decisions\n\n| # | Question | Proposed default | NOMAD |\n|---|---|---|---|\n| Q1 | Use TS? | Yes | TBD |\n\n## Next\n";
+    const out = spliceQTable(raw, [row]);
+    expect(out).toContain("| Q1 | Use TS? | Yes | Ratified 011945ZMAY26 |");
+    expect(out).not.toContain("| TBD |");
+    expect(out).toContain("## Next");
+  });
+
+  test("no Q-table anchor + zero new rows is a no-op", () => {
+    const raw = "# S\n\n## Body\nNo decisions section here.\n";
+    expect(spliceQTable(raw, [])).toBe(raw);
+  });
+
+  test("no Q-table anchor + non-empty rows throws qtable_anchor_missing", () => {
+    const raw = "# S\n\n## Body\nNo decisions section.\n";
+    expect(() => spliceQTable(raw, [row])).toThrow("qtable_anchor_missing");
   });
 });
