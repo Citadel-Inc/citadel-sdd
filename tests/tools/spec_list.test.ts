@@ -108,4 +108,47 @@ describe("specList", () => {
     expect(out[0]?.slug).toBe("in-progress-midway");
     expect(out[1]?.slug).toBe("draft-minimal");
   });
+
+  test("entry has tasks.{checked,total} aggregate", () => {
+    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    const out = specList({}, ctx());
+    expect(out[0]?.tasks).toBeDefined();
+    expect(out[0]?.tasks.total).toBe(5);
+    expect(out[0]?.tasks.checked).toBe(1);
+    expect((out[0]?.tasks.total ?? 0) - (out[0]?.tasks.checked ?? 0)).toBe(
+      (out[0]?.p0_remaining ?? 0) + (out[0]?.p1_remaining ?? 0) + (out[0]?.p2_remaining ?? 0),
+    );
+  });
+
+  test("slim mode returns compact rows", () => {
+    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    const out = specList({ slim: true }, ctx());
+    expect(out).toHaveLength(1);
+    const row = out[0];
+    expect(row).toBeDefined();
+    if (!row) return;
+    expect(Object.keys(row).sort()).toEqual(
+      ["slug", "state", "dtg", "owner", "p0", "p1", "p2", "tasks"].sort(),
+    );
+    expect(row.p0).toBe(2);
+    expect(row.tasks.total).toBe(5);
+  });
+
+  test("limit + offset paginate sorted entries", () => {
+    temp = makeTempRepo({
+      activeFixtures: ["draft-minimal", "in-progress-midway", "approved-ratified"],
+    });
+    const page1 = specList({ state: "all", limit: 2, offset: 0 }, ctx());
+    const page2 = specList({ state: "all", limit: 2, offset: 2 }, ctx());
+    expect(page1).toHaveLength(2);
+    expect(page2).toHaveLength(1);
+    const slugs = [...page1, ...page2].map((e) => e.slug);
+    expect(new Set(slugs).size).toBe(3);
+  });
+
+  test("limit=0 returns empty slice", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const out = specList({ limit: 0 }, ctx());
+    expect(out).toEqual([]);
+  });
 });

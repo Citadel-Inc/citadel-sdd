@@ -7,6 +7,9 @@ import type { ToolContext } from "./types.js";
 export interface SpecListInput {
   state?: "active" | "done" | "parked" | "blocked" | "all";
   mine?: boolean;
+  slim?: boolean;
+  limit?: number;
+  offset?: number;
 }
 
 export interface SpecListEntry {
@@ -20,13 +23,41 @@ export interface SpecListEntry {
   p1_remaining: number;
   p2_remaining: number;
   blockers: string[];
+  tasks: { checked: number; total: number };
 }
+
+export interface SpecListSlimEntry {
+  slug: string;
+  state: SpecState;
+  dtg: string;
+  owner: string;
+  p0: number;
+  p1: number;
+  p2: number;
+  tasks: { checked: number; total: number };
+}
+
 
 function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
-export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[] {
+export function specList(
+  input: SpecListInput & { slim: true },
+  ctx: ToolContext,
+): SpecListSlimEntry[];
+export function specList(
+  input: SpecListInput & { slim?: false | undefined },
+  ctx: ToolContext,
+): SpecListEntry[];
+export function specList(
+  input: SpecListInput,
+  ctx: ToolContext,
+): SpecListEntry[] | SpecListSlimEntry[];
+export function specList(
+  input: SpecListInput,
+  ctx: ToolContext,
+): SpecListEntry[] | SpecListSlimEntry[] {
   const requested = input.state ?? "active";
   const dirScope: "active" | "done" | "parked" | "all" =
     requested === "blocked" || requested === "all" ? "all" : requested;
@@ -68,6 +99,13 @@ export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[
     const remaining = (priority: "P0" | "P1" | "P2"): number =>
       tasks.phases[priority].filter((t) => !t.checked).length;
 
+    let checked = 0;
+    let total = 0;
+    for (const p of ["P0", "P1", "P2"] as const) {
+      total += tasks.phases[p].length;
+      checked += tasks.phases[p].filter((t) => t.checked).length;
+    }
+
     entries.push({
       slug: loc.slug,
       state: spec.frontmatter.status.state,
@@ -79,6 +117,7 @@ export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[
       p1_remaining: remaining("P1"),
       p2_remaining: remaining("P2"),
       blockers: [],
+      tasks: { checked, total },
     });
   }
 
@@ -94,5 +133,25 @@ export function specList(input: SpecListInput, ctx: ToolContext): SpecListEntry[
     entries.sort((a, b) => b.dtg.localeCompare(a.dtg));
   }
 
-  return entries;
+  const offset = Math.max(0, input.offset ?? 0);
+  const limit = input.limit !== undefined && input.limit >= 0 ? input.limit : undefined;
+  const sliced =
+    limit !== undefined ? entries.slice(offset, offset + limit) : entries.slice(offset);
+
+  if (input.slim === true) {
+    return sliced.map(
+      (e): SpecListSlimEntry => ({
+        slug: e.slug,
+        state: e.state,
+        dtg: e.dtg,
+        owner: e.owner,
+        p0: e.p0_remaining,
+        p1: e.p1_remaining,
+        p2: e.p2_remaining,
+        tasks: e.tasks,
+      }),
+    );
+  }
+
+  return sliced;
 }

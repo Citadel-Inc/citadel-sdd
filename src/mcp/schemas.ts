@@ -21,6 +21,24 @@ function withWorkspacePick<T extends Record<string, z.ZodType>>(
 export const SpecListShape = withWorkspacePick({
   state: z.enum(["active", "done", "parked", "blocked", "all"]).optional(),
   mine: z.boolean().optional(),
+  slim: z
+    .boolean()
+    .optional()
+    .describe(
+      "Return compact rows ({slug,state,dtg,owner,p0,p1,p2,tasks}) instead of full entries. Recommended for large backlogs to stay under MCP token caps.",
+    ),
+  limit: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Cap the number of rows returned after sort + slim."),
+  offset: z
+    .number()
+    .int()
+    .min(0)
+    .optional()
+    .describe("Skip the first N sorted rows. Use with `limit` for cursor-style paging."),
 });
 
 export const SpecReadShape = withWorkspacePick({

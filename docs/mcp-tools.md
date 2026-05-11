@@ -40,9 +40,13 @@ All tools resolve their project root at call time from `workspaceRoot`, `rootInd
 
 List specs by state, optionally filtered to caller.
 
-**Inputs:** `{ state?: "active"|"done"|"parked"|"blocked"|"all", mine?: boolean, format?: "compact"|"table"|"json" }`. Defaults: `state="active"`, `mine=false`, `format="compact"`.
+**Inputs:** `{ state?: "active"|"done"|"parked"|"blocked"|"all", mine?: boolean, slim?: boolean, limit?: number, offset?: number }`. Defaults: `state="active"`, `mine=false`, `slim=false`, no pagination.
 
-**Output:** ordered array of `{ slug, state, dtg, owner, approved_dtg, ratified, p0_remaining, p1_remaining, p2_remaining, blockers }`. Sort by DTG descending unless `mine=true` (then by remaining-task count ascending).
+**Output (default):** ordered array of `{ slug, state, dtg, owner, approved_dtg, ratified, p0_remaining, p1_remaining, p2_remaining, blockers, tasks: { checked, total } }`. Sort by DTG descending unless `mine=true` (then by remaining-task count ascending).
+
+**Output (slim):** when `slim: true`, each row is `{ slug, state, dtg, owner, p0, p1, p2, tasks: { checked, total } }` (~80 bytes/row).
+
+**Scaling note:** the default row is ~260 bytes; large backlogs (200+ specs across all buckets) with `state: "all"` exceed typical MCP client output caps (Rethunk-AI/citadel-sdd#2). Pass `slim: true` (~17 kB at 211 rows), or paginate with `{ limit, offset }`. The default `state: "active"` is intentionally narrow precisely so most callers stay under the cap.
 
 ### `spec_read`
 

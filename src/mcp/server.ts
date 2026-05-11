@@ -99,7 +99,8 @@ export function buildServer(opts: BuildServerOptions): McpServer {
   server.registerTool(
     "spec_list",
     {
-      description: "List specs by lifecycle state, optionally filtered to caller.",
+      description:
+        "List specs by lifecycle state, optionally filtered to caller. Large backlogs (~200+ specs) overflow MCP token caps when state='all' is used with the default row shape; pass slim:true (~80 bytes/row) or paginate with {limit, offset}.",
       inputSchema: SpecListShape,
     },
     wrap(specList, ctxFactory),
