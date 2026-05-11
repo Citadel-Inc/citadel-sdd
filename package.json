@@ -26,7 +26,8 @@
     }
   },
   "scripts": {
-    "build": "rimraf dist && tsc && mkdir -p dist/profile && cp src/profile/*.yaml dist/profile/",
+    "build": "rimraf dist && tsc -p tsconfig.build.json && mkdir -p dist/profile && cp src/profile/*.yaml dist/profile/",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "check": "biome check .",
     "check:fix": "biome check --write .",
     "test": "bun test src/ tests/",
