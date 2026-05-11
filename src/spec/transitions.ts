@@ -7,7 +7,8 @@ export type Transition =
   | "spec_block"
   | "spec_unblock"
   | "spec_reopen"
-  | "spec_park";
+  | "spec_park"
+  | "spec_unpark";
 
 export interface TransitionContext {
   claimerIsAuthor?: boolean;
@@ -41,7 +42,18 @@ export function canTransition(
 
     case "spec_close":
       if (from === "IN_PROGRESS") return { ok: true, to: "DONE" };
-      return { ok: false, error: `state_invalid: spec_close requires IN_PROGRESS, got ${from}` };
+      if (from === "PARKED") return { ok: true, to: "DONE" };
+      if (from === "BLOCKED") {
+        return {
+          ok: false,
+          error:
+            "state_invalid: spec_close requires IN_PROGRESS or PARKED, got BLOCKED — use spec_unblock first",
+        };
+      }
+      return {
+        ok: false,
+        error: `state_invalid: spec_close requires IN_PROGRESS or PARKED, got ${from}`,
+      };
 
     case "spec_block":
       if (from === "IN_PROGRESS") return { ok: true, to: "BLOCKED" };
@@ -63,6 +75,10 @@ export function canTransition(
         ok: false,
         error: `state_invalid: spec_park requires DRAFT, APPROVED, IN_PROGRESS, or BLOCKED, got ${from}`,
       };
+
+    case "spec_unpark":
+      if (from === "PARKED") return { ok: true, to: "IN_PROGRESS" };
+      return { ok: false, error: `state_invalid: spec_unpark requires PARKED, got ${from}` };
   }
 }
 

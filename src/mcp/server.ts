@@ -18,6 +18,7 @@ import { specTaskAdd } from "../tools/spec_task_add.js";
 import { specTaskCheck } from "../tools/spec_task_check.js";
 import { specTaskList } from "../tools/spec_task_list.js";
 import { specUnblock } from "../tools/spec_unblock.js";
+import { specUnpark } from "../tools/spec_unpark.js";
 import type { ToolContext } from "../tools/types.js";
 import {
   SddDoctorShape,
@@ -39,6 +40,7 @@ import {
   SpecTaskCheckShape,
   SpecTaskListShape,
   SpecUnblockShape,
+  SpecUnparkShape,
 } from "./schemas.js";
 import type { WorkspaceRootPick } from "./workspace.js";
 
@@ -248,6 +250,16 @@ export function buildServer(opts: BuildServerOptions): McpServer {
       inputSchema: SpecUnblockShape,
     },
     wrap(specUnblock, ctxFactory),
+  );
+
+  server.registerTool(
+    "spec_unpark",
+    {
+      description:
+        "PARKED → IN_PROGRESS + git mv parked→active + index rebuild + commit. Wake a held spec.",
+      inputSchema: SpecUnparkShape,
+    },
+    wrap(specUnpark, ctxFactory),
   );
 
   server.registerTool(

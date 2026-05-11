@@ -50,8 +50,9 @@ Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-too
 | Add a tasks.md item | `spec_task_add` |
 | Reassign owner | `spec_handoff` |
 | Claim (DRAFT/APPROVED → IN_PROGRESS) | `spec_claim` |
-| Close (IN_PROGRESS → DONE) | `spec_close` |
-| Park (abandon / supersede — → PARKED) | `spec_park` |
+| Close (IN_PROGRESS → DONE; also PARKED → DONE to abandon) | `spec_close` |
+| Park (hold pending trigger — → PARKED) | `spec_park` |
+| Unpark (wake trigger fired — PARKED → IN_PROGRESS) | `spec_unpark` |
 | Reopen (DONE → IN_PROGRESS) | `spec_reopen` |
 | Block / unblock | `spec_block` / `spec_unblock` |
 | Regenerate `specs/README.md` | `spec_index_rebuild` |

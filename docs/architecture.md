@@ -41,8 +41,9 @@ Tests mirror `src/` under `tests/`. Synthetic fixtures live in `tests/spec-fixtu
 
 ```
 DRAFT ──spec_approve──► APPROVED ──spec_claim──► IN_PROGRESS ──spec_close──► DONE
-   │                                    │              │
-   │                                    │              ├──spec_park──► PARKED (terminal bucket under specs/parked/)
+   │                                    │              │                       ▲
+   │                                    │              ├──spec_park──► PARKED ─┤  (spec_close abandons)
+   │                                    │              │                ╰──spec_unpark──► IN_PROGRESS
    │                                    │              ├─spec_block─► BLOCKED ─spec_unblock─► IN_PROGRESS
    │                                    │              │
    └──────spec_claim (allowed if claimer = author)─────┘
@@ -51,7 +52,10 @@ DRAFT ──spec_approve──► APPROVED ──spec_claim──► IN_PROGRESS
                                               DONE ──spec_reopen──┘
 ```
 
-`PARKED` is for specs that are **deliberately not pursued** (superseded, withdrawn). Reachable from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED via `spec_park` (moves `specs/active/<slug>/` → `specs/parked/<slug>/`). There is no automated `spec_unpark` in v1 — recover manually if needed.
+`PARKED` is for specs that are **deliberately not pursued yet** (superseded, withdrawn, or held pending an external trigger such as a calendar gate, customer inbound, or Phase-N ratification). Reachable from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED via `spec_park` (moves `specs/active/<slug>/` → `specs/parked/<slug>/`). Exits:
+
+- `spec_unpark` → IN_PROGRESS (wake trigger fired; moves parked→active).
+- `spec_close` → DONE (abandon; trigger permanently obsolete).
 
 Transition rules:
 
@@ -59,7 +63,7 @@ Transition rules:
 - BLOCKED reachable only from IN_PROGRESS.
 - DRAFT → DONE direct: invalid.
 - DONE → DRAFT: invalid; use `spec_reopen` then iterate.
-- PARKED: terminal for abandoned specs; not a stepping stone to DONE.
+- BLOCKED → DONE direct: invalid; `spec_unblock` first (the close error message says so).
 - Each transition appends a row to `## History` in `spec.md` (DTG + actor + transition).
 
 ## File-system contract
@@ -93,7 +97,7 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 |-------|:---:|-------|
 | Read | 5 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `sdd_doctor` |
 | Write atomic | 5 | `spec_approve`, `spec_ratify`, `spec_task_check`, `spec_task_add`, `spec_handoff` |
-| Write composite | 6 | `spec_claim`, `spec_close`, `spec_park`, `spec_reopen`, `spec_block`, `spec_unblock` |
+| Write composite | 7 | `spec_claim`, `spec_close`, `spec_park`, `spec_unpark`, `spec_reopen`, `spec_block`, `spec_unblock` |
 | Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
 
 All write tools support `dryRun: true`. Composite tools emit a single conventional commit by default. Per-tool inputs / outputs / failure modes: [docs/mcp-tools.md](mcp-tools.md).

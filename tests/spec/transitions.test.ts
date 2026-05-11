@@ -20,6 +20,7 @@ const ALL_TRANSITIONS: ReadonlyArray<Transition> = [
   "spec_unblock",
   "spec_reopen",
   "spec_park",
+  "spec_unpark",
 ];
 
 describe("canTransition — legal moves", () => {
@@ -45,6 +46,18 @@ describe("canTransition — legal moves", () => {
     const r = canTransition("IN_PROGRESS", "spec_close");
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.to).toBe("DONE");
+  });
+
+  test("spec_close: PARKED → DONE (abandon parked spec)", () => {
+    const r = canTransition("PARKED", "spec_close");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.to).toBe("DONE");
+  });
+
+  test("spec_unpark: PARKED → IN_PROGRESS", () => {
+    const r = canTransition("PARKED", "spec_unpark");
+    expect(r.ok).toBe(true);
+    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
   });
 
   test("spec_block: IN_PROGRESS → BLOCKED", () => {
@@ -105,6 +118,22 @@ describe("canTransition — illegal moves", () => {
     expect(r.ok).toBe(false);
   });
 
+  test("spec_close from BLOCKED rejected with unblock hint", () => {
+    const r = canTransition("BLOCKED", "spec_close");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toContain("spec_unblock");
+  });
+
+  test("spec_unpark from IN_PROGRESS rejected", () => {
+    const r = canTransition("IN_PROGRESS", "spec_unpark");
+    expect(r.ok).toBe(false);
+  });
+
+  test("spec_unpark from DONE rejected", () => {
+    const r = canTransition("DONE", "spec_unpark");
+    expect(r.ok).toBe(false);
+  });
+
   test("spec_block from APPROVED rejected (BLOCKED reachable only from IN_PROGRESS)", () => {
     const r = canTransition("APPROVED", "spec_block");
     expect(r.ok).toBe(false);
@@ -138,6 +167,7 @@ describe("canTransition — exhaustive matrix", () => {
       "DRAFT|spec_claim", // gated on claimerIsAuthor
       "APPROVED|spec_claim",
       "IN_PROGRESS|spec_close",
+      "PARKED|spec_close",
       "IN_PROGRESS|spec_block",
       "BLOCKED|spec_unblock",
       "DONE|spec_reopen",
@@ -145,6 +175,7 @@ describe("canTransition — exhaustive matrix", () => {
       "APPROVED|spec_park",
       "IN_PROGRESS|spec_park",
       "BLOCKED|spec_park",
+      "PARKED|spec_unpark",
     ]);
 
     for (const state of ALL_STATES) {

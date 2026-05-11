@@ -40,7 +40,7 @@ async function dial(): Promise<{ client: Client; close: () => Promise<void> }> {
 }
 
 describe("MCP server wiring", () => {
-  test("listTools returns the full 19-tool roster", async () => {
+  test("listTools returns the full 20-tool roster", async () => {
     temp = makeTempRepo();
     const { client, close } = await dial();
     const list = await client.listTools();
@@ -66,6 +66,7 @@ describe("MCP server wiring", () => {
         "spec_task_check",
         "spec_task_list",
         "spec_unblock",
+        "spec_unpark",
       ].sort(),
     );
     await close();

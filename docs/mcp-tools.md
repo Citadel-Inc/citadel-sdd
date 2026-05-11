@@ -82,7 +82,7 @@ Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked 
 
 ### `specs/README.md` index edits
 
-Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_claim`, `spec_approve`, `spec_block`, `spec_unblock`, `spec_handoff`, `spec_close`, `spec_park`, `spec_reopen`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
+Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_claim`, `spec_approve`, `spec_block`, `spec_unblock`, `spec_handoff`, `spec_close`, `spec_park`, `spec_unpark`, `spec_reopen`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
 
 ---
 
@@ -148,13 +148,13 @@ DRAFT/APPROVED → IN_PROGRESS + optional ratify + commit.
 
 ### `spec_close`
 
-IN_PROGRESS → DONE + `git mv` active→done + targeted `${spec_dir}/README.md` row update + commit + optional push.
+IN_PROGRESS or PARKED → DONE + `git mv` active|parked→done + targeted `${spec_dir}/README.md` row update + commit + optional push. Closing from PARKED is the "abandon parked spec" path — use when the wake trigger is permanently obsolete; use [`spec_unpark`](#spec_unpark) to wake the spec instead.
 
 **Inputs:** `{ slug, summary, allow_open?: ("p0"|"p1"|"p2")[], commit?: boolean, push?: boolean, dryRun?: boolean }`. `push` defaults to profile's `push_policy`.
 
 **Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, pushed: boolean, dryRun: boolean }`.
 
-**Failure modes:** `state_invalid`, `tasks_open`, `working_tree_dirty`, `summary_missing`.
+**Failure modes:** `state_invalid` (e.g. BLOCKED — run `spec_unblock` first; DRAFT/APPROVED — claim or park first), `tasks_open`, `working_tree_dirty`, `summary_missing`.
 
 ### `spec_park`
 
@@ -189,6 +189,16 @@ BLOCKED → IN_PROGRESS + reason close.
 **Inputs:** `{ slug, resolution }`.
 
 **Output:** `{ slug, before, after, commit_sha }`.
+
+### `spec_unpark`
+
+PARKED → IN_PROGRESS + reverse `git mv` parked→active + targeted `${spec_dir}/README.md` row update + commit. Mirror of `spec_park`; use when the parked wake trigger fires (calendar gate, customer inbound, Phase-N ratification).
+
+**Inputs:** `{ slug, resolution, commit?: boolean, dryRun?: boolean }`. `resolution` is required and recorded in the status tail (`unparked — <resolution>`).
+
+**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, dryRun }`.
+
+**Failure modes:** `state_invalid` (spec not PARKED), `spec_not_found`, `resolution_missing`, `working_tree_dirty`.
 
 ---
 

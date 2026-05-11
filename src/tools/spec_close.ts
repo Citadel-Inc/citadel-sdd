@@ -127,7 +127,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   writeFileSync(loc.specMd, newSpecRaw);
   writeFileSync(loc.tasksMd, newTasksRaw);
 
-  if (loc.state === "active") {
+  if (loc.state === "active" || loc.state === "parked") {
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
   }
 

@@ -158,6 +158,13 @@ export const SpecUnblockShape = withWorkspacePick({
   dryRun: z.boolean().optional(),
 });
 
+export const SpecUnparkShape = withWorkspacePick({
+  slug: SlugSchema,
+  resolution: z.string().min(1),
+  commit: z.boolean().optional(),
+  dryRun: z.boolean().optional(),
+});
+
 export const SpecIndexRebuildShape = withWorkspacePick({
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
