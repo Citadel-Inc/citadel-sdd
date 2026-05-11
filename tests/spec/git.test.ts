@@ -1,13 +1,17 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   assertWorkingTreeClean,
   gitAdd,
   gitCommit,
+  gitConfigSet,
   gitConfigUserEmail,
   gitConfigUserName,
+  gitInit,
   gitMv,
+  gitRevParseShowToplevel,
   gitStatusPorcelain,
   gitWorkingTreeDirty,
 } from "../../src/spec/git.js";
@@ -56,14 +60,16 @@ describe("gitWorkingTreeDirty", () => {
 describe("assertWorkingTreeClean", () => {
   test("throws when unrelated files are dirty", () => {
     temp = makeTempRepo();
-    writeFileSync(join(temp.rootDir, "extra.txt"), "x");
-    expect(() => assertWorkingTreeClean({ rootDir: temp.rootDir })).toThrow("working_tree_dirty");
+    const t = temp;
+    writeFileSync(join(t.rootDir, "extra.txt"), "x");
+    expect(() => assertWorkingTreeClean({ rootDir: t.rootDir })).toThrow("working_tree_dirty");
   });
 
   test("permits ignored dirty paths", () => {
     temp = makeTempRepo();
-    writeFileSync(join(temp.rootDir, "specs", "scratch.md"), "x");
-    expect(() => assertWorkingTreeClean({ rootDir: temp.rootDir }, ["specs"])).not.toThrow();
+    const t = temp;
+    writeFileSync(join(t.rootDir, "specs", "scratch.md"), "x");
+    expect(() => assertWorkingTreeClean({ rootDir: t.rootDir }, ["specs"])).not.toThrow();
   });
 });
 
@@ -80,7 +86,8 @@ describe("gitAdd + gitCommit", () => {
 
   test("gitAdd noop on empty file list", () => {
     temp = makeTempRepo();
-    expect(() => gitAdd({ rootDir: temp.rootDir }, [])).not.toThrow();
+    const t = temp;
+    expect(() => gitAdd({ rootDir: t.rootDir }, [])).not.toThrow();
   });
 });
 
@@ -99,5 +106,26 @@ describe("gitConfigUserName / Email", () => {
     temp = makeTempRepo();
     expect(gitConfigUserName({ rootDir: temp.rootDir })).toBe("Test Agent");
     expect(gitConfigUserEmail({ rootDir: temp.rootDir })).toBe("test@example.com");
+  });
+
+  test("returns '' when -C target does not exist (catch branch)", () => {
+    const bogus = join(tmpdir(), `citadel-git-missing-${Date.now()}`);
+    expect(gitConfigUserName({ rootDir: bogus })).toBe("");
+    expect(gitConfigUserEmail({ rootDir: bogus })).toBe("");
+  });
+});
+
+describe("gitInit / gitConfigSet / gitRevParseShowToplevel", () => {
+  test("gitInit + gitConfigSet wire a usable repo, revparse returns toplevel", () => {
+    const scratch = mkdtempSync(join(tmpdir(), "citadel-git-init-"));
+    try {
+      gitInit(scratch);
+      gitConfigSet({ rootDir: scratch }, "user.name", "Init User");
+      gitConfigSet({ rootDir: scratch }, "user.email", "init@example.com");
+      expect(gitConfigUserName({ rootDir: scratch })).toBe("Init User");
+      expect(gitRevParseShowToplevel(scratch)).toBe(scratch);
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   });
 });
