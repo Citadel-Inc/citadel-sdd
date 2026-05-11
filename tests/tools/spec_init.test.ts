@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { execSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
@@ -71,5 +71,16 @@ describe("specInit", () => {
   test("rejects when specs/ already populated", () => {
     specInit({ profile: "default" }, ctx());
     expect(() => specInit({ profile: "bastion" }, ctx())).toThrow("specs_already_populated");
+  });
+
+  test("rejects when specs/ has stray content (subdir with file OR top-level file)", () => {
+    mkdirSync(join(workdir, "specs", "active"), { recursive: true });
+    writeFileSync(join(workdir, "specs", "active", "leftover.md"), "x");
+    expect(() => specInit({ profile: "default" }, ctx())).toThrow("specs_already_populated");
+    rmSync(join(workdir, "specs"), { recursive: true, force: true });
+
+    mkdirSync(join(workdir, "specs"), { recursive: true });
+    writeFileSync(join(workdir, "specs", "stray.txt"), "x");
+    expect(() => specInit({ profile: "default" }, ctx())).toThrow("specs_already_populated");
   });
 });

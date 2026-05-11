@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specRatify } from "../../src/tools/spec_ratify.js";
@@ -24,8 +24,8 @@ describe("specRatify", () => {
   test("bulk ratify: TBD rows → Ratified <DTG>", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const specPath = join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md");
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.writeFileSync(
+
+    writeFileSync(
       specPath,
       `# T
 
@@ -52,9 +52,9 @@ describe("specRatify", () => {
   test("per-decision overrides preserved", () => {
     temp = makeTempRepo();
     const dir = join(temp.rootDir, "specs", "active", "deciding");
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
+
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
       join(dir, "spec.md"),
       `# T
 
@@ -70,8 +70,8 @@ describe("specRatify", () => {
 | Q2 | y? | No | TBD |
 `,
     );
-    fs.writeFileSync(join(dir, "plan.md"), "");
-    fs.writeFileSync(
+    writeFileSync(join(dir, "plan.md"), "");
+    writeFileSync(
       join(dir, "tasks.md"),
       "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n",
     );

@@ -42,9 +42,9 @@ describe("specClose", () => {
 
   test("happy path closes from a fully-checked spec", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
-    const fs = require("node:fs") as typeof import("node:fs");
+
     const tasksPath = join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md");
-    fs.writeFileSync(
+    writeFileSync(
       tasksPath,
       `# T
 
@@ -87,9 +87,9 @@ describe("specClose", () => {
 
   test("allow_open=[P2] permits open P2 items", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
-    const fs = require("node:fs") as typeof import("node:fs");
+
     const tasksPath = join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md");
-    fs.writeFileSync(
+    writeFileSync(
       tasksPath,
       `# T
 
@@ -131,8 +131,8 @@ describe("specClose", () => {
 
   test("dryRun no write, no mv", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.writeFileSync(
+
+    writeFileSync(
       join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
       `# T
 
@@ -162,10 +162,73 @@ describe("specClose", () => {
     expect(existsSync(join(temp.rootDir, "specs", "done", "in-progress-midway"))).toBe(false);
   });
 
+  test("auto-checks spec-close item + summary_template fallback when no summary input", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+
+    writeFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
+      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] real work\n- [ ] E4. Spec close.\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+    );
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
+
+    const baseProfile = resolveBuiltIn("bastion");
+    const profile = { ...baseProfile, summary_template: "Closed {slug} @ {dtg}" };
+    const ctxTpl: ToolContext = { rootDir: temp.rootDir, profile, clock: CLOCK };
+
+    const out = specClose({ slug: "in-progress-midway" }, ctxTpl);
+    expect(out.after.state).toBe("DONE");
+    const movedDir = join(temp.rootDir, "specs", "done", "in-progress-midway");
+    const md = readFileSync(join(movedDir, "spec.md"), "utf8");
+    expect(md).toContain("DONE 011945ZMAY26 — Closed in-progress-midway @ 011945ZMAY26");
+    const tasksMd = readFileSync(join(movedDir, "tasks.md"), "utf8");
+    expect(tasksMd).toContain("- [x] E4. Spec close.");
+  });
+
+  test("rejects from BLOCKED with spec_unblock hint", () => {
+    temp = makeTempRepo({ activeFixtures: ["blocked-reason"] });
+    expect(() => specClose({ slug: "blocked-reason", summary: "abandon" }, ctx())).toThrow(
+      /spec_unblock/,
+    );
+  });
+
+  test("push success path against local bare upstream", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+
+    writeFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
+      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+    );
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
+
+    const bare = `${temp.rootDir}.upstream.git`;
+    execSync(`git init --bare ${bare}`);
+    execSync(`git -C ${temp.rootDir} remote add origin ${bare}`);
+    execSync(`git -C ${temp.rootDir} push -u origin main`);
+
+    const out = specClose({ slug: "in-progress-midway", summary: "shipped", push: true }, ctx());
+    expect(out.pushed).toBe(true);
+    expect(out.push_error).toBeUndefined();
+
+    execSync(`rm -rf ${bare}`);
+  });
+
+  test("push error path captured when no upstream configured", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+
+    writeFileSync(
+      join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
+      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+    );
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
+    const out = specClose({ slug: "in-progress-midway", summary: "shipped", push: true }, ctx());
+    expect(out.pushed).toBe(false);
+    expect(out.push_error).toBeDefined();
+  });
+
   test("commit rejects unrelated dirty files", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.writeFileSync(
+
+    writeFileSync(
       join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
       `# T
 

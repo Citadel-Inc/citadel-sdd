@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { crossCutting } from "../../src/lint/cross_cutting.js";
 import type { RepoContext } from "../../src/spec/repo.js";
@@ -20,8 +20,8 @@ function repo(): RepoContext {
 describe("crossCutting", () => {
   test("ready-to-close fires when all checked + no human gates", () => {
     temp = makeTempRepo({ activeFixtures: ["done"] });
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.renameSync(
+
+    renameSync(
       join(temp.rootDir, "specs", "active", "done"),
       join(temp.rootDir, "specs", "active", "ready-spec"),
     );

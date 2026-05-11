@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, unlinkSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { sddDoctor } from "../../src/tools/sdd_doctor.js";
@@ -62,8 +62,8 @@ describe("sddDoctor", () => {
 
   test("missing config.yaml recommends spec_init", () => {
     temp = makeTempRepo();
-    const fs = require("node:fs") as typeof import("node:fs");
-    fs.unlinkSync(join(temp.rootDir, "specs", "config.yaml"));
+
+    unlinkSync(join(temp.rootDir, "specs", "config.yaml"));
     const out = sddDoctor({}, ctx());
     expect(out.inferred_profile).toBe("unknown");
     expect(out.recommendations.some((r) => r.includes("spec_init"))).toBe(true);

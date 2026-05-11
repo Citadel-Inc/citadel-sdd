@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specClaim } from "../../src/tools/spec_claim.js";
@@ -38,10 +38,10 @@ describe("specClaim", () => {
 
   test("DRAFT -> IN_PROGRESS only when claimer is owner; bulk-ratifies Q-table by default", () => {
     temp = makeTempRepo();
-    const fs = require("node:fs") as typeof import("node:fs");
+
     const dir = join(temp.rootDir, "specs", "active", "draft-mine");
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
       join(dir, "spec.md"),
       `# Mine
 
@@ -57,8 +57,8 @@ describe("specClaim", () => {
 | Q1 | Yes? | Yes | TBD |
 `,
     );
-    fs.writeFileSync(join(dir, "plan.md"), "");
-    fs.writeFileSync(
+    writeFileSync(join(dir, "plan.md"), "");
+    writeFileSync(
       join(dir, "tasks.md"),
       "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n",
     );
@@ -73,15 +73,15 @@ describe("specClaim", () => {
 
   test("DRAFT claim by non-owner rejected", () => {
     temp = makeTempRepo();
-    const fs = require("node:fs") as typeof import("node:fs");
+
     const dir = join(temp.rootDir, "specs", "active", "draft-other");
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(
       join(dir, "spec.md"),
       "# X\n\n| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | OwnerA |\n",
     );
-    fs.writeFileSync(join(dir, "plan.md"), "");
-    fs.writeFileSync(
+    writeFileSync(join(dir, "plan.md"), "");
+    writeFileSync(
       join(dir, "tasks.md"),
       "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n",
     );
@@ -93,9 +93,9 @@ describe("specClaim", () => {
 
   test("ratify:false rejects when TBD rows present", () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
-    const fs = require("node:fs") as typeof import("node:fs");
+
     const path = join(temp.rootDir, "specs", "active", "approved-ratified", "spec.md");
-    fs.writeFileSync(
+    writeFileSync(
       path,
       `# X
 
@@ -127,5 +127,53 @@ describe("specClaim", () => {
   test("rejects spec_claim from DONE", () => {
     temp = makeTempRepo({ doneFixtures: ["done"] });
     expect(() => specClaim({ slug: "done", claimer: "Bastion" }, ctx())).toThrow("state_invalid");
+  });
+
+  test("defaultClaimer: profile default_claimer wins over git config", () => {
+    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    const profile = { ...resolveBuiltIn("bastion"), default_claimer: "ProfilePicked" };
+    specClaim({ slug: "approved-ratified" }, { rootDir: temp.rootDir, profile, clock: CLOCK });
+    const md = readFileSync(
+      join(temp.rootDir, "specs", "active", "approved-ratified", "spec.md"),
+      "utf8",
+    );
+    expect(md).toContain("ProfilePicked claims execution");
+  });
+
+  test("defaultClaimer: falls back to git config user.name when default_claimer empty", () => {
+    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    specClaim({ slug: "approved-ratified" }, ctx());
+    const md = readFileSync(
+      join(temp.rootDir, "specs", "active", "approved-ratified", "spec.md"),
+      "utf8",
+    );
+    expect(md).toContain("Test Agent claims execution");
+  });
+
+  test("defaultClaimer: falls back to 'Bastion' when both empty", () => {
+    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+    execSync(`git -C ${temp.rootDir} config user.name ""`);
+    const profile = { ...resolveBuiltIn("bastion"), default_claimer: "" };
+    specClaim(
+      { slug: "approved-ratified", commit: false },
+      { rootDir: temp.rootDir, profile, clock: CLOCK },
+    );
+    const md = readFileSync(
+      join(temp.rootDir, "specs", "active", "approved-ratified", "spec.md"),
+      "utf8",
+    );
+    expect(md).toContain("Bastion claims execution");
+  });
+
+  test("rejects unknown slug", () => {
+    temp = makeTempRepo();
+    expect(() => specClaim({ slug: "ghost" }, ctx())).toThrow("spec_not_found");
+  });
+
+  test("owner_mismatch when IN_PROGRESS held by a different owner", () => {
+    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
+    expect(() => specClaim({ slug: "in-progress-midway", claimer: "Outsider" }, ctx())).toThrow(
+      "owner_mismatch",
+    );
   });
 });
