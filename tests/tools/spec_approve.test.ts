@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
@@ -96,5 +97,30 @@ describe("specApprove", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
     expect(() => specApprove({ slug: "draft-minimal" }, ctx())).toThrow("working_tree_dirty");
+  });
+
+  test("freeform commit style yields `Approve <slug>[: note]` subject", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const t = temp;
+    specApprove({ slug: "draft-minimal", note: "shipping" }, ctx("default"));
+    const withNote = execSync(`git -C ${t.rootDir} log -1 --pretty=%s`).toString().trim();
+    expect(withNote).toBe("Approve draft-minimal: shipping");
+
+    temp.cleanup();
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const t2 = temp;
+    specApprove({ slug: "draft-minimal" }, ctx("default"));
+    const noNote = execSync(`git -C ${t2.rootDir} log -1 --pretty=%s`).toString().trim();
+    expect(noNote).toBe("Approve draft-minimal");
+  });
+
+  test("dryRun does not write or commit", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const path = join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md");
+    const before = readFileSync(path, "utf8");
+    const out = specApprove({ slug: "draft-minimal", dryRun: true }, ctx());
+    expect(out.dryRun).toBe(true);
+    expect(out.commit_sha).toBeNull();
+    expect(readFileSync(path, "utf8")).toBe(before);
   });
 });
