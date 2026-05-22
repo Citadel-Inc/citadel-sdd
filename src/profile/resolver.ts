@@ -39,6 +39,16 @@ function parseFragment(raw: string): ProfileFragment {
   return ProfileFragmentSchema.parse(parsed);
 }
 
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === "object" && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Recursively merges child into parent for plain-object values so that a child
+ * profile can partially extend nested objects (e.g. lint_rules) rather than
+ * wholesale replacing them. Arrays replace wholesale — this is intentional and
+ * conventional: a child that sets `states` owns the full list.
+ */
 function deepMerge(
   parent: Record<string, unknown>,
   child: Record<string, unknown>,
@@ -46,7 +56,11 @@ function deepMerge(
   const out: Record<string, unknown> = { ...parent };
   for (const [k, v] of Object.entries(child)) {
     if (v === undefined) continue;
-    out[k] = v;
+    if (isPlainObject(v) && isPlainObject(out[k])) {
+      out[k] = deepMerge(out[k] as Record<string, unknown>, v);
+    } else {
+      out[k] = v;
+    }
   }
   return out;
 }
