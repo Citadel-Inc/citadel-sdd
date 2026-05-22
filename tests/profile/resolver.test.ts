@@ -9,7 +9,7 @@ describe("resolveBuiltIn — shipped profiles", () => {
     expect(p.commit_style).toBe("freeform");
     expect(p.push_policy).toBe("never");
     expect(p.priorities).toEqual(["P0", "P1", "P2"]);
-    expect(p.states).toEqual(["DRAFT", "APPROVED", "IN_PROGRESS", "BLOCKED", "DONE"]);
+    expect(p.states).toEqual(["DRAFT", "APPROVED", "IN_PROGRESS", "BLOCKED", "DONE", "PARKED"]);
   });
 
   test("bastion extends default; flips DTG + commit_style; inherits push_policy", () => {
