@@ -77,11 +77,17 @@ export function findTaskIndex(tasks: ParsedTasks, m: TaskMatch): number {
     return idx;
   }
   const needle = m.match;
+  const matches: number[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    if (item?.text.startsWith(needle)) return i;
+    if (item?.text.startsWith(needle)) matches.push(i);
   }
-  return -1;
+  if (matches.length > 1) {
+    throw new Error(
+      `task_ambiguous: prefix "${needle}" matches ${matches.length} tasks in phase ${m.phase}`,
+    );
+  }
+  return matches[0] ?? -1;
 }
 
 export function resolveTaskMatch(

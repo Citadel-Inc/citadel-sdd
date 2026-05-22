@@ -17,6 +17,9 @@ export const MONTHS_UPPER: ReadonlyArray<string> = [
   "DEC",
 ];
 
+/** Maximum days per month (non-leap year; leap years get +1 for FEB at index 1). */
+const MONTH_MAX_DAYS: ReadonlyArray<number> = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
 }
@@ -73,6 +76,10 @@ export function dtgToRecencySortKey(dtg: string): number {
       return DTG_SORT_UNKNOWN;
     }
     const year = yy >= 70 ? 1900 + yy : 2000 + yy;
+    // Validate day against the calendar month, accounting for leap years.
+    const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const maxDay = (MONTH_MAX_DAYS[month] ?? 31) + (month === 1 && isLeap ? 1 : 0);
+    if (day > maxDay) return DTG_SORT_UNKNOWN;
     return Date.UTC(year, month, day, hour, minute, 0, 0);
   }
 

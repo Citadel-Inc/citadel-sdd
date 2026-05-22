@@ -27,7 +27,7 @@ export function ensureSpecBucketDirs(ctx: RepoContext): string[] {
     if (!hadDir) {
       created.push(relDir);
       const gitkeepPath = join(dir, ".gitkeep");
-      writeFileSync(gitkeepPath, "");
+      writeFileSync(gitkeepPath, "", { flag: "wx" });
       created.push(`${relDir}/.gitkeep`);
     }
   }
