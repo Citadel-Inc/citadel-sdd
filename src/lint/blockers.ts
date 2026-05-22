@@ -115,6 +115,11 @@ export function blockerLint(
   options: {
     activeSlugs: ReadonlySet<string>;
     activeSlugsWithOpenHuman: ReadonlySet<string>;
+    /** All known spec slugs across active, done, and parked. When provided,
+     *  hyphenated tokens extracted from blocker bodies are only treated as
+     *  spec references if they appear in this set, eliminating false-positive
+     *  blocker-orphan findings for ordinary hyphenated English words. */
+    allKnownSlugs?: ReadonlySet<string>;
   },
 ): BlockerLintFinding[] {
   const findings: BlockerLintFinding[] = [];
@@ -132,6 +137,9 @@ export function blockerLint(
       });
     }
     for (const slug of e.referencedSpecs) {
+      // If allKnownSlugs is provided, skip tokens that don't match any known
+      // spec slug to avoid false-positive orphan findings for hyphenated words.
+      if (options.allKnownSlugs !== undefined && !options.allKnownSlugs.has(slug)) continue;
       if (!options.activeSlugs.has(slug)) {
         findings.push({
           category: "blocker-orphan",

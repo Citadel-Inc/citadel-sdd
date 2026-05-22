@@ -199,7 +199,12 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
     const activeSlugsWithOpenHuman = new Set(
       activeSummaries.filter((s) => s.human > 0).map((s) => s.loc.slug),
     );
-    for (const f of blockerLint(blockers, { activeSlugs, activeSlugsWithOpenHuman })) {
+    const allKnownSlugs = new Set([
+      ...active.map((l) => l.slug),
+      ...done.map((l) => l.slug),
+      ...parked.map((l) => l.slug),
+    ]);
+    for (const f of blockerLint(blockers, { activeSlugs, activeSlugsWithOpenHuman, allKnownSlugs })) {
       findings.push({ category: f.category, message: f.message });
     }
   }
