@@ -60,7 +60,7 @@ Return combined spec + plan + tasks for a slug.
 
 Single-spec status summary.
 
-**Inputs:** `{ slug }`.
+**Inputs:** `{ slug, recent_limit?: number, since?: string }`. `recent_limit` caps the number of history rows returned. `since` is an ISO-8601 or Bastion DTG string; only history entries at or after that timestamp are included.
 
 **Output:** `{ slug, state, dtg, owner, approved_dtg, ratified, q_table: [{id, question, default, ratified_at}], task_counts: { p0:{open,done}, p1:{...}, p2:{...} }, blockers, last_commit_sha }`.
 
@@ -68,7 +68,7 @@ Single-spec status summary.
 
 Run strict-mode validation. Wraps the TypeScript port of archived `spec-status.py`.
 
-**Inputs:** `{ slug?, include_done?: boolean, include_parked?: boolean }`. Without slug, lints the whole tree. Default scans `specs/active/` only; `include_done` adds `specs/done/`; `include_parked` adds `specs/parked/` (flags compose). Per-spec `slug` lint resolves the slug wherever it lives.
+**Inputs:** `{ slug?, include_done?: boolean, include_parked?: boolean, no_strict?: boolean, fail_on?: string[]|"all", roots?: string[], scan_nested?: { parent: string, depth?: number }, stale_days?: number }`. Without slug, lints the whole tree. Default scans `specs/active/` only; `include_done` adds `specs/done/`; `include_parked` adds `specs/parked/` (flags compose). Per-spec `slug` lint resolves the slug wherever it lives. `no_strict` disables strict-mode rules. `fail_on` sets which rule codes (or `"all"`) cause a non-zero exit. `roots` overrides the set of spec-tree roots to lint. `scan_nested` walks `parent` up to `depth` levels looking for nested spec trees. `stale_days` overrides the profile default for stale-spec detection.
 
 **Output:** `{ findings: [{severity, message, path, slug?}], exit_code }`. Exit-code parity with archived Python script is enforced ([D-4](decisions.md)).
 
@@ -116,7 +116,9 @@ Empty `decisions` + default `Ratified <DTG>` = bulk ratify (common case).
 
 Flip a single `tasks.md` checkbox.
 
-**Inputs:** `{ slug, phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }`. `match` is exact-match prefix or 1-based index within phase.
+**Inputs (single-item form):** `{ slug, phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }`. `match` is exact-match prefix or 1-based index within phase.
+
+**Inputs (batch form):** `{ slug, items: [{ phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }] }`. Check or uncheck multiple items in one call; applied in order.
 
 **Output:** `{ slug, before, after, commit_sha }`.
 

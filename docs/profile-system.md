@@ -29,6 +29,7 @@ states:
   - APPROVED
   - IN_PROGRESS
   - BLOCKED
+  - PARKED
   - DONE
 priorities: [P0, P1, P2]
 dtg_format: DDHHMMZMONYY      # ISO-8601 for default profile; bastion uses DDHHMMZMONYY
@@ -77,7 +78,7 @@ Loaded via Zod schema in `src/config/load.ts`. Failures surface as `config_inval
 
 ```yaml
 spec_dir: specs
-states: [DRAFT, APPROVED, IN_PROGRESS, BLOCKED, DONE]
+states: [DRAFT, APPROVED, IN_PROGRESS, BLOCKED, PARKED, DONE]
 priorities: [P0, P1, P2]
 dtg_format: ISO-8601
 commit_style: freeform
@@ -99,7 +100,7 @@ commit_style: conventional
 
 ## Slug uniqueness
 
-**Enforced forever, not configurable.** A slug used in `specs/active/` or `specs/done/` is held permanently; reuse rejected even after `spec_close`.
+**Enforced forever, not configurable.** A slug used in `specs/active/`, `specs/done/`, or `specs/parked/` is held permanently; reuse rejected even after `spec_close` or `spec_park`.
 
 This rule is hard-coded in `src/spec/invariants.ts`. No profile can override. Rationale: prevents accidental history overwrite when a closed spec's slug gets reused for unrelated future work.
 
