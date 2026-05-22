@@ -50,11 +50,7 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
     const raw = lines[i];
     if (raw === undefined) continue;
     const line = raw.trim();
-    if (
-      line.startsWith("|") &&
-      /question/i.test(line) &&
-      /proposed\s*default/i.test(line)
-    ) {
+    if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
       // Require the very next line to be a markdown table separator row,
       // so we don't mistake prose tables for Q-tables.
       const nextRaw = lines[i + 1];

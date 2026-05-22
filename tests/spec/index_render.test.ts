@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildIndex, buildRow } from "../../src/spec/index_render.js";
+import { buildIndex } from "../../src/spec/index_render.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
 let temp: TempRepo | undefined;
@@ -91,10 +91,7 @@ describe("buildRow — corrupt spec visibility", () => {
     const dir = join(temp.rootDir, "specs", "active", "corrupt");
     mkdirSync(dir, { recursive: true });
     // Write a spec.md with no Status field — parseFrontmatter will throw
-    writeFileSync(
-      join(dir, "spec.md"),
-      "# Corrupt\n\n| | |\n|---|---|\n| Owner | TestAgent |\n",
-    );
+    writeFileSync(join(dir, "spec.md"), "# Corrupt\n\n| | |\n|---|---|\n| Owner | TestAgent |\n");
     writeFileSync(join(dir, "tasks.md"), "# Corrupt\n\n| | |\n|---|---|\n| Owner | x |\n");
     writeFileSync(join(dir, "plan.md"), "# Corrupt — Plan\n");
 

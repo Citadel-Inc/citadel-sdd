@@ -148,11 +148,7 @@ export function parseQTable(md: string): QTableRow[] {
     const raw = lines[i];
     if (raw === undefined) continue;
     const line = raw.trim();
-    if (
-      line.startsWith("|") &&
-      /question/i.test(line) &&
-      /proposed\s*default/i.test(line)
-    ) {
+    if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
       // Require the very next line to be a markdown table separator row.
       const nextRaw = lines[i + 1];
       if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) continue;
