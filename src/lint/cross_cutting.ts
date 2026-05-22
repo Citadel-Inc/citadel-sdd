@@ -81,6 +81,10 @@ function readIndex(
   return out;
 }
 
+function escapeRegex(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function readBlockersText(rootDir: string): string | null {
   const path = join(rootDir, "HUMAN_BLOCKERS.md");
   if (!existsSync(path)) return null;
@@ -183,7 +187,12 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
   const blockersText = readBlockersText(repo.rootDir);
   if (blockersText !== null) {
     for (const s of activeSummaries) {
-      if (s.human > 0 && !blockersText.includes(s.loc.slug)) {
+      // Use a word-boundary regex rather than a plain substring match so that
+      // a slug that is a prefix of another slug ("api" vs "api-v2") doesn't
+      // produce false negatives — "api" inside "api-v2" must not count as a
+      // reference to the "api" spec.
+      const slugRe = new RegExp(`(?<![a-z0-9-])${escapeRegex(s.loc.slug)}(?![a-z0-9-])`);
+      if (s.human > 0 && !slugRe.test(blockersText)) {
         findings.push({
           category: "human-uncrossed",
           slug: s.loc.slug,
