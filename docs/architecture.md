@@ -27,7 +27,7 @@ src/
 │   └── bastion.yaml
 ├── config/
 │   └── load.ts             # specs/config.yaml loader + Zod validation
-└── tools/                  # one file per MCP tool (18 + sdd_doctor)
+└── tools/                  # one file per MCP tool (20 total)
     ├── spec_list.ts
     ├── spec_read.ts
     ├── ... (remaining tools)
