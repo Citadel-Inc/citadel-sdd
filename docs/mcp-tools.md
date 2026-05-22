@@ -24,13 +24,16 @@ All tools resolve their project root at call time from `workspaceRoot`, `rootInd
 | `state_invalid` | Requested transition not legal per [docs/architecture.md § State machine](architecture.md#state-machine). |
 | `slug_collision` | Slug already used under `active/`, `done/`, or `parked/`. Slugs are unique forever ([D-9](decisions.md)). |
 | `slug_invalid` | Slug fails canonical pattern (lowercase kebab-case, no path separators). |
-| `working_tree_dirty` | Unrelated dirty paths in tree; commit refused unless `--allow-dirty`. |
+| `working_tree_dirty` | Dirty paths within the spec's own scope; every mutating tool now refuses unconditionally so a failed mutation can always be rolled back cleanly. |
 | `ratify_required` | Q-table has `TBD` rows and `ratify=false`. |
 | `tasks_open` | `spec_close` called with unchecked checkboxes outside `allow_open` whitelist. |
 | `path_outside_repo` | Input path escapes `git rev-parse --show-toplevel`. Refused. |
-| `profile_chain_broken` | `extends:` references unknown profile or forms a cycle. |
+| `path_is_symlink` | A spec's `spec.md` / `tasks.md` / `plan.md` is a symlink. Read and write both refuse — specs must be regular files. |
+| `profile_chain_broken` | `extends:` references an unknown profile or exceeds the inheritance depth limit. |
+| `profile_cycle` | `extends:` chain forms a cycle (a profile name recurs in its own resolution chain). |
 | `config_invalid` | `specs/config.yaml` fails schema validation. |
 | `owner_mismatch` | `spec_claim` against IN_PROGRESS spec held by a different owner. |
+| `task_ambiguous` | A task `match` string is a prefix of more than one task; no task is mutated. |
 
 ---
 
@@ -138,6 +141,8 @@ Reassign owner without state flip.
 
 **Output:** `{ slug, before_owner, after_owner, commit_sha }`. Updates the Active table row in `${spec_dir}/README.md` when committing.
 
+**Failure modes:** `handoff_invalid_state` (handoff is only legal while a spec is `IN_PROGRESS` or `BLOCKED` — it reassigns ownership without a state flip), `spec_not_found`, `working_tree_dirty`.
+
 ---
 
 ## Write composite tools
@@ -204,7 +209,7 @@ PARKED → IN_PROGRESS + reverse `git mv` parked→active + targeted `${spec_dir
 
 **Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, dryRun }`.
 
-**Failure modes:** `state_invalid` (spec not PARKED), `spec_not_found`, `resolution_missing`, `working_tree_dirty`.
+**Failure modes:** `state_invalid` (spec not PARKED), `spec_not_parked` (slug not physically under `specs/parked/`), `spec_not_found`, `resolution_missing`, `working_tree_dirty`.
 
 ---
 

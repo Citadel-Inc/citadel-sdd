@@ -11,9 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **npmjs + GitHub Packages publishing.** `prepublishOnly` gates `npm publish` on `build`, `check`, and `test`. New [`.github/workflows/release.yml`](.github/workflows/release.yml) runs on a `v*.*.*` tag: it asserts the tag matches `package.json` version, builds and tests, publishes `@rethunk-ai/citadel-sdd` to GitHub Packages, and cuts a GitHub Release with the `npm pack` tarball. `HUMANS.md` now documents the manual npmjs release flow.
 
+### Security
+
+- Patched two moderate transitive advisories surfaced by `bun audit`: `qs` ≤6.15.1 ([GHSA-q8mj-m7cp-5q26](https://github.com/advisories/GHSA-q8mj-m7cp-5q26)) and `brace-expansion` <5.0.6 ([GHSA-jxxr-4gwj-5jf2](https://github.com/advisories/GHSA-jxxr-4gwj-5jf2)), both DoS, pinned forward via `overrides`.
+- A spec's `spec.md` / `tasks.md` / `plan.md` is now rejected (`path_is_symlink`) on both read and write if it is a symlink, closing a traversal path to files outside the repo.
+
 ### Changed
 
+- **Write atomicity.** Every mutating tool now wraps its write + `git` sequence in a transactional helper that restores the spec to its pre-state on any failure, and refuses unconditionally when its in-scope working tree is dirty (`working_tree_dirty`) — a partial, half-migrated spec can no longer be left on disk.
+- `spec_handoff` now rejects specs that are not `IN_PROGRESS` or `BLOCKED` (`handoff_invalid_state`); previously it would rewrite the owner of a DONE/DRAFT/PARKED spec.
+- `spec_unpark` now asserts the spec is physically under `specs/parked/` (`spec_not_parked`); `spec_unpark` and `spec_reopen` now preserve the full `tasks.md` body instead of only its frontmatter.
+- Profile `extends:` cycles now raise a distinct `profile_cycle`; `profile_chain_broken` is now unknown-profile / depth-limit only. Profile-inheritance merging is now genuinely recursive.
+- `spec_lint` reports an unparseable `spec.md` / `tasks.md` as `error` (was `warning`), so CI fails on a structurally broken spec.
+- Q-table detection no longer requires the bastion-specific `nomad` column header.
+- Corrupt specs now appear as an `ERROR` row in the generated `specs/README.md` index instead of being silently omitted.
 - `docs/install.md` — dropped the "(target)" scaffolding labels now that the package is publish-ready.
+
+### Fixed
+
+- `spec_init` and `spec_index_rebuild` no longer swallow `git commit` failures into a `null` SHA.
+- All `git` invocations carry a 30 s timeout, so a hung git operation cannot block the server indefinitely.
+- Inline-frontmatter parsing and splicing are bounded to the frontmatter region — body prose shaped `Word: value` is no longer corrupted.
+- Lint false positives removed: hyphenated English words are no longer flagged as spec references, and `human-uncrossed` slug matching uses whole-token comparison.
+- Low-severity hardening: calendar-aware DTG day validation, ambiguous task-prefix matches now error (`task_ambiguous`), exclusive `.gitkeep` creation, and a symlink guard on the intermediate `specs/` directory during nested scans.
+- Documentation drift corrected across `README.md`, `HUMANS.md`, and `docs/` — version badge, 20-tool count, removal of the retired `citadel` built-in profile, lint file layout, restored decision `D-23`, and missing tool-schema fields.
 
 ## [0.5.0] — 2026-05-10
 
