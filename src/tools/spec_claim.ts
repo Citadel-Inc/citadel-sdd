@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit, gitConfigUserName } from "../spec/git.js";
+import { gitAdd, gitCommit, gitConfigUserName } from "../spec/git.js";
 import { ratifySpec, setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -8,6 +8,7 @@ import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter, spliceQTable, spliceSpecFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecClaimInput {
@@ -113,32 +114,34 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newSpecRaw);
-  writeFileSync(loc.tasksMd, newTasksRaw);
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-
+  const scopePaths = [
+    `${loc.relDir}/spec.md`,
+    `${loc.relDir}/tasks.md`,
+    `${repo.specDir}/README.md`,
+  ];
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const ratifyTail = ratifiedCount > 0 ? `; ratified ${ratifiedCount} Q-row(s)` : "";
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): IN_PROGRESS — ${claimer} claims${ratifyTail}`
-        : `${claimer} claims ${loc.slug}${ratifyTail}`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+      writeFileSync(loc.specMd, newSpecRaw);
+      writeFileSync(loc.tasksMd, newTasksRaw);
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const ratifyTail = ratifiedCount > 0 ? `; ratified ${ratifiedCount} Q-row(s)` : "";
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(${loc.slug}): IN_PROGRESS — ${claimer} claims${ratifyTail}`
+          : `${claimer} claims ${loc.slug}${ratifyTail}`;
+      gitAdd({ rootDir: ctx.rootDir }, [
+        `${loc.relDir}/spec.md`,
+        `${loc.relDir}/tasks.md`,
+        readmeRel,
+      ]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return {

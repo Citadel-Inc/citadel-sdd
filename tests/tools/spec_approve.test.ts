@@ -93,10 +93,12 @@ describe("specApprove", () => {
     expect(() => specApprove({ slug: "missing" }, ctx())).toThrow("spec_not_found");
   });
 
-  test("commit rejects unrelated dirty files", () => {
+  test("unrelated dirty files do not block mutation (scope-only check)", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
-    expect(() => specApprove({ slug: "draft-minimal" }, ctx())).toThrow("working_tree_dirty");
+    // runSpecTxn only checks scoped paths — unrelated files are ignored.
+    const out = specApprove({ slug: "draft-minimal" }, ctx());
+    expect(out.commit_sha).not.toBeNull();
   });
 
   test("freeform commit style yields `Approve <slug>[: note]` subject", () => {

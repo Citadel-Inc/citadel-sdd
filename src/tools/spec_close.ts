@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit, gitMv, gitPush } from "../spec/git.js";
+import { gitAdd, gitCommit, gitMv, gitPush } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -9,6 +9,7 @@ import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { Priority, SpecState } from "../spec/types.js";
 import { PRIORITIES } from "../spec/types.js";
 import { spliceFrontmatter, spliceTasksFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecCloseInput {
@@ -116,35 +117,35 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      beforePath,
-      afterRelDir,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newSpecRaw);
-  writeFileSync(loc.tasksMd, newTasksRaw);
-
-  if (loc.state === "active" || loc.state === "parked") {
-    gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
-  }
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-
+  const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`];
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): DONE — ${summary}`
-        : `Close ${loc.slug}: ${summary}`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${afterRelDir}/spec.md`,
-      `${afterRelDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+      writeFileSync(loc.specMd, newSpecRaw);
+      writeFileSync(loc.tasksMd, newTasksRaw);
+      if (loc.state === "active" || loc.state === "parked") {
+        gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
+      }
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(${loc.slug}): DONE — ${summary}`
+          : `Close ${loc.slug}: ${summary}`;
+      gitAdd({ rootDir: ctx.rootDir }, [
+        `${afterRelDir}/spec.md`,
+        `${afterRelDir}/tasks.md`,
+        readmeRel,
+      ]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    if (loc.state === "active" || loc.state === "parked") {
+      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
+    }
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   let pushed = false;

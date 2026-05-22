@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { resolveTaskMatch, setTaskChecked } from "../spec/mutate.js";
 import { parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { Priority } from "../spec/types.js";
 import { spliceTasksFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface TaskCheckItem {
@@ -111,23 +112,27 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
     };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-  }
-
-  writeFileSync(loc.tasksMd, newRaw);
-
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const count = results.length;
-    const verb = results.every((r) => r.after.checked) ? "check" : "update";
-    const phases = [...new Set(results.map((r) => r.phase))].join("+");
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): ${verb} ${count} ${phases} task${count !== 1 ? "s" : ""}`
-        : `${verb} ${count} ${phases} task${count !== 1 ? "s" : ""} in ${loc.slug}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(
+      ctx.rootDir,
+      { scopePaths: [`${loc.relDir}/tasks.md`], writeTargets: [loc.tasksMd] },
+      () => {
+        writeFileSync(loc.tasksMd, newRaw);
+        const count = results.length;
+        const verb = results.every((r) => r.after.checked) ? "check" : "update";
+        const phases = [...new Set(results.map((r) => r.phase))].join("+");
+        const subject =
+          ctx.profile.commit_style === "conventional"
+            ? `spec(${loc.slug}): ${verb} ${count} ${phases} task${count !== 1 ? "s" : ""}`
+            : `${verb} ${count} ${phases} task${count !== 1 ? "s" : ""} in ${loc.slug}`;
+        gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
+        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      },
+    );
+  } else {
+    writeFileSync(loc.tasksMd, newRaw);
   }
 
   return {

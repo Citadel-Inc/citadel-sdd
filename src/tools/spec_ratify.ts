@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { type RatifyDecision, ratifySpec } from "../spec/mutate.js";
 import { parseSpec } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import { spliceQTable } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecRatifyInput {
@@ -53,20 +54,24 @@ export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatify
     return { slug: loc.slug, ratified_q_count, commit_sha: null, dryRun: true };
   }
 
-  if (input.commit !== false && ratified_q_count > 0) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
-  }
-
-  writeFileSync(loc.specMd, newRaw);
-
   let commit_sha: string | null = null;
+
   if (input.commit !== false && ratified_q_count > 0) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): ratify ${ratified_q_count} Q-row(s)`
-        : `Ratify ${ratified_q_count} Q-rows in ${loc.slug}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(
+      ctx.rootDir,
+      { scopePaths: [`${loc.relDir}/spec.md`], writeTargets: [loc.specMd] },
+      () => {
+        writeFileSync(loc.specMd, newRaw);
+        const subject =
+          ctx.profile.commit_style === "conventional"
+            ? `spec(${loc.slug}): ratify ${ratified_q_count} Q-row(s)`
+            : `Ratify ${ratified_q_count} Q-rows in ${loc.slug}`;
+        gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
+        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      },
+    );
+  } else {
+    writeFileSync(loc.specMd, newRaw);
   }
 
   return { slug: loc.slug, ratified_q_count, commit_sha, dryRun: false };

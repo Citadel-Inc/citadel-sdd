@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -8,6 +8,7 @@ import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecBlockInput {
@@ -30,13 +31,18 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
+/** Shared regex used by both spec_block and spec_unblock to find the Blocking section. */
+const BLOCKING_RE = /## Blocking\s*\n[\s\S]*?(?=\n## |$)\n*/g;
+
+function removeBlockingSection(rawMd: string): string {
+  return rawMd.replace(BLOCKING_RE, "");
+}
+
 function injectBlockingSection(rawMd: string, reason: string): string {
   const blockingHeading = "## Blocking";
-  if (rawMd.includes(blockingHeading)) {
-    const re = /## Blocking\s*\n[\s\S]*?(?=\n## |$)/;
-    return rawMd.replace(re, `${blockingHeading}\n\n${reason}\n\n`);
-  }
-  const lines = rawMd.split(/\r?\n/);
+  // Strip any existing Blocking section(s) first to ensure idempotency.
+  const stripped = removeBlockingSection(rawMd);
+  const lines = stripped.split(/\r?\n/);
   let insertAt = lines.length;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
@@ -86,31 +92,33 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
     return { slug: loc.slug, before, after, commit_sha: null, dryRun: true };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newSpecRaw);
-  writeFileSync(loc.tasksMd, newTasksRaw);
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-
+  const scopePaths = [
+    `${loc.relDir}/spec.md`,
+    `${loc.relDir}/tasks.md`,
+    `${repo.specDir}/README.md`,
+  ];
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): BLOCKED — ${input.reason}`
-        : `Block ${loc.slug}: ${input.reason}`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+      writeFileSync(loc.specMd, newSpecRaw);
+      writeFileSync(loc.tasksMd, newTasksRaw);
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(${loc.slug}): BLOCKED — ${input.reason}`
+          : `Block ${loc.slug}: ${input.reason}`;
+      gitAdd({ rootDir: ctx.rootDir }, [
+        `${loc.relDir}/spec.md`,
+        `${loc.relDir}/tasks.md`,
+        readmeRel,
+      ]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return { slug: loc.slug, before, after, commit_sha, dryRun: false };

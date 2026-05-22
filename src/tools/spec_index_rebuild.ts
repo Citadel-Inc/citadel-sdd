@@ -1,10 +1,12 @@
+import { execFileSync } from "node:child_process";
 import { mkdirSync } from "node:fs";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { buildIndex, renderIndex } from "../spec/index_render.js";
 import type { RepoContext } from "../spec/repo.js";
 import { specsRoot } from "../spec/repo.js";
 import { ensureSpecBucketDirs } from "../spec/scaffold.js";
 import { writeSpecReadmeFull } from "../spec/spec_readme.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export type SpecIndexRebuildInput = {
@@ -25,6 +27,22 @@ export interface SpecIndexRebuildOutput {
 
 function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+}
+
+/**
+ * Returns true if any of `files` are staged (i.e. differ from HEAD in the index).
+ * Used to guard gitCommit when writeSpecReadmeFull produces identical content.
+ */
+function hasStagedChanges(rootDir: string, files: readonly string[]): boolean {
+  if (files.length === 0) return false;
+  try {
+    execFileSync("git", ["-C", rootDir, "diff", "--cached", "--quiet", "--", ...files], {
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+    return false; // exit 0 means no diff → nothing staged
+  } catch {
+    return true; // exit 1 means diff → something staged
+  }
 }
 
 export function specIndexRebuild(
@@ -48,28 +66,28 @@ export function specIndexRebuild(
   }
 
   mkdirSync(specsRoot(repo), { recursive: true });
-  const scaffold_repairs = ensureSpecBucketDirs(repo);
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      `${repo.specDir}/README.md`,
-      ...scaffold_repairs,
-    ]);
-  }
-  writeSpecReadmeFull(repo);
 
   let commit_sha: string | null = null;
+  let scaffold_repairs: string[] = [];
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
-        : `Rebuild specs/README.md`;
-    const staged = [`${repo.specDir}/README.md`, ...scaffold_repairs];
-    gitAdd({ rootDir: ctx.rootDir }, staged);
-    try {
-      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
-    } catch {
-      commit_sha = null;
-    }
+    runSpecTxn(ctx.rootDir, { scopePaths: [`${repo.specDir}/README.md`], writeTargets: [] }, () => {
+      scaffold_repairs = ensureSpecBucketDirs(repo);
+      writeSpecReadmeFull(repo);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
+          : `Rebuild specs/README.md`;
+      const toStage = [`${repo.specDir}/README.md`, ...scaffold_repairs];
+      gitAdd({ rootDir: ctx.rootDir }, toStage);
+      // Skip commit if README content is identical to HEAD (nothing to commit).
+      if (hasStagedChanges(ctx.rootDir, toStage)) {
+        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      }
+    });
+  } else {
+    scaffold_repairs = ensureSpecBucketDirs(repo);
+    writeSpecReadmeFull(repo);
   }
 
   return {

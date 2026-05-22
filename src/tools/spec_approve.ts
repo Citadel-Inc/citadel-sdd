@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
@@ -8,6 +8,7 @@ import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
 import { spliceFrontmatter, spliceSpecFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecApproveInput {
@@ -60,38 +61,38 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
     return { slug: loc.slug, before, after, commit_sha: null, dryRun: true };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newSpecRaw);
-  writeFileSync(loc.tasksMd, newTasksRaw);
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+  const scopePaths = [
+    `${loc.relDir}/spec.md`,
+    `${loc.relDir}/tasks.md`,
+    `${repo.specDir}/README.md`,
+  ];
 
   let commit_sha: string | null = null;
-  if (input.commit !== false && ctx.profile.commit_style === "conventional") {
-    const subject = input.note
-      ? `spec(${loc.slug}): APPROVED — ${input.note}`
-      : `spec(${loc.slug}): APPROVED`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
-  } else if (input.commit !== false) {
-    const subject = input.note ? `Approve ${loc.slug}: ${input.note}` : `Approve ${loc.slug}`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${loc.relDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+
+  if (input.commit !== false) {
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+      writeFileSync(loc.specMd, newSpecRaw);
+      writeFileSync(loc.tasksMd, newTasksRaw);
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? input.note
+            ? `spec(${loc.slug}): APPROVED — ${input.note}`
+            : `spec(${loc.slug}): APPROVED`
+          : input.note
+            ? `Approve ${loc.slug}: ${input.note}`
+            : `Approve ${loc.slug}`;
+      gitAdd({ rootDir: ctx.rootDir }, [
+        `${loc.relDir}/spec.md`,
+        `${loc.relDir}/tasks.md`,
+        readmeRel,
+      ]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return { slug: loc.slug, before, after, commit_sha, dryRun: false };

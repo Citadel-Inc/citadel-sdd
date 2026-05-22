@@ -225,7 +225,7 @@ describe("specClose", () => {
     expect(out.push_error).toBeDefined();
   });
 
-  test("commit rejects unrelated dirty files", () => {
+  test("unrelated dirty files do not block close (scope-only check)", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
 
     writeFileSync(
@@ -251,8 +251,8 @@ describe("specClose", () => {
     );
     execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
     writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
-    expect(() =>
-      specClose({ slug: "in-progress-midway", summary: "implementation landed" }, ctx()),
-    ).toThrow("working_tree_dirty");
+    // runSpecTxn only checks scoped paths — unrelated files are ignored.
+    const out = specClose({ slug: "in-progress-midway", summary: "implementation landed" }, ctx());
+    expect(out.commit_sha).not.toBeNull();
   });
 });

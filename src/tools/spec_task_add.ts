@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { addTaskItem } from "../spec/mutate.js";
 import { parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { Priority } from "../spec/types.js";
 import { spliceTasksFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecTaskAddInput {
@@ -42,20 +43,24 @@ export function specTaskAdd(input: SpecTaskAddInput, ctx: ToolContext): SpecTask
     return { slug: loc.slug, added_index, commit_sha: null, dryRun: true };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-  }
-
-  writeFileSync(loc.tasksMd, newRaw);
-
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): add ${input.phase} task`
-        : `Add ${input.phase} task to ${loc.slug}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(
+      ctx.rootDir,
+      { scopePaths: [`${loc.relDir}/tasks.md`], writeTargets: [loc.tasksMd] },
+      () => {
+        writeFileSync(loc.tasksMd, newRaw);
+        const subject =
+          ctx.profile.commit_style === "conventional"
+            ? `spec(${loc.slug}): add ${input.phase} task`
+            : `Add ${input.phase} task to ${loc.slug}`;
+        gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
+        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      },
+    );
+  } else {
+    writeFileSync(loc.tasksMd, newRaw);
   }
 
   return { slug: loc.slug, added_index, commit_sha, dryRun: false };

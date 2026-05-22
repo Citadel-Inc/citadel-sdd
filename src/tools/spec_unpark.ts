@@ -1,13 +1,14 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { nowDTG } from "../spec/dtg.js";
-import { assertWorkingTreeClean, gitAdd, gitCommit, gitMv } from "../spec/git.js";
+import { gitAdd, gitCommit, gitMv } from "../spec/git.js";
 import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
 import type { SpecState } from "../spec/types.js";
-import { spliceFrontmatter } from "../spec/writer.js";
+import { spliceFrontmatter, spliceTasksFile } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecUnparkInput {
@@ -39,6 +40,13 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
   const loc = locateSpec(repo, input.slug);
   if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
 
+  // Fix 4: guard — unpark only valid when spec is physically in specs/parked/.
+  if (loc.state !== "parked") {
+    throw new Error(
+      `spec_not_parked: spec_unpark only moves specs from specs/parked/ (found in ${loc.state}/)`,
+    );
+  }
+
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
   const spec = parseSpec(specRaw);
@@ -60,7 +68,7 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
 
   const fmt = ctx.profile.frontmatter_format;
   const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
+  const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt);
 
   const beforePath = loc.relDir;
   const afterRelDir = `${repo.specDir}/active/${loc.slug}`;
@@ -79,35 +87,32 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
     };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      beforePath,
-      afterRelDir,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newSpecRaw);
-  writeFileSync(loc.tasksMd, newTasksRaw);
-
-  if (loc.state === "parked") {
-    gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
-  }
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-
+  const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`];
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): UNPARK — ${resolution}`
-        : `Unpark ${loc.slug}: ${resolution}`;
-    gitAdd({ rootDir: ctx.rootDir }, [
-      `${afterRelDir}/spec.md`,
-      `${afterRelDir}/tasks.md`,
-      readmeRel,
-    ]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+      writeFileSync(loc.specMd, newSpecRaw);
+      writeFileSync(loc.tasksMd, newTasksRaw);
+      // loc.state is always "parked" here — ensured by fix 4 guard above.
+      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(${loc.slug}): UNPARK — ${resolution}`
+          : `Unpark ${loc.slug}: ${resolution}`;
+      gitAdd({ rootDir: ctx.rootDir }, [
+        `${afterRelDir}/spec.md`,
+        `${afterRelDir}/tasks.md`,
+        readmeRel,
+      ]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return {

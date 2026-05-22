@@ -1,10 +1,11 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { assertWorkingTreeClean, gitAdd, gitCommit } from "../spec/git.js";
+import { gitAdd, gitCommit } from "../spec/git.js";
 import { setOwner } from "../spec/mutate.js";
 import { parseSpec } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
 import { spliceFrontmatter } from "../spec/writer.js";
+import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
 export interface SpecHandoffInput {
@@ -35,6 +36,14 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   const raw = readFileSync(loc.specMd, "utf8");
   const spec = parseSpec(raw);
 
+  // Fix 2: guard — handoff only valid from IN_PROGRESS or BLOCKED.
+  const currentState = spec.frontmatter.status.state;
+  if (currentState !== "IN_PROGRESS" && currentState !== "BLOCKED") {
+    throw new Error(
+      `handoff_invalid_state: spec_handoff requires IN_PROGRESS or BLOCKED state (found ${currentState})`,
+    );
+  }
+
   const beforeOwnerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
   const before_owner = beforeOwnerField?.[1] ?? "";
 
@@ -59,25 +68,23 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
     };
   }
 
-  if (input.commit !== false) {
-    assertWorkingTreeClean({ rootDir: ctx.rootDir }, [
-      `${loc.relDir}/spec.md`,
-      `${repo.specDir}/README.md`,
-    ]);
-  }
-
-  writeFileSync(loc.specMd, newRaw);
-
-  const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-
+  const scopePaths = [`${loc.relDir}/spec.md`, `${repo.specDir}/README.md`];
   let commit_sha: string | null = null;
+
   if (input.commit !== false) {
-    const subject =
-      ctx.profile.commit_style === "conventional"
-        ? `spec(${loc.slug}): handoff to ${new_owner}${input.note ? ` — ${input.note}` : ""}`
-        : `Handoff ${loc.slug} to ${new_owner}`;
-    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel]);
-    commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd] }, () => {
+      writeFileSync(loc.specMd, newRaw);
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      const subject =
+        ctx.profile.commit_style === "conventional"
+          ? `spec(${loc.slug}): handoff to ${new_owner}${input.note ? ` — ${input.note}` : ""}`
+          : `Handoff ${loc.slug} to ${new_owner}`;
+      gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel]);
+      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+    });
+  } else {
+    writeFileSync(loc.specMd, newRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return {
