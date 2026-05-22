@@ -1,10 +1,16 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specRatify } from "../../src/tools/spec_ratify.js";
 import type { ToolContext } from "../../src/tools/types.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
+
+function gitCommitAll(rootDir: string, msg: string): void {
+  execFileSync("git", ["-C", rootDir, "add", "."], { stdio: "ignore" });
+  execFileSync("git", ["-C", rootDir, "commit", "-m", msg], { stdio: "ignore" });
+}
 
 let temp: TempRepo | undefined;
 
@@ -41,6 +47,8 @@ describe("specRatify", () => {
 | Q2 | B? | No | TBD |
 `,
     );
+    // Commit the modified spec.md so the working tree is clean before specRatify runs.
+    gitCommitAll(temp.rootDir, "fixture: add TBD Q-table");
     const out = specRatify({ slug: "draft-minimal" }, ctx());
     expect(out.ratified_q_count).toBe(2);
     expect(out.commit_sha).not.toBeNull();
