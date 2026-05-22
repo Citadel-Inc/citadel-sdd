@@ -13,6 +13,7 @@ function git(ctx: GitContext, args: readonly string[], opts: { silent?: boolean 
   return execFileSync("git", ["-C", ctx.rootDir, ...args], {
     encoding: "utf8",
     stdio: opts.silent ? ["ignore", "pipe", "pipe"] : ["ignore", "pipe", "inherit"],
+    timeout: 30000,
   });
 }
 
