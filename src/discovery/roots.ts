@@ -99,10 +99,13 @@ export function scanNested(opts: ScanNestedOptions): DiscoveredRoot[] {
     } catch {
       return;
     }
-    const candidate = join(p, specDir, "active");
-    if (isDir(candidate) && !isSymlink(candidate)) {
+    const specsCandidate = join(p, specDir);
+    const candidate = join(specsCandidate, "active");
+    // Guard both the specs/ directory and the specs/active/ directory against
+    // symlinks so a symlinked specs tree doesn't produce a false discovery root.
+    if (isDir(candidate) && !isSymlink(specsCandidate) && !isSymlink(candidate)) {
       const meta = p;
-      const specs = join(meta, specDir);
+      const specs = specsCandidate;
       if (!found.has(specs)) {
         found.set(specs, asDiscovered(meta, specs));
       }
