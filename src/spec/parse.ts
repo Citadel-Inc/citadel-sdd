@@ -71,7 +71,7 @@ export function parseStatusValue(raw: string): StatusValue {
   const aliased = STATE_ALIASES[stateRaw];
   const state = (aliased ?? stateRaw) as SpecState;
   if (!SPEC_STATES.has(state)) {
-    throw new Error(`state_unknown: "${stateRaw}"`);
+    throw new Error(`state_unknown: "${stateRaw}" is not a recognised spec state`);
   }
   return { state, dtg: match[2] ?? "", tail: match[3] ?? "", bold };
 }
