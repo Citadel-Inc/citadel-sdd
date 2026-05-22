@@ -1,13 +1,13 @@
 # Install
 
 
-## Prerequisites (target)
+## Prerequisites
 
 - **Bun ≥ 1.3.11** — primary runtime + package manager.
 - **Node.js ≥ 22** — fallback for `npx` users.
 - **Git ≥ 2.28** — required by file-system + commit tools.
 
-## From npm (target)
+## From npm
 
 ```bash
 npx -y @rethunk/citadel-sdd
@@ -15,7 +15,7 @@ npx -y @rethunk/citadel-sdd
 bunx @rethunk/citadel-sdd
 ```
 
-## Per-client wiring (target)
+## Per-client wiring
 
 ### Claude Code
 

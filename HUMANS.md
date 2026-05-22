@@ -62,6 +62,28 @@ All write tools support `dryRun: true` for preview.
 
 Tools automatically target the active MCP workspace root. In multi-root clients, pass `rootIndex` or `workspaceRoot` to select a different project; environment variables are only a fallback for clients without MCP roots support.
 
+## Publishing
+
+### GitHub (automated) — version tags only
+
+Pushing a semver tag `vX.Y.Z` that **exactly matches** `version` in `package.json` runs [`.github/workflows/release.yml`](.github/workflows/release.yml): it asserts the tag/version match, builds, lint-checks, and tests, then:
+
+1. `npm pack` using the committed `package.json` name `@rethunk/citadel-sdd` — the tarball is attached to a **GitHub Release** for that tag.
+2. **GitHub Packages** (npm registry): the workflow rewrites the name to `@rethunk-ai/citadel-sdd` (the scope GitHub Packages requires for org `Rethunk-AI`) and runs `npm publish` to `https://npm.pkg.github.com` with the automatic `GITHUB_TOKEN`.
+
+No repository secrets beyond the built-in `GITHUB_TOKEN` are required.
+
+### npmjs (manual) — maintainers only
+
+The public npmjs package `@rethunk/citadel-sdd` is published by hand:
+
+1. On a clean checkout at the release commit: `bun install --frozen-lockfile`.
+2. `npm login` so `npm whoami` shows the account that owns the `@rethunk` scope on npmjs.
+3. Confirm `package.json` has `"name": "@rethunk/citadel-sdd"` and `publishConfig.access` is `"public"`.
+4. `npm publish` — the `prepublishOnly` script first runs `build`, `check`, and `test`; publish aborts if any fail.
+
+Publish the same `version` the `vX.Y.Z` tag points at, so npmjs and GitHub Packages stay in step.
+
 ## Where to go next
 
 - Install detail → [docs/install.md](docs/install.md)

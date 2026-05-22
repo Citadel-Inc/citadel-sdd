@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **npmjs + GitHub Packages publishing.** `prepublishOnly` gates `npm publish` on `build`, `check`, and `test`. New [`.github/workflows/release.yml`](.github/workflows/release.yml) runs on a `v*.*.*` tag: it asserts the tag matches `package.json` version, builds and tests, publishes `@rethunk-ai/citadel-sdd` to GitHub Packages, and cuts a GitHub Release with the `npm pack` tarball. `HUMANS.md` now documents the manual npmjs release flow.
+
+### Changed
+
+- `docs/install.md` — dropped the "(target)" scaffolding labels now that the package is publish-ready.
+
 ## [0.5.0] — 2026-05-10
 
 ### Added
