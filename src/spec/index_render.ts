@@ -26,18 +26,20 @@ export function formatDoneOrParkedIndexRow(r: IndexRow): string {
   return `| ${r.slug} | ${r.dtg} | ${r.note} |`;
 }
 
-export function buildRow(loc: SpecLocation): IndexRow | null {
+export function buildRow(loc: SpecLocation): IndexRow {
   let raw: string;
   try {
     raw = readFileSync(loc.specMd, "utf8");
-  } catch {
-    return null;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { slug: loc.slug, state: "ERROR", dtg: "", owner: "", note: msg };
   }
   let spec: ReturnType<typeof parseSpec>;
   try {
     spec = parseSpec(raw);
-  } catch {
-    return null;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    return { slug: loc.slug, state: "ERROR", dtg: "", owner: "", note: msg };
   }
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
   return {
@@ -62,18 +64,9 @@ export function buildIndex(ctx: RepoContext): {
   done: IndexRow[];
   parked: IndexRow[];
 } {
-  const active = listSpecs(ctx, "active")
-    .map(buildRow)
-    .filter((r): r is IndexRow => r !== null)
-    .sort(sortByRecencyDesc);
-  const done = listSpecs(ctx, "done")
-    .map(buildRow)
-    .filter((r): r is IndexRow => r !== null)
-    .sort(sortByRecencyDesc);
-  const parked = listSpecs(ctx, "parked")
-    .map(buildRow)
-    .filter((r): r is IndexRow => r !== null)
-    .sort(sortByRecencyDesc);
+  const active = listSpecs(ctx, "active").map(buildRow).sort(sortByRecencyDesc);
+  const done = listSpecs(ctx, "done").map(buildRow).sort(sortByRecencyDesc);
+  const parked = listSpecs(ctx, "parked").map(buildRow).sort(sortByRecencyDesc);
   return { active, done, parked };
 }
 
