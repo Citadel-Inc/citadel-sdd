@@ -75,6 +75,22 @@ describe("spliceFrontmatter — format conversion", () => {
   });
 });
 
+describe("spliceFrontmatter — inline→pipe strips only frontmatter region", () => {
+  test("prose line shaped 'Word: value' in body is preserved during inline→pipe conversion", () => {
+    const raw =
+      "# Spec\n\nStatus: DRAFT 011900ZMAY26\nOwner: TestAgent\n\n## Body\n\nNote: this is prose that should not be stripped.\n";
+    const fm = parseFrontmatter(
+      "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |",
+    );
+    const out = spliceFrontmatter(raw, fm, "pipe-table");
+    // The pipe-table should be inserted, inline keys stripped from frontmatter region
+    expect(out).toContain("| Status | DRAFT 011900ZMAY26 |");
+    expect(out).not.toMatch(/^Status:/m);
+    // But body prose should survive
+    expect(out).toContain("Note: this is prose that should not be stripped.");
+  });
+});
+
 describe("spliceFrontmatter — empty DTG", () => {
   test("bold state-only status renders without trailing space", () => {
     const fmBold = parseFrontmatter("| | |\n|---|---|\n| Status | **DRAFT** |");

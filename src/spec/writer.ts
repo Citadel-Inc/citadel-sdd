@@ -94,10 +94,34 @@ export function spliceFrontmatter(
       const after = lines.slice(block.end);
       return [...before, ...renderFrontmatter(newFm).split("\n"), ...after].join("\n");
     }
-    // Convert inline → pipe-table (or insert into file with no frontmatter): strip inline keys, insert pipe block after title.
+    // Convert inline → pipe-table (or insert into file with no frontmatter): strip inline keys
+    // from the frontmatter region only (between the title line and the next heading), then
+    // insert the pipe block after the title.
     const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
     const RE_INLINE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
-    const stripped = lines.filter((line) => {
+    // Locate the frontmatter region: after the title line up to (not including) the next heading.
+    let titleIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const l = lines[i] ?? "";
+      if (l.startsWith("# ") || l.startsWith("## ")) {
+        titleIdx = i;
+        break;
+      }
+    }
+    // The frontmatter region is strictly AFTER the title line.
+    let fmEnd = lines.length;
+    if (titleIdx !== -1) {
+      for (let i = titleIdx + 1; i < lines.length; i++) {
+        const l = lines[i] ?? "";
+        if (l.startsWith("# ") || l.startsWith("## ")) {
+          fmEnd = i;
+          break;
+        }
+      }
+    }
+    const stripped = lines.filter((line, idx) => {
+      // Only strip inline-key lines that fall within the frontmatter region.
+      if (idx <= titleIdx || idx >= fmEnd) return true;
       const m = RE_INLINE.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
