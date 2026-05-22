@@ -75,7 +75,7 @@ describe("resolveProfile — extending", () => {
       b: { extends: "a" },
     };
     expect(() => resolveProfile({ extends: "a" }, { resolveExtra: (n) => custom[n] })).toThrow(
-      "profile_chain_broken",
+      "profile_cycle",
     );
   });
 
@@ -84,7 +84,7 @@ describe("resolveProfile — extending", () => {
       a: { extends: "a" },
     };
     expect(() => resolveProfile({ extends: "a" }, { resolveExtra: (n) => custom[n] })).toThrow(
-      "profile_chain_broken",
+      "profile_cycle",
     );
   });
 });

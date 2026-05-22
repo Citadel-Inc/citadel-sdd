@@ -69,34 +69,57 @@ export function resolveProfile(
   fragment: Record<string, unknown> | ProfileFragment,
   opts: ResolveOptions = {},
 ): Profile {
+  // `visited` tracks every profile name that has appeared anywhere in the
+  // resolution chain, including the root fragment's own identity (if it declares
+  // `extends`, the target is added before we load it).  This catches:
+  //   - self-extension:  extends: "self"  (caught on the first lookup)
+  //   - two-step cycles: A → B → A       (caught when B tries to load A again)
+  //   - any longer cycle without relying on the depth fallback
   const visited = new Set<string>();
   const chain: ProfileFragment[] = [];
 
   let current: ProfileFragment | undefined = ProfileFragmentSchema.parse(fragment);
-  let depth = 0;
-  while (current !== undefined) {
-    if (depth > 32) {
-      throw new Error("profile_chain_broken: depth limit exceeded");
-    }
+  // Seed visited with the root fragment's own extends target so that if the
+  // root itself is later loaded by name and extends back here, we detect it.
+  if (current.extends !== undefined) {
+    visited.add(current.extends);
+  }
+
+  while (chain.length <= 64) {
     chain.push(current);
     const parentName = current.extends;
     if (parentName === undefined) break;
-    if (visited.has(parentName)) {
-      throw new Error(`profile_chain_broken: cycle detected at "${parentName}"`);
-    }
-    visited.add(parentName);
+
+    let next: ProfileFragment;
     if (BUILT_IN_PROFILES.has(parentName)) {
-      current = loadBuiltInFragment(parentName);
+      next = loadBuiltInFragment(parentName);
     } else if (opts.resolveExtra) {
       const extra = opts.resolveExtra(parentName);
       if (extra === undefined) {
         throw new Error(`profile_chain_broken: unknown profile "${parentName}"`);
       }
-      current = ProfileFragmentSchema.parse(extra);
+      next = ProfileFragmentSchema.parse(extra);
     } else {
       throw new Error(`profile_chain_broken: unknown profile "${parentName}"`);
     }
-    depth++;
+
+    // After loading the next fragment, check whether its own `extends` target
+    // is already in the resolution chain before we continue.
+    const nextParent = next.extends;
+    if (nextParent !== undefined) {
+      if (visited.has(nextParent)) {
+        throw new Error(
+          `profile_cycle: profile "${nextParent}" appears more than once in the extends chain`,
+        );
+      }
+      visited.add(nextParent);
+    }
+
+    current = next;
+  }
+
+  if (chain.length > 64) {
+    throw new Error("profile_chain_broken: depth limit exceeded");
   }
 
   let merged: Record<string, unknown> = {};
