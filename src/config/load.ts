@@ -21,16 +21,27 @@ export function loadConfig(opts: LoadOptions): Profile {
   try {
     fragment = parseYaml(raw);
   } catch (e) {
-    throw new Error(`config_invalid: YAML parse failed: ${(e as Error).message}`);
+    // The YAML parser message can embed raw source-line content; extract just
+    // the first line (the human-readable summary) to keep the error concise.
+    const yamlMsg = (e as Error).message.split("\n")[0] ?? "YAML parse error";
+    throw new Error(`config_invalid: ${path}: ${yamlMsg}`);
   }
   if (fragment === null || typeof fragment !== "object" || Array.isArray(fragment)) {
-    throw new Error("config_invalid: top-level must be a YAML object");
+    throw new Error(`config_invalid: ${path}: top-level must be a YAML object`);
   }
-  const profile = resolveProfile(fragment as Record<string, unknown>);
+  let profile: Profile;
+  try {
+    profile = resolveProfile(fragment as Record<string, unknown>);
+  } catch (e) {
+    // Zod and profile errors can be verbose; surface only the first line so
+    // the client sees a single actionable message, not a full stack dump.
+    const detail = (e as Error).message.split("\n")[0] ?? "invalid profile";
+    throw new Error(`config_invalid: ${path}: ${detail}`);
+  }
   try {
     resolveRepoSubdir(opts.rootDir, profile.spec_dir);
   } catch (e) {
-    throw new Error(`config_invalid: ${(e as Error).message}`);
+    throw new Error(`config_invalid: ${path}: ${(e as Error).message}`);
   }
   return profile;
 }
