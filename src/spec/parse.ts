@@ -80,8 +80,18 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
   const lines = md.split(/\r?\n/);
   const fields: Array<readonly [string, string]> = [];
   let status: StatusValue | null = null;
+  let pastTitle = false;
   for (const raw of lines) {
     if (raw === undefined) continue;
+    // Skip the title line itself (first # heading), but note when we've seen it.
+    if (!pastTitle && (raw.startsWith("# ") || raw.startsWith("## "))) {
+      pastTitle = true;
+      continue;
+    }
+    // Stop frontmatter scanning at the next heading after the title.
+    if (pastTitle && (raw.startsWith("# ") || raw.startsWith("## "))) {
+      break;
+    }
     const m = /^([A-Z][A-Za-z _-]*?):\s+(.+)$/.exec(raw);
     if (!m) {
       if (status !== null) break;

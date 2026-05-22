@@ -166,6 +166,27 @@ Some prose about a question and proposed default without a proper table.
   });
 });
 
+describe("parseFrontmatter — inline heading boundary", () => {
+  test("Status: in body prose after a heading is not treated as frontmatter", () => {
+    // The inline frontmatter parser must stop at the ## heading — the Status: line
+    // in the body section should not be picked up.
+    const md = `# Spec
+
+Status: DRAFT 011900ZMAY26
+Owner: TestAgent
+
+## Body
+
+Status: this line is prose and should be ignored as frontmatter
+`;
+    const fm = parseFrontmatter(md);
+    expect(fm.status.state).toBe("DRAFT");
+    // Only one Status field should be parsed — from the frontmatter region
+    const statusFields = fm.fields.filter(([k]) => k.toLowerCase() === "status");
+    expect(statusFields).toHaveLength(1);
+  });
+});
+
 describe("parseSpec", () => {
   test("loads all fixtures without throwing", () => {
     const all = loadAllFixtures();
