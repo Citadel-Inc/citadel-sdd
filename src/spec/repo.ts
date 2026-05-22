@@ -3,6 +3,17 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseSpec, parseTasks } from "./parse.js";
 import type { ParsedSpec, ParsedTasks } from "./types.js";
 
+/**
+ * Throws if `path` is a symbolic link (or does not exist).
+ * Call this before readFileSync to prevent symlink-following attacks.
+ */
+export function assertRegularFile(path: string): void {
+  const stat = lstatSync(path);
+  if (stat.isSymbolicLink()) {
+    throw new Error(`path_is_symlink: ${path}`);
+  }
+}
+
 export interface RepoContext {
   rootDir: string;
   specDir: string;
@@ -77,14 +88,17 @@ export function listSpecs(
 }
 
 export function readSpec(loc: SpecLocation): ParsedSpec {
+  assertRegularFile(loc.specMd);
   return parseSpec(readFileSync(loc.specMd, "utf8"));
 }
 
 export function readTasks(loc: SpecLocation): ParsedTasks {
+  assertRegularFile(loc.tasksMd);
   return parseTasks(readFileSync(loc.tasksMd, "utf8"));
 }
 
 export function readPlan(loc: SpecLocation): string {
+  assertRegularFile(loc.planMd);
   return readFileSync(loc.planMd, "utf8");
 }
 

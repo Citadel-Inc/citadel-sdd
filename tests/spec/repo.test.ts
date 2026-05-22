@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { symlinkSync } from "node:fs";
+import { symlinkSync, unlinkSync } from "node:fs";
+import { join } from "node:path";
 import {
+  assertRegularFile,
   listSpecs,
   locateSpec,
   type RepoContext,
@@ -134,6 +136,41 @@ describe("specsRoot", () => {
   test("joins rootDir + specDir", () => {
     temp = makeTempRepo();
     expect(specsRoot(ctx())).toBe(`${temp.rootDir}/specs`);
+  });
+});
+
+describe("assertRegularFile", () => {
+  test("does not throw for a regular file", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const loc = locateSpec(ctx(), "draft-minimal");
+    expect(loc).not.toBeNull();
+    if (!loc) return;
+    expect(() => assertRegularFile(loc.specMd)).not.toThrow();
+  });
+
+  test("throws path_is_symlink for a symlinked file", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const loc = locateSpec(ctx(), "draft-minimal");
+    expect(loc).not.toBeNull();
+    if (!loc) return;
+    const symlinkPath = join(loc.dir, "symlinked-spec.md");
+    symlinkSync(loc.specMd, symlinkPath);
+    expect(() => assertRegularFile(symlinkPath)).toThrow("path_is_symlink");
+  });
+});
+
+describe("readSpec / readTasks / readPlan — symlink rejection", () => {
+  test("readSpec throws when spec.md is a symlink", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal", "approved-ratified"] });
+    const locDst = locateSpec(ctx(), "draft-minimal");
+    const locSrc = locateSpec(ctx(), "approved-ratified");
+    expect(locDst).not.toBeNull();
+    expect(locSrc).not.toBeNull();
+    if (!locDst || !locSrc) return;
+    // Replace spec.md with a symlink pointing to another spec's file
+    unlinkSync(locDst.specMd);
+    symlinkSync(locSrc.specMd, locDst.specMd);
+    expect(() => readSpec(locDst)).toThrow("path_is_symlink");
   });
 });
 
