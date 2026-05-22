@@ -222,7 +222,7 @@ Regenerate `specs/README.md` from per-spec frontmatter + summaries. Used to reco
 
 Bootstrap fresh repo: writes `specs/config.yaml` + `specs/README.md` + `specs/active/.gitkeep` + `specs/done/.gitkeep` + `specs/parked/.gitkeep`.
 
-**Inputs:** `{ profile: "default"|"bastion"|"citadel"|"custom", overrides?: object }`.
+**Inputs:** `{ profile: string, overrides?: object }`. `profile` is a free-form string naming any built-in (`"default"`, `"bastion"`) or a custom profile declared in `specs/config.yaml`.
 
 **Output:** `{ created_files: string[], profile_resolved: object }`.
 

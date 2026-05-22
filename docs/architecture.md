@@ -24,8 +24,7 @@ src/
 ├── profile/
 │   ├── resolver.ts         # extends-chain walker
 │   ├── default.yaml
-│   ├── bastion.yaml
-│   └── citadel.yaml
+│   └── bastion.yaml
 ├── config/
 │   └── load.ts             # specs/config.yaml loader + Zod validation
 └── tools/                  # one file per MCP tool (18 + sdd_doctor)

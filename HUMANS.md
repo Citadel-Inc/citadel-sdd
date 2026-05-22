@@ -8,7 +8,7 @@ Drop the ~15 mechanical tool calls per spec claim/close cycle (status flips, dec
 
 ## Scope
 
-**In:** spec lifecycle (claim, approve, close, park, reopen, block, unblock, ratify, handoff, task ops, lint, init, doctor), profile system (`default → bastion → citadel`), TS port of archived `spec-status.py`.
+**In:** spec lifecycle (claim, approve, close, park, reopen, block, unblock, ratify, handoff, task ops, lint, init, doctor), profile system (`default → bastion`), TS port of archived `spec-status.py`.
 
 **Out:** GitHub/GitLab API, spec authoring AI, multi-repo coordination, Q-table reasoning, CI/deploy hooks, web UI, telemetry.
 

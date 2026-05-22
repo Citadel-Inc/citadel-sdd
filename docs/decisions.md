@@ -10,7 +10,7 @@ Permanent canon. Each decision is append-only — do not edit history. To revers
 | D-4 | Lint script provenance | Ported Python `spec-status.py` → TS; archived script remains source-of-truth for parity | 011945ZMAY26 |
 | D-5 | Commit author identity | `git config user.name`/`user.email`; profile may override | 011945ZMAY26 |
 | D-6 | Push policy | Profile-configurable (`never` / `on_close` / `always`) | 011945ZMAY26 |
-| D-7 | Bastion features | Neutral default; `bastion` profile adds DTG/IRONLAW/voice; `citadel` extends `bastion` | 011945ZMAY26 |
+| D-7 | Bastion features | Neutral default; `bastion` profile adds DTG/IRONLAW/voice; `citadel` extends `bastion` _(superseded by D-22: built-in `citadel` profile removed)_ | 011945ZMAY26 |
 | D-8 | Telemetry | Zero | 011945ZMAY26 |
 | D-9 | Slug uniqueness | Enforced forever; not configurable | 011945ZMAY26 |
 | D-10 | Versioning | Semver from `v0.0.x`; `v0.1.0` on first promotion-gate green | 011945ZMAY26 |
