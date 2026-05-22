@@ -141,9 +141,11 @@ export function parseQTable(md: string): QTableRow[] {
     if (
       line.startsWith("|") &&
       /question/i.test(line) &&
-      /proposed\s*default/i.test(line) &&
-      /nomad/i.test(line)
+      /proposed\s*default/i.test(line)
     ) {
+      // Require the very next line to be a markdown table separator row.
+      const nextRaw = lines[i + 1];
+      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) continue;
       headerIdx = i;
       break;
     }

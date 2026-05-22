@@ -127,6 +127,43 @@ describe("parseQTable", () => {
     expect(rows).toHaveLength(2);
     expect(rows.every((r) => r.ratified.startsWith("Ratified"))).toBe(true);
   });
+
+  test("parses Q-table when 4th column is not 'nomad' (renamed column)", () => {
+    const md = `# Spec
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Decisions
+
+| # | Question | Proposed default | Disposition |
+|---|----------|------------------|-------------|
+| Q1 | Use TS? | Yes | Ratified 011900ZMAY26 |
+| Q2 | License? | MIT | TBD |
+`;
+    const rows = parseQTable(md);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]?.id).toBe("Q1");
+    expect(rows[0]?.ratified).toBe("Ratified 011900ZMAY26");
+    expect(rows[1]?.ratified).toBe("TBD");
+  });
+
+  test("does not treat a prose table mentioning 'question' as a Q-table when no separator follows", () => {
+    // This tests that the separator-row guard prevents false positives.
+    const md = `# Spec
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Notes
+
+Some prose about a question and proposed default without a proper table.
+`;
+    const rows = parseQTable(md);
+    expect(rows).toHaveLength(0);
+  });
 });
 
 describe("parseSpec", () => {

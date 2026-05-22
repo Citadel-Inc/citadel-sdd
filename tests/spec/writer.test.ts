@@ -112,4 +112,13 @@ describe("spliceQTable", () => {
     const raw = "# S\n\n## Body\nNo decisions section.\n";
     expect(() => spliceQTable(raw, [row])).toThrow("qtable_anchor_missing");
   });
+
+  test("replaces Q-table rows when 4th column is renamed (not 'nomad')", () => {
+    const raw =
+      "# S\n\n## Decisions\n\n| # | Question | Proposed default | Disposition |\n|---|---|---|---|\n| Q1 | Use TS? | Yes | TBD |\n\n## Next\n";
+    const out = spliceQTable(raw, [row]);
+    expect(out).toContain("| Q1 | Use TS? | Yes | Ratified 011945ZMAY26 |");
+    expect(out).not.toContain("| TBD |");
+    expect(out).toContain("## Next");
+  });
 });

@@ -53,9 +53,12 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
     if (
       line.startsWith("|") &&
       /question/i.test(line) &&
-      /proposed\s*default/i.test(line) &&
-      /nomad/i.test(line)
+      /proposed\s*default/i.test(line)
     ) {
+      // Require the very next line to be a markdown table separator row,
+      // so we don't mistake prose tables for Q-tables.
+      const nextRaw = lines[i + 1];
+      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) continue;
       let end = i;
       while (end < lines.length) {
         const cur = lines[end];
@@ -67,6 +70,10 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
     }
   }
   return null;
+}
+
+function isSeparatorRow(line: string): boolean {
+  return /^\|[\s:|-]+\|$/.test(line);
 }
 
 export function spliceFrontmatter(
