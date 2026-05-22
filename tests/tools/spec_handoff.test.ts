@@ -56,4 +56,11 @@ describe("specHandoff", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
     expect(() => specHandoff({ slug: "in-progress-midway" }, ctx())).toThrow("new_owner_missing");
   });
+
+  test("rejects handoff_invalid_state when spec is not IN_PROGRESS or BLOCKED", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    expect(() => specHandoff({ slug: "draft-minimal", new_owner: "SomeAgent" }, ctx())).toThrow(
+      "handoff_invalid_state",
+    );
+  });
 });
