@@ -19,8 +19,10 @@ src/
 │   ├── git.ts              # commit / push / mv (shells local git)
 │   └── invariants.ts       # post-write invariant checker
 ├── lint/
-│   ├── index.ts            # ported spec-status (TS port of archived Python)
-│   └── rules.ts            # individual lint rules
+│   ├── blockers.ts         # lint rules: blocker checks
+│   ├── closure.ts          # lint rules: closure / done-state checks
+│   ├── cross_cutting.ts    # lint rules: cross-cutting checks (TS port of archived Python)
+│   └── strict.ts           # lint rules: strict-mode checks
 ├── profile/
 │   ├── resolver.ts         # extends-chain walker
 │   ├── default.yaml
