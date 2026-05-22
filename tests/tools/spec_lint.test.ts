@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { writeFileSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specLint } from "../../src/tools/spec_lint.js";
@@ -17,6 +17,10 @@ function ctx(profileName: "default" | "bastion" | "citadel" = "default"): ToolCo
   if (!temp) throw new Error("temp repo not initialized");
   return { rootDir: temp.rootDir, profile: resolveBuiltIn(profileName) };
 }
+
+const VALID_SPEC = "# Valid\n\n| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | T |\n";
+const VALID_TASKS =
+  "# Valid — Tasks\n\n| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n";
 
 describe("specLint", () => {
   test("clean fixture suite has zero error findings", () => {
@@ -87,6 +91,69 @@ describe("specLint", () => {
     const out = specLint({ slug: "missing" }, ctx());
     expect(out.findings.some((f) => f.code === "spec_not_found")).toBe(true);
     expect(out.exit_code).toBe(1);
+  });
+
+  test("repo-wide scan surfaces every per-spec error code at once", () => {
+    // The `done` fixture (state DONE) copied into active/ trips path_mismatch.
+    temp = makeTempRepo({ activeFixtures: ["done"] });
+    const active = join(temp.rootDir, "specs", "active");
+
+    // Invalid slug + missing spec.md (tasks.md only).
+    mkdirSync(join(active, "Bad-Slug"));
+    writeFileSync(join(active, "Bad-Slug", "tasks.md"), VALID_TASKS);
+    // Unparseable spec.md, valid tasks.md.
+    mkdirSync(join(active, "unparse-spec"));
+    writeFileSync(join(active, "unparse-spec", "spec.md"), "not a spec — no frontmatter\n");
+    writeFileSync(join(active, "unparse-spec", "tasks.md"), VALID_TASKS);
+    // Valid spec.md, unparseable tasks.md.
+    mkdirSync(join(active, "unparse-tasks"));
+    writeFileSync(join(active, "unparse-tasks", "spec.md"), VALID_SPEC);
+    writeFileSync(join(active, "unparse-tasks", "tasks.md"), "garbage\n");
+
+    const out = specLint({}, ctx());
+    const codes = new Set(out.findings.map((f) => f.code));
+    for (const code of [
+      "slug_invalid",
+      "spec_md_missing",
+      "spec_md_unparseable",
+      "tasks_md_unparseable",
+      "path_mismatch",
+      "not-indexed", // cross-cutting: the raw dirs are absent from specs/README.md
+    ]) {
+      expect(codes.has(code)).toBe(true);
+    }
+    expect(out.exit_code).toBe(1);
+  });
+
+  test("multi-root scan with fail_on:all reports roots and trips exit code", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const out = specLint({ roots: [temp.rootDir], fail_on: "all" }, ctx());
+    expect(out.roots).toBeDefined();
+    expect(out.roots?.length).toBe(1);
+    expect(out.findings.every((f) => typeof f.root === "string")).toBe(true);
+
+    const empty = specLint({ roots: [join(temp.rootDir, "no-such-dir")] }, ctx());
+    expect(empty.findings.some((f) => f.code === "no_roots_found")).toBe(true);
+    expect(empty.exit_code).toBe(1);
+    expect(empty.roots).toEqual([]);
+  });
+
+  test("strict frontmatter-format enforcement flags mismatched specs and stray priority headings", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal", "in-progress-inline"] });
+    // A `## P0` heading outside tasks.md trips strict-priority-in-nontasks.
+    writeFileSync(
+      join(temp.rootDir, "specs", "active", "draft-minimal", "plan.md"),
+      "# Plan\n\n## P0\n\nStuff.\n",
+    );
+    const base = resolveBuiltIn("default");
+    const inlineCtx: ToolContext = {
+      rootDir: temp.rootDir,
+      profile: { ...base, frontmatter_format: "inline" },
+    };
+    const out = specLint({}, inlineCtx);
+    const codes = new Set(out.findings.map((f) => f.code));
+    expect(codes.has("strict-frontmatter-format")).toBe(true);
+    expect(codes.has("strict-priority-in-nontasks")).toBe(true);
   });
 
   test("status_tail_missing info-level under conventional commit profile", () => {
