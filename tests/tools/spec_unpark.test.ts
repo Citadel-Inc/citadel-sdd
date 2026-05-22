@@ -31,7 +31,7 @@ describe("specUnpark", () => {
   test("rejects spec not in PARKED", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     expect(() => specUnpark({ slug: "draft-minimal", resolution: "x" }, ctx())).toThrow(
-      "state_invalid",
+      "spec_not_parked",
     );
   });
 
