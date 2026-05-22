@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { parseFrontmatter } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { Frontmatter } from "../spec/types.js";
@@ -31,12 +31,29 @@ export function specRead(input: SpecReadInput, ctx: ToolContext): SpecReadOutput
   }
   const parts = new Set<SpecReadPart>(input.parts ?? ["spec", "plan", "tasks"]);
   const specMd = readFileSync(loc.specMd, "utf8");
+
+  let plan_md: string | null = null;
+  if (parts.has("plan")) {
+    if (!existsSync(loc.planMd)) {
+      throw new Error(`file_not_found: plan.md missing for spec ${loc.slug} at ${loc.planMd}`);
+    }
+    plan_md = readFileSync(loc.planMd, "utf8");
+  }
+
+  let tasks_md: string | null = null;
+  if (parts.has("tasks")) {
+    if (!existsSync(loc.tasksMd)) {
+      throw new Error(`file_not_found: tasks.md missing for spec ${loc.slug} at ${loc.tasksMd}`);
+    }
+    tasks_md = readFileSync(loc.tasksMd, "utf8");
+  }
+
   return {
     slug: loc.slug,
     state: loc.state,
     spec_md: parts.has("spec") ? specMd : null,
-    plan_md: parts.has("plan") ? readFileSync(loc.planMd, "utf8") : null,
-    tasks_md: parts.has("tasks") ? readFileSync(loc.tasksMd, "utf8") : null,
+    plan_md,
+    tasks_md,
     frontmatter: parseFrontmatter(specMd),
   };
 }
