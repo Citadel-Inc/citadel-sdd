@@ -210,7 +210,7 @@ export function buildServer(opts: BuildServerOptions): McpServer {
     "spec_close",
     {
       description:
-        "Composite IN_PROGRESS → DONE + git mv active→done + index rebuild + commit + optional push.",
+        "Composite IN_PROGRESS|PARKED → DONE + git mv active|parked→done + index rebuild + commit + optional push.",
       inputSchema: SpecCloseShape,
     },
     wrap(specClose, ctxFactory),

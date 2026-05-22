@@ -44,6 +44,10 @@ function parseDtgUtc(dtg: string): Date | null {
   const mon = MONTHS_MIL[m[4] ?? ""];
   const yy = Number.parseInt(m[5] ?? "", 10);
   if (Number.isNaN(dd) || Number.isNaN(hh) || mon === undefined || Number.isNaN(yy)) return null;
+  // Two-digit-year pivot: yy >= 70 → 19xx, yy < 70 → 20xx.
+  // This correctly handles dates up to 2069; years 2070-2099 will be
+  // misread as 1970-1999. Acceptable limitation for a DTG format whose
+  // real-world use spans 1970-2069.
   return new Date(Date.UTC(yy >= 70 ? 1900 + yy : 2000 + yy, mon, dd, hh, mm, 0));
 }
 

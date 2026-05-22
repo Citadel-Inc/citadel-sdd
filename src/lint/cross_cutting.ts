@@ -75,7 +75,7 @@ function readIndex(
       continue;
     }
     if (section === null) continue;
-    const m = /^\|\s+([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
+    const m = /^\|\s*([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
     if (m?.[1]) out[section].add(m[1]);
   }
   return out;
