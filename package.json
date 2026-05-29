@@ -1,6 +1,6 @@
 {
   "name": "@rethunk/citadel-sdd",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "MCP stdio server wrapping the Spec-Driven Development lifecycle for agent workflows.",
   "type": "module",
   "private": false,

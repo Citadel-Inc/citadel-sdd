@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] — 2026-05-29
+
+### Changed
+
+- Refreshed all dependencies (`bun audit` clean) and raised `spec_lint` test coverage across error paths, multi-root resolution, and strict-format branches. No tool-surface or behavioural changes.
+
 ## [0.6.0] — 2026-05-22
 
 ### Added
