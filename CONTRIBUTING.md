@@ -81,7 +81,7 @@ Test categories:
 - **Unit:** parser round-trips on every fixture; render-then-parse idempotency.
 - **Integration:** spin temp git repo from fixtures; run each tool end-to-end; assert tree + commit log shape.
 - **Profile parity:** every shipped profile (`default`, `bastion`, `citadel`) round-trips through full lifecycle on a fixture repo.
-- **Lint parity (synthetic):** TS port matches archived Python `spec-status.py --strict --include-done` exit-code-wise on the fixture suite.
+- **Lint parity (synthetic):** `spec_lint` matches the archived Python linter's `--strict --include-done` exit-code behaviour on the fixture suite.
 
 ### Citadel parity (off-CI, maintainer-only)
 
@@ -92,7 +92,7 @@ Citadel is private; GitHub-hosted runners are not trusted with credentials. Main
 bun run lint:citadel-parity --citadel ../citadel
 ```
 
-Expects exit-code parity with archived `spec-status.py --strict --include-done` against the live citadel tree.
+Expects `spec_lint --strict --include-done` exit-code parity against the live citadel tree (verified via `scripts/lint-citadel-parity.ts`).
 
 ## Promotion gate
 

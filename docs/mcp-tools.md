@@ -69,7 +69,7 @@ Single-spec status summary.
 
 ### `spec_lint`
 
-Run strict-mode validation. Wraps the TypeScript port of archived `spec-status.py`.
+Run strict-mode validation across the spec tree.
 
 **Inputs:** `{ slug?, include_done?: boolean, include_parked?: boolean, no_strict?: boolean, fail_on?: string[]|"all", roots?: string[], scan_nested?: { parent: string, depth?: number }, stale_days?: number }`. Without slug, lints the whole tree. Default scans `specs/active/` only; `include_done` adds `specs/done/`; `include_parked` adds `specs/parked/` (flags compose). Per-spec `slug` lint resolves the slug wherever it lives. `no_strict` disables strict-mode rules. `fail_on` sets which rule codes (or `"all"`) cause a non-zero exit. `roots` overrides the set of spec-tree roots to lint. `scan_nested` walks `parent` up to `depth` levels looking for nested spec trees. `stale_days` overrides the profile default for stale-spec detection.
 
