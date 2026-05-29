@@ -1,4 +1,6 @@
-# citadel-sdd
+<h1 align="center">citadel-sdd</h1>
+
+<div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
@@ -6,7 +8,15 @@
 [![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6.svg)](https://www.typescriptlang.org)
 [![Repo: Rethunk-AI](https://img.shields.io/badge/repo-Rethunk--AI-blue.svg)](https://github.com/Rethunk-AI/citadel-sdd)
 
-MCP server wrapping the **Spec-Driven Development** lifecycle. One atomic MCP call replaces ~15 hand-edits per spec claim / close cycle. Built for Bastion, Citadel operators, Citadel customers, and public agent workflows.
+</div>
+
+---
+
+Agent workflows break down at the seams between lifecycle events — status flips, task-table updates, index rows, commit authoring, and `git mv` all have to happen together or the spec tree drifts. citadel-sdd collapses that work into one atomic MCP call per event, so a spec claim, close, or handoff is a single tool invocation rather than a coordinated sequence of ~15 hand-edits.
+
+Under the hood it is a stdio MCP server built on Bun and TypeScript. Every mutating tool buffers writes in memory and either commits all of them or restores pre-call state — no partial updates reach disk. Invariants (spec.md status, tasks.md state, on-disk path, and the `specs/README.md` index) are checked and enforced on every write, making drift structurally impossible after a successful tool call.
+
+The server ships two profiles out of the box (`default` and `bastion`) with profile inheritance, and is designed for three audiences: Citadel operators running private SDD workflows, Bastion agents that need deterministic lifecycle tooling, and public agent workflows that want a local-only, zero-telemetry spec engine under an MIT license.
 
 ## Highlights
 
@@ -17,7 +27,7 @@ MCP server wrapping the **Spec-Driven Development** lifecycle. One atomic MCP ca
 - **Local-only** — no telemetry, no remote API, runs over MCP stdio.
 - **MIT licensed**, public OSS.
 
-## Where to go
+## Documentation
 
 | You are… | Start here |
 |----------|------------|
@@ -29,3 +39,7 @@ MCP server wrapping the **Spec-Driven Development** lifecycle. One atomic MCP ca
 | Reading architectural decisions | [docs/decisions.md](docs/decisions.md) |
 | Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
 | Reporting a vulnerability | [SECURITY.md](SECURITY.md) |
+
+## License
+
+MIT — see [LICENSE](LICENSE).
