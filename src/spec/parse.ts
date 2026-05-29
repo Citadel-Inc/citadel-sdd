@@ -38,7 +38,7 @@ function splitPipeRow(line: string): string[] {
   return inner
     .replace(/\\\|/g, ESCAPED_PIPE_PLACEHOLDER)
     .split("|")
-    .map((c) => c.trim().replace(/\x00/g, "|"));
+    .map((c) => c.trim().replaceAll("\x00", "|"));
 }
 
 function extractPipeTable(lines: readonly string[], startIdx: number): PipeTableExtraction {
