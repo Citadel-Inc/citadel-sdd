@@ -98,6 +98,15 @@ describe("parseFrontmatter", () => {
     const md = "# X\n\nNo table here.\n";
     expect(() => parseFrontmatter(md)).toThrow("frontmatter_missing");
   });
+
+  test("pipe in Status tail is preserved via \\| escape", () => {
+    const md =
+      "| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — hedge-grep (might\\|maybe\\|probably) |\n| Owner | Bastion |\n";
+    const fm = parseFrontmatter(md);
+    expect(fm.status.state).toBe("DONE");
+    expect(fm.status.dtg).toBe("011945ZMAY26");
+    expect(fm.status.tail).toBe("hedge-grep (might|maybe|probably)");
+  });
 });
 
 describe("parseQTable", () => {

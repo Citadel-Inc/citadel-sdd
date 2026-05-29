@@ -72,6 +72,25 @@ describe("renderFrontmatter", () => {
     expect(dataLines[1]).toContain("Owner");
     expect(dataLines[2]).toContain("Approved");
   });
+
+  test("pipe in Status tail is escaped as \\| and round-trips cleanly", () => {
+    // Build frontmatter with pipes in the status tail directly (simulates a spec_close summary
+    // that contains regex alternation or TS union types).
+    const status = parseStatusValue("DONE 011945ZMAY26 — all tasks green");
+    // Mutate the tail to contain pipes (bypassing parseStatusValue which would reject them)
+    const statusWithPipes = { ...status, tail: "hedge-grep (might|maybe|probably)" };
+    const fm = parseFrontmatter(
+      "| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n",
+    );
+    const fmWithPipes = { ...fm, status: statusWithPipes };
+    const rendered = renderFrontmatter(fmWithPipes);
+    // Pipes within cell content must be escaped as \|
+    expect(rendered).toContain("might\\|maybe\\|probably");
+    // Round-trip: parse back and recover original pipes
+    const reparsed = parseFrontmatter(rendered);
+    expect(reparsed.status.state).toBe("DONE");
+    expect(reparsed.status.tail).toBe("hedge-grep (might|maybe|probably)");
+  });
 });
 
 describe("renderQTable", () => {

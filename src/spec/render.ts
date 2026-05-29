@@ -16,19 +16,23 @@ export function renderStatusValue(s: StatusValue): string {
   return `${head} — ${s.tail}`;
 }
 
+function escapePipeCell(s: string): string {
+  return s.replace(/\|/g, "\\|");
+}
+
 export function renderFrontmatter(fm: Frontmatter): string {
   const lines: string[] = ["| | |", "|---|---|"];
   let statusEmitted = false;
   for (const [key, value] of fm.fields) {
     if (key.toLowerCase() === "status") {
-      lines.push(`| Status | ${renderStatusValue(fm.status)} |`);
+      lines.push(`| Status | ${escapePipeCell(renderStatusValue(fm.status))} |`);
       statusEmitted = true;
     } else {
-      lines.push(`| ${key} | ${value} |`);
+      lines.push(`| ${key} | ${escapePipeCell(value)} |`);
     }
   }
   if (!statusEmitted) {
-    lines.splice(2, 0, `| Status | ${renderStatusValue(fm.status)} |`);
+    lines.splice(2, 0, `| Status | ${escapePipeCell(renderStatusValue(fm.status))} |`);
   }
   return lines.join("\n");
 }
@@ -57,7 +61,9 @@ export function renderQTable(rows: readonly QTableRow[]): string {
     "|---|----------|------------------|-------|",
   ];
   for (const row of rows) {
-    lines.push(`| ${row.id} | ${row.question} | ${row.proposedDefault} | ${row.ratified} |`);
+    lines.push(
+      `| ${row.id} | ${escapePipeCell(row.question)} | ${escapePipeCell(row.proposedDefault)} | ${escapePipeCell(row.ratified)} |`,
+    );
   }
   return lines.join("\n");
 }
