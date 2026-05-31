@@ -46,7 +46,7 @@ jobs:
         run: bun run build
 
       - name: Lint and format check
-        run: bun run check
+        run: bun run ci
 
       - name: Unit tests with coverage
         run: bun run test:coverage

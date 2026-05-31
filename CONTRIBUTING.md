@@ -15,8 +15,8 @@ git clone https://github.com/Rethunk-AI/citadel-sdd.git
 cd citadel-sdd
 bun install
 bun run build       # tsc → dist/
-bun run check       # Biome lint + format check
-bun run check:fix   # auto-fix with Biome
+bun run lint       # Biome lint + format check
+bun run format   # auto-fix with Biome
 bun run test        # bun test src/
 bun run test:coverage  # bun test src/ --coverage
 ```
@@ -29,7 +29,7 @@ bun run test:coverage  # bun test src/ --coverage
 
 | Hook | Runs |
 |------|------|
-| pre-commit | `bun run check` + `bun run test` |
+| pre-commit | `bun run lint` + `bun run test` |
 | pre-push | frozen install + build + check + test (mirrors CI) |
 
 Set `SKIP_GIT_HOOKS=1` to bypass.
@@ -63,7 +63,7 @@ GitHub Actions runs on PRs and pushes to `main`:
 
 1. `bun install --frozen-lockfile`
 2. `bun run build`
-3. `bun run check` (Biome)
+3. `bun run lint` (Biome)
 4. `bun run test:coverage` + 80% line coverage threshold
 
 Match CI steps locally before opening a PR.
@@ -106,7 +106,7 @@ Both must hold; either failure blocks the tag.
 ## Pull request checklist
 
 - [ ] `bun run build` passes.
-- [ ] `bun run check` passes (no Biome errors).
+- [ ] `bun run lint` passes (no Biome errors).
 - [ ] `bun run test` passes.
 - [ ] Any new tool has a corresponding `*.test.ts` file.
 - [ ] Contract changes hit their canon location per [AGENTS.md "Contract-change rules"](AGENTS.md#contract-change-rules).

@@ -41,7 +41,7 @@ jobs:
 
       - name: Lint and format check
         if: steps.phase.outputs.ready == 'true'
-        run: bun run check
+        run: bun run ci
 
       - name: Unit tests with coverage
         if: steps.phase.outputs.ready == 'true'

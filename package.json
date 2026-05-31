@@ -28,13 +28,14 @@
   "scripts": {
     "build": "rimraf dist && tsc -p tsconfig.build.json && mkdir -p dist/profile && cp src/profile/*.yaml dist/profile/",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "check": "biome check .",
-    "check:fix": "biome check --write .",
     "test": "bun test src/ tests/",
     "test:coverage": "bun test src/ tests/ --coverage",
-    "prepublishOnly": "bun run build && bun run check && bun run test",
+    "prepublishOnly": "bun run ci",
     "lint:citadel-parity": "bun scripts/lint-citadel-parity.ts",
-    "setup-hooks": "git config core.hooksPath .githooks"
+    "setup-hooks": "git config core.hooksPath .githooks",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
   },
   "keywords": [
     "mcp",
