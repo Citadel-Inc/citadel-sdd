@@ -4,7 +4,7 @@
   "description": "MCP stdio server wrapping the Spec-Driven Development lifecycle for agent workflows.",
   "type": "module",
   "private": false,
-  "packageManager": "bun@1.3.13",
+  "packageManager": "bun@1.3.14",
   "engines": {
     "node": ">=22.0.0"
   },

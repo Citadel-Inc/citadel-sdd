@@ -5,15 +5,15 @@
     "": {
       "name": "@rethunk/citadel-sdd",
       "dependencies": {
-        "@modelcontextprotocol/sdk": "latest",
-        "yaml": "latest",
-        "zod": "latest",
+        "@modelcontextprotocol/sdk": "^1.29.0",
+        "yaml": "^2.9.0",
+        "zod": "^4.4.3",
       },
       "devDependencies": {
-        "@biomejs/biome": "latest",
-        "@types/node": "latest",
-        "rimraf": "latest",
-        "typescript": "latest",
+        "@biomejs/biome": "^2.4.16",
+        "@types/node": "^25.9.1",
+        "rimraf": "^6.1.3",
+        "typescript": "^6.0.3",
       },
     },
   },
