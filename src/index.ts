@@ -1,4 +1,6 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { RootsListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -17,6 +19,53 @@ import type { ToolContext } from "./tools/types.js";
 
 const VERSION: string = pkg.version;
 
+export function formatCliVersion(): string {
+  return VERSION;
+}
+
+export function formatCliHelp(): string {
+  return [
+    `citadel-sdd ${VERSION}`,
+    "",
+    "Usage:",
+    "  citadel-sdd",
+    "",
+    "Options:",
+    "  --help, -h       Show this help text.",
+    "  --version, -v    Show the package version.",
+  ].join("\n");
+}
+
+export function handleCliMetadataArgs(
+  argv: readonly string[] = process.argv.slice(2),
+  writeOutput: (message: string) => void = console.log,
+): boolean {
+  if (argv.includes("--help") || argv.includes("-h")) {
+    writeOutput(formatCliHelp());
+    return true;
+  }
+
+  if (argv.includes("--version") || argv.includes("-v")) {
+    writeOutput(formatCliVersion());
+    return true;
+  }
+
+  return false;
+}
+
+export function isCliEntryPoint(
+  argvPath: string | undefined = process.argv[1],
+  modulePath: string = fileURLToPath(import.meta.url),
+): boolean {
+  if (argvPath === undefined) return false;
+
+  try {
+    return realpathSync(argvPath) === realpathSync(modulePath);
+  } catch {
+    return argvPath === modulePath;
+  }
+}
+
 function discoverRootFallback(): string {
   const fromEnv = process.env.CITADEL_SDD_ROOT;
   if (fromEnv && fromEnv.length > 0) return normalizeProjectRoot(fromEnv);
@@ -28,6 +77,8 @@ function discoverRootFallback(): string {
 }
 
 async function main(): Promise<void> {
+  if (handleCliMetadataArgs()) return;
+
   const fallbackRootDir = discoverRootFallback();
   let server: McpServer;
   let cachedFileRoots: string[] = [];
@@ -87,7 +138,9 @@ async function main(): Promise<void> {
   await server.connect(transport);
 }
 
-main().catch((e) => {
-  process.stderr.write(`citadel-sdd fatal: ${e instanceof Error ? e.message : String(e)}\n`);
-  process.exit(1);
-});
+if (isCliEntryPoint()) {
+  main().catch((e) => {
+    process.stderr.write(`citadel-sdd fatal: ${e instanceof Error ? e.message : String(e)}\n`);
+    process.exit(1);
+  });
+}
