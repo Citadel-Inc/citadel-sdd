@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -123,7 +123,7 @@ describe("gitInit / gitConfigSet / gitRevParseShowToplevel", () => {
       gitConfigSet({ rootDir: scratch }, "user.name", "Init User");
       gitConfigSet({ rootDir: scratch }, "user.email", "init@example.com");
       expect(gitConfigUserName({ rootDir: scratch })).toBe("Init User");
-      expect(gitRevParseShowToplevel(scratch)).toBe(scratch);
+      expect(realpathSync(gitRevParseShowToplevel(scratch))).toBe(realpathSync(scratch));
     } finally {
       rmSync(scratch, { recursive: true, force: true });
     }
