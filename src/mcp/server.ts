@@ -1,46 +1,40 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { RatifyDecision } from "../spec/mutate.js";
+import type { Priority } from "../spec/types.js";
 import { sddDoctor } from "../tools/sdd_doctor.js";
-import { specApprove } from "../tools/spec_approve.js";
-import { specBlock } from "../tools/spec_block.js";
-import { specClaim } from "../tools/spec_claim.js";
-import { specClose } from "../tools/spec_close.js";
+import { type SpecApproveOutput, specApprove } from "../tools/spec_approve.js";
+import { type SpecBlockOutput, specBlock } from "../tools/spec_block.js";
+import { type SpecClaimOutput, specClaim } from "../tools/spec_claim.js";
+import { type SpecCloseOutput, specClose } from "../tools/spec_close.js";
 import { specHandoff } from "../tools/spec_handoff.js";
 import { specIndexRebuild } from "../tools/spec_index_rebuild.js";
 import { specInit } from "../tools/spec_init.js";
 import { specLint } from "../tools/spec_lint.js";
 import { specList } from "../tools/spec_list.js";
-import { specPark } from "../tools/spec_park.js";
-import { specRatify } from "../tools/spec_ratify.js";
+import { type SpecParkOutput, specPark } from "../tools/spec_park.js";
+import { type SpecRatifyOutput, specRatify } from "../tools/spec_ratify.js";
 import { specRead } from "../tools/spec_read.js";
-import { specReopen } from "../tools/spec_reopen.js";
+import { type SpecReopenOutput, specReopen } from "../tools/spec_reopen.js";
 import { specStatus } from "../tools/spec_status.js";
 import { specTaskAdd } from "../tools/spec_task_add.js";
 import { specTaskCheck } from "../tools/spec_task_check.js";
 import { specTaskList } from "../tools/spec_task_list.js";
-import { specUnblock } from "../tools/spec_unblock.js";
-import { specUnpark } from "../tools/spec_unpark.js";
+import { type SpecUnblockOutput, specUnblock } from "../tools/spec_unblock.js";
+import { type SpecUnparkOutput, specUnpark } from "../tools/spec_unpark.js";
 import type { ToolContext } from "../tools/types.js";
 import {
   SddDoctorShape,
-  SpecApproveShape,
-  SpecBlockShape,
-  SpecClaimShape,
-  SpecCloseShape,
   SpecHandoffShape,
   SpecIndexRebuildShape,
   SpecInitShape,
   SpecLintShape,
   SpecListShape,
-  SpecParkShape,
-  SpecRatifyShape,
   SpecReadShape,
-  SpecReopenShape,
   SpecStatusShape,
   SpecTaskAddShape,
   SpecTaskCheckShape,
   SpecTaskListShape,
-  SpecUnblockShape,
-  SpecUnparkShape,
+  SpecTransitionShape,
 } from "./schemas.js";
 import type { WorkspaceRootPick } from "./workspace.js";
 
@@ -77,6 +71,100 @@ function wrap<I extends object, O>(
       return err(e);
     }
   };
+}
+
+export type SpecTransitionAction =
+  | "approve"
+  | "ratify"
+  | "claim"
+  | "close"
+  | "reopen"
+  | "park"
+  | "block"
+  | "unblock"
+  | "unpark";
+
+export interface SpecTransitionInput {
+  slug: string;
+  to: SpecTransitionAction;
+  note?: string;
+  decisions?: Record<string, RatifyDecision>;
+  default_disposition?: string;
+  claimer?: string;
+  ratify?: boolean;
+  summary?: string;
+  allow_open?: Priority[];
+  push?: boolean;
+  reason?: string;
+  resolution?: string;
+  blocker_path?: string;
+  commit?: boolean;
+  dryRun?: boolean;
+}
+
+export type SpecTransitionOutput =
+  | SpecApproveOutput
+  | SpecRatifyOutput
+  | SpecClaimOutput
+  | SpecCloseOutput
+  | SpecReopenOutput
+  | SpecParkOutput
+  | SpecBlockOutput
+  | SpecUnblockOutput
+  | SpecUnparkOutput;
+
+/**
+ * Single MCP surface for the nine lifecycle-transition tools. Routes to the
+ * existing per-action handlers unchanged — this is a dispatch layer only, no
+ * business-logic rewrite. `reason`/`resolution` are required by the
+ * underlying handlers (they self-validate and throw `reason_missing:` /
+ * `resolution_missing:` on empty input), so an omitted field here is passed
+ * through as `""` and surfaces that same handler-owned error.
+ */
+export function specTransition(input: SpecTransitionInput, ctx: ToolContext): SpecTransitionOutput {
+  const { slug, commit, dryRun } = input;
+  switch (input.to) {
+    case "approve":
+      return specApprove({ slug, note: input.note, commit, dryRun }, ctx);
+    case "ratify":
+      return specRatify(
+        {
+          slug,
+          decisions: input.decisions,
+          default_disposition: input.default_disposition,
+          commit,
+          dryRun,
+        },
+        ctx,
+      );
+    case "claim":
+      return specClaim({ slug, claimer: input.claimer, ratify: input.ratify, commit, dryRun }, ctx);
+    case "close":
+      return specClose(
+        {
+          slug,
+          summary: input.summary,
+          allow_open: input.allow_open,
+          commit,
+          push: input.push,
+          dryRun,
+        },
+        ctx,
+      );
+    case "reopen":
+      return specReopen({ slug, reason: input.reason ?? "", commit, dryRun }, ctx);
+    case "park":
+      return specPark({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
+    case "block":
+      return specBlock(
+        { slug, reason: input.reason ?? "", blocker_path: input.blocker_path, commit, dryRun },
+        ctx,
+      );
+    case "unblock":
+      return specUnblock({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
+    case "unpark":
+      return specUnpark({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
+  }
 }
 
 export interface BuildServerOptions {
@@ -143,21 +231,16 @@ export function buildServer(opts: BuildServerOptions): McpServer {
   );
 
   server.registerTool(
-    "spec_approve",
+    "spec_transition",
     {
-      description: "Atomic DRAFT → APPROVED.",
-      inputSchema: SpecApproveShape,
+      description:
+        "Drive a spec lifecycle transition. `to`: approve (DRAFT→APPROVED) | ratify (fill Q-table TBDs) | " +
+        "claim (DRAFT/APPROVED→IN_PROGRESS) | close (IN_PROGRESS|PARKED→DONE) | reopen (DONE→IN_PROGRESS) | " +
+        "park (→PARKED) | block (IN_PROGRESS→BLOCKED) | unblock (BLOCKED→IN_PROGRESS) | unpark (PARKED→IN_PROGRESS). " +
+        "reason is required for reopen/block; resolution is required for park/unblock/unpark.",
+      inputSchema: SpecTransitionShape,
     },
-    wrap(specApprove, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_ratify",
-    {
-      description: "Replace TBD rows in Q-table with Ratified <DTG>.",
-      inputSchema: SpecRatifyShape,
-    },
-    wrap(specRatify, ctxFactory),
+    wrap(specTransition, ctxFactory),
   );
 
   server.registerTool(
@@ -195,72 +278,6 @@ export function buildServer(opts: BuildServerOptions): McpServer {
       inputSchema: SpecHandoffShape,
     },
     wrap(specHandoff, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_claim",
-    {
-      description: "Composite DRAFT/APPROVED → IN_PROGRESS + optional Q-table ratify + commit.",
-      inputSchema: SpecClaimShape,
-    },
-    wrap(specClaim, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_close",
-    {
-      description:
-        "Composite IN_PROGRESS|PARKED → DONE + git mv active|parked→done + index rebuild + commit + optional push.",
-      inputSchema: SpecCloseShape,
-    },
-    wrap(specClose, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_reopen",
-    {
-      description: "Composite DONE → IN_PROGRESS + git mv done→active + index rebuild + commit.",
-      inputSchema: SpecReopenShape,
-    },
-    wrap(specReopen, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_park",
-    {
-      description:
-        "DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + git mv active→parked + index rebuild + commit. Intentionally not pursuing a spec.",
-      inputSchema: SpecParkShape,
-    },
-    wrap(specPark, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_block",
-    {
-      description: "Composite IN_PROGRESS → BLOCKED + ## Blocking section + commit.",
-      inputSchema: SpecBlockShape,
-    },
-    wrap(specBlock, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_unblock",
-    {
-      description: "Composite BLOCKED → IN_PROGRESS + remove ## Blocking + commit.",
-      inputSchema: SpecUnblockShape,
-    },
-    wrap(specUnblock, ctxFactory),
-  );
-
-  server.registerTool(
-    "spec_unpark",
-    {
-      description:
-        "PARKED → IN_PROGRESS + git mv parked→active + index rebuild + commit. Wake a held spec.",
-      inputSchema: SpecUnparkShape,
-    },
-    wrap(specUnpark, ctxFactory),
   );
 
   server.registerTool(

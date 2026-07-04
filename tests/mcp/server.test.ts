@@ -40,7 +40,7 @@ async function dial(): Promise<{ client: Client; close: () => Promise<void> }> {
 }
 
 describe("MCP server wiring", () => {
-  test("listTools returns the full 20-tool roster", async () => {
+  test("listTools returns the full 12-tool roster", async () => {
     temp = makeTempRepo();
     const { client, close } = await dial();
     const list = await client.listTools();
@@ -48,25 +48,17 @@ describe("MCP server wiring", () => {
     expect(names).toEqual(
       [
         "sdd_doctor",
-        "spec_approve",
-        "spec_block",
-        "spec_claim",
-        "spec_close",
         "spec_handoff",
         "spec_index_rebuild",
         "spec_init",
         "spec_lint",
         "spec_list",
-        "spec_park",
-        "spec_ratify",
         "spec_read",
-        "spec_reopen",
         "spec_status",
         "spec_task_add",
         "spec_task_check",
         "spec_task_list",
-        "spec_unblock",
-        "spec_unpark",
+        "spec_transition",
       ].sort(),
     );
     await close();
@@ -129,25 +121,38 @@ describe("MCP server wiring", () => {
     await close();
   });
 
-  test("callTool spec_approve mutates AND surfaces error on bad transition", async () => {
+  test("callTool spec_transition(to:approve) mutates AND surfaces error on bad transition", async () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const { client, close } = await dial();
 
     const ok = await client.callTool({
-      name: "spec_approve",
-      arguments: { slug: "draft-minimal" },
+      name: "spec_transition",
+      arguments: { slug: "draft-minimal", to: "approve" },
     });
     const okContent = ok.content as Array<{ type: string; text: string }>;
     expect(okContent[0]?.text ?? "").toContain("APPROVED");
 
     const err = await client.callTool({
-      name: "spec_approve",
-      arguments: { slug: "draft-minimal" },
+      name: "spec_transition",
+      arguments: { slug: "draft-minimal", to: "approve" },
     });
     expect(err.isError).toBe(true);
     const errContent = err.content as Array<{ type: string; text: string }>;
     expect(errContent[0]?.text ?? "").toContain("state_invalid");
 
+    await close();
+  });
+
+  test("callTool spec_transition(to:reopen) without reason surfaces reason_missing", async () => {
+    temp = makeTempRepo({ doneFixtures: ["done"] });
+    const { client, close } = await dial();
+    const res = await client.callTool({
+      name: "spec_transition",
+      arguments: { slug: "done", to: "reopen" },
+    });
+    expect(res.isError).toBe(true);
+    const content = res.content as Array<{ type: string; text: string }>;
+    expect(content[0]?.text ?? "").toContain("reason_missing");
     await close();
   });
 

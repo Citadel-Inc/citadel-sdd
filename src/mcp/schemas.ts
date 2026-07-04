@@ -70,22 +70,45 @@ export const SpecLintShape = withWorkspacePick({
 
 export const SddDoctorShape = withWorkspacePick({});
 
-export const SpecApproveShape = withWorkspacePick({
-  slug: SlugSchema,
-  note: z.string().optional(),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
 const RatifyDecisionSchema = z.object({
   text: z.string(),
   as_of_dtg: z.string().optional(),
 });
 
-export const SpecRatifyShape = withWorkspacePick({
+export const SpecTransitionActions = [
+  "approve",
+  "ratify",
+  "claim",
+  "close",
+  "reopen",
+  "park",
+  "block",
+  "unblock",
+  "unpark",
+] as const;
+
+export const SpecTransitionShape = withWorkspacePick({
   slug: SlugSchema,
+  to: z.enum(SpecTransitionActions),
+  // approve
+  note: z.string().optional(),
+  // ratify
   decisions: z.record(z.string(), RatifyDecisionSchema).optional(),
   default_disposition: z.string().optional(),
+  // claim
+  claimer: z.string().optional(),
+  ratify: z.boolean().optional(),
+  // close
+  summary: z.string().optional(),
+  allow_open: z.array(PrioritySchema).optional(),
+  push: z.boolean().optional(),
+  // reopen, block (required at runtime by the underlying handler)
+  reason: z.string().optional(),
+  // park, unblock, unpark (required at runtime by the underlying handler)
+  resolution: z.string().optional(),
+  // block
+  blocker_path: z.string().optional(),
+  // shared
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
 });
@@ -126,59 +149,6 @@ export const SpecHandoffShape = withWorkspacePick({
   slug: SlugSchema,
   new_owner: z.string().min(1).optional(),
   note: z.string().optional(),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecClaimShape = withWorkspacePick({
-  slug: SlugSchema,
-  claimer: z.string().optional(),
-  ratify: z.boolean().optional(),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecCloseShape = withWorkspacePick({
-  slug: SlugSchema,
-  summary: z.string().min(1).optional(),
-  allow_open: z.array(PrioritySchema).optional(),
-  commit: z.boolean().optional(),
-  push: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecReopenShape = withWorkspacePick({
-  slug: SlugSchema,
-  reason: z.string().min(1),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecParkShape = withWorkspacePick({
-  slug: SlugSchema,
-  resolution: z.string().min(1),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecBlockShape = withWorkspacePick({
-  slug: SlugSchema,
-  reason: z.string().min(1),
-  blocker_path: z.string().optional(),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecUnblockShape = withWorkspacePick({
-  slug: SlugSchema,
-  resolution: z.string().min(1),
-  commit: z.boolean().optional(),
-  dryRun: z.boolean().optional(),
-});
-
-export const SpecUnparkShape = withWorkspacePick({
-  slug: SlugSchema,
-  resolution: z.string().min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
 });
