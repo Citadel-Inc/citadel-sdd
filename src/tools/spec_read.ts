@@ -1,7 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import { parseFrontmatter } from "../spec/parse.js";
 import { locateSpec, type RepoContext } from "../spec/repo.js";
-import type { Frontmatter } from "../spec/types.js";
 import type { ToolContext } from "./types.js";
 
 export type SpecReadPart = "spec" | "plan" | "tasks";
@@ -17,7 +15,6 @@ export interface SpecReadOutput {
   spec_md: string | null;
   plan_md: string | null;
   tasks_md: string | null;
-  frontmatter: Frontmatter;
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
@@ -54,6 +51,5 @@ export function specRead(input: SpecReadInput, ctx: ToolContext): SpecReadOutput
     spec_md: parts.has("spec") ? specMd : null,
     plan_md,
     tasks_md,
-    frontmatter: parseFrontmatter(specMd),
   };
 }

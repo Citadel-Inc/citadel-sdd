@@ -17,7 +17,7 @@ function ctx(): ToolContext {
 }
 
 describe("specRead", () => {
-  test("default returns all three parts + frontmatter", () => {
+  test("default returns all three parts", () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
     const out = specRead({ slug: "approved-ratified" }, ctx());
     expect(out.slug).toBe("approved-ratified");
@@ -25,7 +25,6 @@ describe("specRead", () => {
     expect(out.spec_md).toContain("APPROVED");
     expect(out.plan_md).toContain("Phase 1");
     expect(out.tasks_md).toContain("[HUMAN]");
-    expect(out.frontmatter.status.state).toBe("APPROVED");
   });
 
   test("parts:[spec] returns only spec_md", () => {
