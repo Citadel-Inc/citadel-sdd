@@ -5,7 +5,6 @@ import { gitRevParseShowToplevel } from "../spec/git.js";
 
 export interface WorkspaceRootPick {
   workspaceRoot?: string;
-  rootIndex?: number;
 }
 
 export function rootUriToPath(uri: string): string | null {
@@ -35,17 +34,6 @@ export function resolveWorkspaceRoot(
 ): string {
   const explicit = input?.workspaceRoot?.trim();
   if (explicit) return normalizeProjectRoot(explicit);
-
-  const rootIndex = input?.rootIndex;
-  if (rootIndex != null) {
-    const selected = fileRoots[rootIndex];
-    if (!selected) {
-      throw new Error(
-        `root_index_out_of_range: rootIndex=${rootIndex} rootCount=${fileRoots.length}`,
-      );
-    }
-    return normalizeProjectRoot(selected);
-  }
 
   const primary = fileRoots[0];
   if (primary) return normalizeProjectRoot(primary);

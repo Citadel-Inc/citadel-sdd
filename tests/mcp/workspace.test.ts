@@ -37,7 +37,7 @@ describe("workspace root resolution", () => {
     }
   });
 
-  test("prefers workspaceRoot, then rootIndex, then primary MCP root, then fallback", () => {
+  test("prefers workspaceRoot, then primary MCP root, then fallback", () => {
     const t = makeTree();
     try {
       const a = join(t.root, "a");
@@ -47,20 +47,11 @@ describe("workspace root resolution", () => {
       mkdirSync(b, { recursive: true });
       mkdirSync(c, { recursive: true });
 
-      expect(resolveWorkspaceRoot({ workspaceRoot: c, rootIndex: 1 }, [a, b], t.root)).toBe(
-        resolve(c),
-      );
-      expect(resolveWorkspaceRoot({ rootIndex: 1 }, [a, b], t.root)).toBe(resolve(b));
+      expect(resolveWorkspaceRoot({ workspaceRoot: c }, [a, b], t.root)).toBe(resolve(c));
       expect(resolveWorkspaceRoot(undefined, [a, b], t.root)).toBe(resolve(a));
       expect(resolveWorkspaceRoot(undefined, [], c)).toBe(resolve(c));
     } finally {
       t.cleanup();
     }
-  });
-
-  test("throws a structured error for an invalid rootIndex", () => {
-    expect(() => resolveWorkspaceRoot({ rootIndex: 2 }, ["/tmp/a"], "/tmp/fallback")).toThrow(
-      "root_index_out_of_range",
-    );
   });
 });

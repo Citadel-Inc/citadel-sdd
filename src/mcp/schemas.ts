@@ -3,13 +3,10 @@ import { z } from "zod";
 const SlugSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 const PrioritySchema = z.enum(["P0", "P1", "P2"]);
 const WorkspacePickShape = {
-  workspaceRoot: z.string().optional().describe("Highest-priority workspace root override."),
-  rootIndex: z
-    .number()
-    .int()
-    .min(0)
+  workspaceRoot: z
+    .string()
     .optional()
-    .describe("0-based index into the MCP file roots list; ignored when workspaceRoot is set."),
+    .describe("Project root override; omit to use the active workspace."),
 } as const;
 
 function withWorkspacePick<T extends Record<string, z.ZodType>>(
@@ -121,12 +118,8 @@ const TaskCheckItemSchema = z.object({
 
 export const SpecTaskCheckShape = withWorkspacePick({
   slug: SlugSchema,
-  /** Batch form — check/uncheck multiple items in one call. */
-  items: z.array(TaskCheckItemSchema).optional(),
-  /** Flat single-item form (backward compat). */
-  phase: PrioritySchema.optional(),
-  match: z.union([z.string(), z.number().int().min(1)]).optional(),
-  checked: z.boolean().optional(),
+  /** Check/uncheck one or more items in a single call. */
+  items: z.array(TaskCheckItemSchema).min(1),
   commit: z.boolean().optional(),
   dryRun: z.boolean().optional(),
 });

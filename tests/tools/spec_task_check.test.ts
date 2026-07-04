@@ -22,7 +22,7 @@ describe("specTaskCheck", () => {
   test("check by 1-based index", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const out = specTaskCheck(
-      { slug: "draft-minimal", phase: "P0", match: 2, checked: true },
+      { slug: "draft-minimal", items: [{ phase: "P0", match: 2, checked: true }] },
       ctx(),
     );
     expect(out.before.checked).toBe(false);
@@ -36,7 +36,10 @@ describe("specTaskCheck", () => {
 
   test("check by text-prefix match", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    specTaskCheck({ slug: "draft-minimal", phase: "P0", match: "First", checked: true }, ctx());
+    specTaskCheck(
+      { slug: "draft-minimal", items: [{ phase: "P0", match: "First", checked: true }] },
+      ctx(),
+    );
     const tasks = readFileSync(
       join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md"),
       "utf8",
@@ -47,7 +50,7 @@ describe("specTaskCheck", () => {
   test("uncheck flips x → space", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
     const out = specTaskCheck(
-      { slug: "in-progress-midway", phase: "P0", match: "Scaffold", checked: false },
+      { slug: "in-progress-midway", items: [{ phase: "P0", match: "Scaffold", checked: false }] },
       ctx(),
     );
     expect(out.before.checked).toBe(true);
@@ -59,7 +62,7 @@ describe("specTaskCheck", () => {
     const path = join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md");
     const before = readFileSync(path, "utf8");
     specTaskCheck(
-      { slug: "draft-minimal", phase: "P0", match: 1, checked: true, dryRun: true },
+      { slug: "draft-minimal", items: [{ phase: "P0", match: 1, checked: true }], dryRun: true },
       ctx(),
     );
     expect(readFileSync(path, "utf8")).toBe(before);
@@ -69,7 +72,10 @@ describe("specTaskCheck", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     let msg = "";
     try {
-      specTaskCheck({ slug: "draft-minimal", phase: "P0", match: "ZZZ", checked: true }, ctx());
+      specTaskCheck(
+        { slug: "draft-minimal", items: [{ phase: "P0", match: "ZZZ", checked: true }] },
+        ctx(),
+      );
     } catch (e) {
       msg = (e as Error).message;
     }
@@ -80,14 +86,20 @@ describe("specTaskCheck", () => {
   test("out-of-range index throws", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     expect(() =>
-      specTaskCheck({ slug: "draft-minimal", phase: "P0", match: 99, checked: true }, ctx()),
+      specTaskCheck(
+        { slug: "draft-minimal", items: [{ phase: "P0", match: 99, checked: true }] },
+        ctx(),
+      ),
     ).toThrow("task_not_found");
   });
 
   test("inline-format tasks.md: check succeeds and preserves Status line", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-inline"] });
     const out = specTaskCheck(
-      { slug: "in-progress-inline", phase: "P0", match: "Land renderer", checked: true },
+      {
+        slug: "in-progress-inline",
+        items: [{ phase: "P0", match: "Land renderer", checked: true }],
+      },
       ctx(),
     );
     expect(out.before.checked).toBe(false);
@@ -103,7 +115,7 @@ describe("specTaskCheck", () => {
   test("output includes matched_text and matched_index", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const out = specTaskCheck(
-      { slug: "draft-minimal", phase: "P0", match: 2, checked: true },
+      { slug: "draft-minimal", items: [{ phase: "P0", match: 2, checked: true }] },
       ctx(),
     );
     expect(out.matched_index).toBe(2);
@@ -180,17 +192,21 @@ describe("specTaskCheck", () => {
     const before = readFileSync(path, "utf8");
     expect(() =>
       specTaskCheck(
-        { slug: "in-progress-inline", phase: "P1", match: 1, checked: false, dryRun: true },
+        {
+          slug: "in-progress-inline",
+          items: [{ phase: "P1", match: 1, checked: false }],
+          dryRun: true,
+        },
         ctx(),
       ),
     ).not.toThrow();
     expect(readFileSync(path, "utf8")).toBe(before);
   });
 
-  test("throws when neither items[] nor flat phase+match+checked supplied", () => {
+  test("throws when items[] is empty", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    expect(() => specTaskCheck({ slug: "draft-minimal" }, ctx())).toThrow(
-      "provide either items[] or flat",
+    expect(() => specTaskCheck({ slug: "draft-minimal", items: [] }, ctx())).toThrow(
+      "items_missing",
     );
   });
 });

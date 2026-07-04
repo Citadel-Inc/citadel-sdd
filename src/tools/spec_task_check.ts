@@ -16,12 +16,8 @@ export interface TaskCheckItem {
 
 export interface SpecTaskCheckInput {
   slug: string;
-  /** Batch form — check/uncheck multiple items in one call. */
-  items?: TaskCheckItem[];
-  /** Flat single-item form (backward compat). */
-  phase?: Priority;
-  match?: string | number;
-  checked?: boolean;
+  /** Check/uncheck one or more items in a single call. */
+  items: TaskCheckItem[];
   commit?: boolean;
   dryRun?: boolean;
 }
@@ -47,11 +43,8 @@ export interface SpecTaskCheckOutput {
 }
 
 function normalizeItems(input: SpecTaskCheckInput): TaskCheckItem[] {
-  if (input.items && input.items.length > 0) return input.items;
-  if (input.phase !== undefined && input.match !== undefined && input.checked !== undefined) {
-    return [{ phase: input.phase, match: input.match, checked: input.checked }];
-  }
-  throw new Error("spec_task_check: provide either items[] or flat phase+match+checked");
+  if (input.items.length > 0) return input.items;
+  throw new Error("items_missing: spec_task_check requires a non-empty items[]");
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
