@@ -3,7 +3,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version: 0.6.0](https://img.shields.io/badge/version-0.6.0-green.svg)](CHANGELOG.md)
+[![Version: 0.7.0](https://img.shields.io/badge/version-0.7.0-green.svg)](CHANGELOG.md)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-Bun-black.svg)](https://bun.sh)
 [![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6.svg)](https://www.typescriptlang.org)
 [![Repo: Rethunk-AI](https://img.shields.io/badge/repo-Rethunk--AI-blue.svg)](https://github.com/Rethunk-AI/citadel-sdd)
@@ -20,7 +20,7 @@ The server ships two profiles out of the box (`default` and `bastion`) with prof
 
 ## Highlights
 
-- **20 MCP tools** covering every lifecycle event from DRAFT through DONE — and back via `spec_reopen` (DONE → IN_PROGRESS), `spec_unblock` (BLOCKED → IN_PROGRESS), and `spec_unpark` (PARKED → IN_PROGRESS).
+- **12 MCP tools** covering every lifecycle event from DRAFT through DONE — and back — via a single `spec_transition` tool (`to: reopen|unblock|unpark|...`) rather than one tool per transition.
 - **Two shipped profiles** with inheritance: `default → bastion`.
 - **Atomic by default** — all-or-nothing edits; failed mid-operation tools restore pre-call state.
 - **Drift-impossible invariants** — `spec.md` status, `tasks.md` status, on-disk path, and `specs/README.md` index always agree after any tool's success.

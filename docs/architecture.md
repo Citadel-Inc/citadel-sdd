@@ -29,7 +29,8 @@ src/
 │   └── bastion.yaml
 ├── config/
 │   └── load.ts             # specs/config.yaml loader + Zod validation
-└── tools/                  # one file per MCP tool (20 total)
+└── tools/                  # one handler file per lifecycle action/tool; 12 MCP tools total
+                             # (9 lifecycle-transition handlers dispatch through spec_transition)
     ├── spec_list.ts
     ├── spec_read.ts
     ├── ... (remaining tools)
@@ -53,18 +54,20 @@ DRAFT ──spec_approve──► APPROVED ──spec_claim──► IN_PROGRESS
                                               DONE ──spec_reopen──┘
 ```
 
-`PARKED` is for specs that are **deliberately not pursued yet** (superseded, withdrawn, or held pending an external trigger such as a calendar gate, customer inbound, or Phase-N ratification). Reachable from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED via `spec_park` (moves `specs/active/<slug>/` → `specs/parked/<slug>/`). Exits:
+Each edge label above is a `spec_transition` action (`to: "approve"|"claim"|"close"|"park"|"unpark"|"block"|"unblock"|"reopen"`) — see [docs/mcp-tools.md § spec_transition](mcp-tools.md#spec_transition) for exact inputs/outputs per action.
 
-- `spec_unpark` → IN_PROGRESS (wake trigger fired; moves parked→active).
-- `spec_close` → DONE (abandon; trigger permanently obsolete).
+`PARKED` is for specs that are **deliberately not pursued yet** (superseded, withdrawn, or held pending an external trigger such as a calendar gate, customer inbound, or Phase-N ratification). Reachable from DRAFT, APPROVED, IN_PROGRESS, or BLOCKED via `to: "park"` (moves `specs/active/<slug>/` → `specs/parked/<slug>/`). Exits:
+
+- `to: "unpark"` → IN_PROGRESS (wake trigger fired; moves parked→active).
+- `to: "close"` → DONE (abandon; trigger permanently obsolete).
 
 Transition rules:
 
 - DRAFT → IN_PROGRESS direct: allowed only when claimer matches spec's authored Owner.
 - BLOCKED reachable only from IN_PROGRESS.
 - DRAFT → DONE direct: invalid.
-- DONE → DRAFT: invalid; use `spec_reopen` then iterate.
-- BLOCKED → DONE direct: invalid; `spec_unblock` first (the close error message says so).
+- DONE → DRAFT: invalid; use `to: "reopen"` then iterate.
+- BLOCKED → DONE direct: invalid; `to: "unblock"` first (the close error message says so).
 - Each transition appends a row to `## History` in `spec.md` (DTG + actor + transition).
 
 ## File-system contract
@@ -97,12 +100,12 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 | Class | Count | Tools |
 |-------|:---:|-------|
 | Read | 6 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `spec_task_list`, `sdd_doctor` |
-| Write atomic | 5 | `spec_approve`, `spec_ratify`, `spec_task_check`, `spec_task_add`, `spec_handoff` |
-| Write composite | 7 | `spec_claim`, `spec_close`, `spec_park`, `spec_unpark`, `spec_reopen`, `spec_block`, `spec_unblock` |
+| Write atomic | 3 | `spec_task_check`, `spec_task_add`, `spec_handoff` |
+| Write lifecycle transition | 1 | `spec_transition` (dispatches nine actions: `approve`, `ratify`, `claim`, `close`, `reopen`, `park`, `block`, `unblock`, `unpark`) |
 | Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
 
-Total: **20** (matches `server.registerTool` calls; asserted by `tests/mcp/server.test.ts`).
+Total: **12** (matches `server.registerTool` calls; asserted by `tests/mcp/server.test.ts`).
 
 All write tools support `dryRun: true`. Composite tools emit a single conventional commit by default. Per-tool inputs / outputs / failure modes: [docs/mcp-tools.md](mcp-tools.md).
 
-Every tool resolves the target project root per call. Resolution order is: explicit `workspaceRoot`, `rootIndex` into MCP client file roots, primary MCP client file root, then process fallback (`CITADEL_SDD_ROOT`, git top-level of `cwd`, `cwd`). Roots are normalized to the containing `specs/active` tree when present, otherwise to the git top-level when available.
+Every tool resolves the target project root per call. Resolution order is: explicit `workspaceRoot`, primary MCP client file root, then process fallback (`CITADEL_SDD_ROOT`, git top-level of `cwd`, `cwd`). Roots are normalized to the containing `specs/active` tree when present, otherwise to the git top-level when available.

@@ -8,14 +8,13 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 
 | Field | Default | Notes |
 |-------|---------|-------|
-| `workspaceRoot` | first MCP file root | Highest-priority project-root override. Usually omit it: MCP clients that support roots provide the active workspace automatically. |
-| `rootIndex` | `0` | 0-based index into the MCP file roots list; ignored when `workspaceRoot` is set. Useful in multi-root clients. |
+| `workspaceRoot` | first MCP file root | Project-root override. Usually omit it: MCP clients that support roots provide the active workspace automatically. |
 | `dryRun` | `false` | Preview only — no FS writes, no commits. Returns same diff as live call. |
 | `commit` | profile-default | When `false`, leaves edits staged but does not commit. |
 | `push` | profile-default | Push policy: `never` / `on_close` / `always`. |
 | `format` | `"json"` | `"markdown"` for human-readable rollup. |
 
-All tools resolve their project root at call time from `workspaceRoot`, `rootIndex`, MCP client roots, then process fallback. The fallback still honors `CITADEL_SDD_ROOT` for clients that do not support MCP roots, but normal client wiring does not require an environment variable.
+All tools resolve their project root at call time from `workspaceRoot`, MCP client roots, then process fallback. The fallback still honors `CITADEL_SDD_ROOT` for clients that do not support MCP roots, but normal client wiring does not require an environment variable.
 
 ## Common failure codes
 
@@ -57,7 +56,7 @@ Return combined spec + plan + tasks for a slug.
 
 **Inputs:** `{ slug, parts?: ("spec"|"plan"|"tasks")[] }`. Default returns all three.
 
-**Output:** `{ slug, spec_md, plan_md, tasks_md, frontmatter }`.
+**Output:** `{ slug, state, spec_md, plan_md, tasks_md }`.
 
 ### `spec_status`
 
@@ -89,41 +88,19 @@ Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked 
 
 ### `specs/README.md` index edits
 
-Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_claim`, `spec_approve`, `spec_block`, `spec_unblock`, `spec_handoff`, `spec_close`, `spec_park`, `spec_unpark`, `spec_reopen`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
+Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_handoff` and every `spec_transition` action except `ratify`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
 
 ---
 
 ## Write atomic tools
 
-### `spec_approve`
-
-DRAFT → APPROVED. Sole legal use; all other transitions covered by composites.
-
-**Inputs:** `{ slug, note? }`.
-
-**Output:** `{ slug, before, after, commit_sha }`.
-
-**Behavior:** flip status, append history row, targeted `${spec_dir}/README.md` row update, conventional commit `spec(<slug>): APPROVED — <note?>`.
-
-### `spec_ratify`
-
-Replace `TBD` rows in Q-table with `Ratified <DTG>`.
-
-**Inputs:** `{ slug, decisions?: { [Q_id]: { text, as_of_dtg } }, default_disposition?: string }`.
-
-**Output:** `{ slug, ratified_q_count, commit_sha }`.
-
-Empty `decisions` + default `Ratified <DTG>` = bulk ratify (common case).
-
 ### `spec_task_check`
 
-Flip a single `tasks.md` checkbox.
+Flip one or more `tasks.md` checkboxes in a single call.
 
-**Inputs (single-item form):** `{ slug, phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }`. `match` is exact-match prefix or 1-based index within phase.
+**Inputs:** `{ slug, items: [{ phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }] }` (non-empty). `match` is exact-match prefix or 1-based index within phase; items are applied in order and a `task_not_found` on any item aborts the whole call before writing.
 
-**Inputs (batch form):** `{ slug, items: [{ phase: "P0"|"P1"|"P2", match: string|number, checked: boolean }] }`. Check or uncheck multiple items in one call; applied in order.
-
-**Output:** `{ slug, before, after, commit_sha }`.
+**Output:** `{ slug, results: [{phase, matched_index, matched_text, before, after}], matched_text, matched_index, before, after, commit_sha }`. The top-level `matched_text`/`matched_index`/`before`/`after` mirror `results[0]` for single-item callers.
 
 ### `spec_task_add`
 
@@ -145,71 +122,41 @@ Reassign owner without state flip.
 
 ---
 
-## Write composite tools
+## `spec_transition`
 
-### `spec_claim`
+Single MCP surface for every lifecycle-state transition (previously nine separate tools:
+`spec_approve`, `spec_ratify`, `spec_claim`, `spec_close`, `spec_reopen`, `spec_park`, `spec_block`,
+`spec_unblock`, `spec_unpark`). `to` selects the action; the underlying business logic, error codes,
+and file-write behavior are unchanged from the tools it replaces — this is a dispatch-only surface.
 
-DRAFT/APPROVED → IN_PROGRESS + optional ratify + commit.
+**Shared inputs:** `{ slug, to: "approve"|"ratify"|"claim"|"close"|"reopen"|"park"|"block"|"unblock"|"unpark", commit?: boolean, dryRun?: boolean }` plus the per-action fields below.
 
-**Inputs:** `{ slug, claimer?, ratify?: boolean, seed_session_tasks?: boolean, commit?: boolean, dryRun?: boolean }`. `claimer` defaults to `"Bastion"` for bastion-chain profiles, `git config user.name` otherwise.
+| `to` | Transition | Extra inputs | Required | Output (in addition to `slug`) |
+|------|-----------|--------------|----------|-------------------------------|
+| `approve` | DRAFT → APPROVED | `note?` | — | `before, after, commit_sha` |
+| `ratify` | Fill Q-table TBD rows with `Ratified <DTG>` | `decisions?: {[Q_id]:{text,as_of_dtg}}`, `default_disposition?` | — | `ratified_q_count, commit_sha` |
+| `claim` | DRAFT/APPROVED → IN_PROGRESS | `claimer?`, `ratify?: boolean` | — | `before, after, commit_sha, ratified_q_count` |
+| `close` | IN_PROGRESS \| PARKED → DONE | `summary?`, `allow_open?: ("P0"\|"P1"\|"P2")[]`, `push?: boolean` | `summary` (or profile `summary_template`) | `before, after, commit_sha, pushed, push_error?` |
+| `reopen` | DONE → IN_PROGRESS | `reason` | `reason` | `before, after, commit_sha` |
+| `park` | DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED | `resolution` | `resolution` | `before, after, commit_sha` |
+| `block` | IN_PROGRESS → BLOCKED | `reason`, `blocker_path?` | `reason` | `before, after, commit_sha` |
+| `unblock` | BLOCKED → IN_PROGRESS | `resolution` | `resolution` | `before, after, commit_sha` |
+| `unpark` | PARKED → IN_PROGRESS | `resolution` | `resolution` | `before, after, commit_sha` |
 
-**Output:** `{ slug, before, after, commit_sha, ratified_q_count, seeded_task_proposals?: [...] }`.
+`before`/`after` are `{state, dtg}` for transitions that never leave `specs/active/` (`approve`,
+`claim`, `block`, `unblock`) and `{state, dtg, path}` for transitions that `git mv` the spec directory
+between `active/`, `done/`, and `parked/` (`close`, `reopen`, `park`, `unpark`).
 
-**Failure modes:** `state_invalid`, `ratify_required`, `tasks_md_missing_human_gate`, `working_tree_dirty`, `owner_mismatch`.
+**Failure modes:** `state_invalid` (illegal transition for the spec's current state — e.g. `close` from
+BLOCKED requires `unblock` first), `ratify_required`, `tasks_open`, `tasks_md_missing_human_gate`,
+`working_tree_dirty`, `owner_mismatch`, `spec_not_found`, `spec_not_active` (`park` on a non-`active/`
+spec), `spec_not_parked` (`unpark` on a non-`parked/` spec), `reason_missing` (`reopen`/`block` with an
+empty `reason`), `resolution_missing` (`park`/`unblock`/`unpark` with an empty `resolution`),
+`summary_missing` (`close` with no `summary` and no profile `summary_template`).
 
-### `spec_close`
-
-IN_PROGRESS or PARKED → DONE + `git mv` active|parked→done + targeted `${spec_dir}/README.md` row update + commit + optional push. Closing from PARKED is the "abandon parked spec" path — use when the wake trigger is permanently obsolete; use [`spec_unpark`](#spec_unpark) to wake the spec instead.
-
-**Inputs:** `{ slug, summary, allow_open?: ("p0"|"p1"|"p2")[], commit?: boolean, push?: boolean, dryRun?: boolean }`. `push` defaults to profile's `push_policy`.
-
-**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, pushed: boolean, dryRun: boolean }`.
-
-**Failure modes:** `state_invalid` (e.g. BLOCKED — run `spec_unblock` first; DRAFT/APPROVED — claim or park first), `tasks_open`, `working_tree_dirty`, `summary_missing`.
-
-### `spec_park`
-
-DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED + `git mv` active→`specs/parked/` + targeted `${spec_dir}/README.md` row update + commit.
-
-**Inputs:** `{ slug, resolution, commit?: boolean, dryRun?: boolean }`. `resolution` is required (non-empty); recorded in status tail and `## History`.
-
-**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, dryRun }`.
-
-**Failure modes:** `state_invalid`, `spec_not_found`, `spec_not_active` (slug not under `specs/active/`), `resolution_missing`, `working_tree_dirty` (when applicable).
-
-### `spec_reopen`
-
-DONE → IN_PROGRESS + reverse `git mv` + targeted `${spec_dir}/README.md` row update + commit.
-
-**Inputs:** `{ slug, reason }`.
-
-**Output:** `{ slug, before, after, commit_sha }`.
-
-### `spec_block`
-
-IN_PROGRESS → BLOCKED + reason + optional `HUMAN_BLOCKERS.md` row.
-
-**Inputs:** `{ slug, reason, blocker_path? }`.
-
-**Output:** `{ slug, before, after, commit_sha }`.
-
-### `spec_unblock`
-
-BLOCKED → IN_PROGRESS + reason close.
-
-**Inputs:** `{ slug, resolution }`.
-
-**Output:** `{ slug, before, after, commit_sha }`.
-
-### `spec_unpark`
-
-PARKED → IN_PROGRESS + reverse `git mv` parked→active + targeted `${spec_dir}/README.md` row update + commit. Mirror of `spec_park`; use when the parked wake trigger fires (calendar gate, customer inbound, Phase-N ratification).
-
-**Inputs:** `{ slug, resolution, commit?: boolean, dryRun?: boolean }`. `resolution` is required and recorded in the status tail (`unparked — <resolution>`).
-
-**Output:** `{ slug, before:{state,dtg,path}, after:{state,dtg,path}, commit_sha, dryRun }`.
-
-**Failure modes:** `state_invalid` (spec not PARKED), `spec_not_parked` (slug not physically under `specs/parked/`), `spec_not_found`, `resolution_missing`, `working_tree_dirty`.
+`close` from PARKED is the "abandon parked spec" path — use when the wake trigger is permanently
+obsolete; use `to: "unpark"` to wake the spec instead. `unpark` is the mirror of `park`, for when the
+wake trigger fires (calendar gate, customer inbound, Phase-N ratification).
 
 ---
 

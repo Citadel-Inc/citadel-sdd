@@ -4,7 +4,7 @@ LLM + dev orientation. **This file is intentionally thin** — it points at the 
 
 ## Status
 
-`v0.6.0` — write-atomicity transactions wrap every mutating tool (rollback on failure, refuse on dirty tree); symlink-traversal hardening on spec files; npmjs + GitHub Packages publishing; 20-tool roster.
+`v0.7.0` — lifecycle transitions (approve/ratify/claim/close/reopen/park/block/unblock/unpark) consolidated into one `spec_transition` tool; `rootIndex` and `spec_task_check`'s legacy flat form removed; compact (non-pretty-printed) JSON tool results; 12-tool roster.
 
 ## Canon pointers
 

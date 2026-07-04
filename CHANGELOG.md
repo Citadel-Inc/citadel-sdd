@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-07-03
+
+Token-cost reduction pass: smaller schemas, smaller results, fewer tools. No lifecycle business logic
+changed — this release only touches the MCP surface (tool registration, schemas, and result encoding).
+
+### Breaking changes
+
+- **Nine lifecycle tools replaced by one `spec_transition` tool.** `spec_approve`, `spec_ratify`,
+  `spec_claim`, `spec_close`, `spec_reopen`, `spec_park`, `spec_block`, `spec_unblock`, and
+  `spec_unpark` are removed from the MCP surface (20-tool roster → 12). Call the same transitions via
+  `spec_transition({ slug, to: "approve"|"ratify"|"claim"|"close"|"reopen"|"park"|"block"|"unblock"|"unpark", ... })`.
+  Routing is dispatch-only — the underlying handlers, error codes (`state_invalid`, `reason_missing`,
+  `resolution_missing`, `summary_missing`, etc.), and file-write behavior are unchanged. See
+  [docs/mcp-tools.md § spec_transition](docs/mcp-tools.md#spec_transition) for the per-action field
+  reference.
+- **`rootIndex` removed.** Every tool's `WorkspacePickShape` dropped the `rootIndex` field (it
+  serialized a full `{type, minimum, maximum: 9007199254740991, description}` JSON Schema object per
+  tool for a rarely-used multi-root escape hatch). Multi-root clients must pass `workspaceRoot`
+  explicitly instead of an index into the MCP roots list; single-root clients are unaffected (primary
+  root fallback still applies).
+- **`spec_task_check`'s flat `phase`/`match`/`checked` form removed.** `items: [...]` (min length 1) is
+  now the only accepted input shape; wrap a single check as a one-element array.
+- **`spec_read` no longer returns `frontmatter`.** It duplicated data already present verbatim in
+  `spec_md`. Use `spec_status` for the parsed status/Q-table view.
+
+### Changed
+
+- `ok()` tool results are now compact JSON (`JSON.stringify(value)`) instead of pretty-printed
+  (`JSON.stringify(value, null, 2)`), matching `err()`'s existing compact encoding. Every successful
+  tool call previously paid ~20-35% extra tokens in indentation whitespace.
+
 ## [0.6.1] — 2026-05-29
 
 ### Changed

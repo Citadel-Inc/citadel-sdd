@@ -44,23 +44,23 @@ Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-too
 | Single-spec status summary | `spec_status` |
 | Lint spec tree | `spec_lint` |
 | Diagnose existing repo | `sdd_doctor` |
-| Approve a draft | `spec_approve` |
-| Ratify Q-table TBD rows | `spec_ratify` |
+| Approve a draft | `spec_transition` (`to: "approve"`) |
+| Ratify Q-table TBD rows | `spec_transition` (`to: "ratify"`) |
 | Flip a tasks.md checkbox | `spec_task_check` |
 | Add a tasks.md item | `spec_task_add` |
 | Reassign owner | `spec_handoff` |
-| Claim (DRAFT/APPROVED → IN_PROGRESS) | `spec_claim` |
-| Close (IN_PROGRESS → DONE; also PARKED → DONE to abandon) | `spec_close` |
-| Park (hold pending trigger — → PARKED) | `spec_park` |
-| Unpark (wake trigger fired — PARKED → IN_PROGRESS) | `spec_unpark` |
-| Reopen (DONE → IN_PROGRESS) | `spec_reopen` |
-| Block / unblock | `spec_block` / `spec_unblock` |
+| Claim (DRAFT/APPROVED → IN_PROGRESS) | `spec_transition` (`to: "claim"`) |
+| Close (IN_PROGRESS → DONE; also PARKED → DONE to abandon) | `spec_transition` (`to: "close"`) |
+| Park (hold pending trigger — → PARKED) | `spec_transition` (`to: "park"`) |
+| Unpark (wake trigger fired — PARKED → IN_PROGRESS) | `spec_transition` (`to: "unpark"`) |
+| Reopen (DONE → IN_PROGRESS) | `spec_transition` (`to: "reopen"`) |
+| Block / unblock | `spec_transition` (`to: "block"` / `to: "unblock"`) |
 | Regenerate `specs/README.md` | `spec_index_rebuild` |
 | Bootstrap fresh repo | `spec_init` |
 
 All write tools support `dryRun: true` for preview.
 
-Tools automatically target the active MCP workspace root. In multi-root clients, pass `rootIndex` or `workspaceRoot` to select a different project; environment variables are only a fallback for clients without MCP roots support.
+Tools automatically target the active MCP workspace root. Pass `workspaceRoot` to select a different project; environment variables are only a fallback for clients without MCP roots support.
 
 ## Publishing
 
