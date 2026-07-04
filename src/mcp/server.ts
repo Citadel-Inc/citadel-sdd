@@ -54,7 +54,7 @@ interface CallResult {
 
 function ok(value: unknown): CallResult {
   return {
-    content: [{ type: "text", text: JSON.stringify(value, null, 2) }],
+    content: [{ type: "text", text: JSON.stringify(value) }],
   };
 }
 
