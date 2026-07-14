@@ -21,7 +21,7 @@ jobs:
           echo "::notice::package.json not present yet — Phase A scaffolding pending; skipping build/check/test."
         fi
 
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       if: steps.phase.outputs.ready == 'true'
       with:
         node-version: "24"
