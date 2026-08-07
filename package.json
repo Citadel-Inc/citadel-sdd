@@ -73,10 +73,11 @@
     "typescript": "^7.0.2"
   },
   "overrides": {
-    "@hono/node-server": "^1.19.14",
-    "hono": "^4.12.18",
-    "fast-uri": "^3.1.2",
-    "qs": "^6.15.2",
-    "brace-expansion": "^5.0.6"
+    "@hono/node-server": "^2.1.0",
+    "hono": "^4.13.1",
+    "fast-uri": "^3.1.5",
+    "brace-expansion": "^5.0.9",
+    "ip-address": "^10.4.0",
+    "body-parser": "^2.3.0"
   }
 }
