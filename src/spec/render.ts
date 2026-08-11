@@ -17,7 +17,11 @@ export function renderStatusValue(s: StatusValue): string {
 }
 
 function escapePipeCell(s: string): string {
-  return s.replace(/\|/g, "\\|");
+  let escaped = "";
+  for (const char of s) {
+    escaped += char === "\\" || char === "|" ? `\\${char}` : char;
+  }
+  return escaped;
 }
 
 export function renderFrontmatter(fm: Frontmatter): string {

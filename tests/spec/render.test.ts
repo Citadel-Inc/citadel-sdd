@@ -91,6 +91,18 @@ describe("renderFrontmatter", () => {
     expect(reparsed.status.state).toBe("DONE");
     expect(reparsed.status.tail).toBe("hedge-grep (might|maybe|probably)");
   });
+
+  test("backslashes and pipes in cells round-trip cleanly", () => {
+    const status = parseStatusValue("DONE 011945ZMAY26 — all tasks green");
+    const tail = String.raw`path C:\specs\active\foo | bar`;
+    const fm = parseFrontmatter(
+      "| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n",
+    );
+    const rendered = renderFrontmatter({ ...fm, status: { ...status, tail } });
+
+    expect(rendered).toContain(String.raw`C:\\specs\\active\\foo \| bar`);
+    expect(parseFrontmatter(rendered).status.tail).toBe(tail);
+  });
 });
 
 describe("renderQTable", () => {

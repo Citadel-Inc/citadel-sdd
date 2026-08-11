@@ -29,16 +29,29 @@ function isSeparatorRow(line: string): boolean {
   return /^\|[\s:|-]+\|$/.test(line.trim());
 }
 
-// Null byte is used as a placeholder for escaped pipes (\|) during cell splitting.
-// Markdown content never contains raw null bytes, so this is safe.
-const ESCAPED_PIPE_PLACEHOLDER = "\x00";
-
 function splitPipeRow(line: string): string[] {
   const inner = line.replace(/^\|/, "").replace(/\|$/, "");
-  return inner
-    .replace(/\\\|/g, ESCAPED_PIPE_PLACEHOLDER)
-    .split("|")
-    .map((c) => c.trim().replaceAll("\x00", "|"));
+  const cells: string[] = [];
+  let cell = "";
+  for (let i = 0; i < inner.length; i++) {
+    const char = inner[i];
+    if (char === "\\") {
+      const next = inner[i + 1];
+      if (next === "\\" || next === "|") {
+        cell += next;
+        i++;
+      } else {
+        cell += char;
+      }
+    } else if (char === "|") {
+      cells.push(cell.trim());
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
 }
 
 function extractPipeTable(lines: readonly string[], startIdx: number): PipeTableExtraction {
