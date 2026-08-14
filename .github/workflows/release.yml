@@ -28,7 +28,7 @@ jobs:
         echo "$HOME/.bun/bin" >> "$GITHUB_PATH"
 
     - name: Assert Node.js version
-      run: node -e "const v=+process.version.slice(1).split('.')[0]; if(v<22)process.exit(1)"
+      run: node -e "const v=+process.version.slice(1).split('.')[0]; if(v<24)process.exit(1)"
 
     - name: Assert tag matches package.json version
       run: |

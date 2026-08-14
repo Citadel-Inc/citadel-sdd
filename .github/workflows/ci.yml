@@ -67,4 +67,4 @@ jobs:
 
     - name: Assert Node.js version
       if: steps.phase.outputs.ready == 'true'
-      run: node -e "const v=+process.version.slice(1).split('.')[0]; if(v<22)process.exit(1)"
+      run: node -e "const v=+process.version.slice(1).split('.')[0]; if(v<24)process.exit(1)"
