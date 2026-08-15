@@ -23,7 +23,7 @@ jobs:
           node-version: "24"
 
       - name: Install Bun
-        uses: Rethunk-Tech/gh-actions/setup-bun@29b10bda2eaf82d59230f550b919bfa3bca59771 # v1.2
+        uses: Rethunk-Tech/gh-actions/setup-bun@ea87a602a5214e1fb513feb22a035b7e0f3b9245 # v1.5
         with:
           bun-version: "1.3.13"
 
