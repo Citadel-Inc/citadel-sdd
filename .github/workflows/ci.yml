@@ -26,7 +26,7 @@ jobs:
 
       - name: Install Bun
         if: steps.phase.outputs.ready == 'true'
-        uses: Rethunk-Tech/gh-actions/setup-bun@3d17a0c4ae39fb5fe971af9345423e0ecb35038e # v1
+        uses: Rethunk-Tech/gh-actions/setup-bun@29b10bda2eaf82d59230f550b919bfa3bca59771 # v1.2
         with:
           bun-version: "1.3.13"
 
