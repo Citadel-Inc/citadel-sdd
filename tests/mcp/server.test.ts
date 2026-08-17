@@ -73,7 +73,10 @@ describe("MCP server wiring", () => {
     expect(res.isError).not.toBe(true);
     const content = res.content as Array<{ type: string; text: string }>;
     const data = JSON.parse(content[0]?.text ?? "[]") as Array<{ slug: string }>;
-    expect(data.map((d) => d.slug).sort((a, b) => a.localeCompare(b))).toEqual(["approved-ratified", "draft-minimal"]);
+    expect(data.map((d) => d.slug).sort((a, b) => a.localeCompare(b))).toEqual([
+      "approved-ratified",
+      "draft-minimal",
+    ]);
     await close();
   });
 

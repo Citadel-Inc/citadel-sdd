@@ -56,7 +56,11 @@ export function lintFilePresence(loc: ReturnType<typeof locateSpec>): SpecLintFi
   return findings;
 }
 
-export function lintStaleDays(repo: RepoContext, staleDays: number, today: Date): SpecLintFinding[] {
+export function lintStaleDays(
+  repo: RepoContext,
+  staleDays: number,
+  today: Date,
+): SpecLintFinding[] {
   const findings: SpecLintFinding[] = [];
   const map = lastTouchedBulk({
     metaRoot: repo.rootDir,

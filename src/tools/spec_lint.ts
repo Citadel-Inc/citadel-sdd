@@ -46,7 +46,6 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
 }
 
-
 function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput): SpecLintFinding[] {
   const findings: SpecLintFinding[] = [];
   const noStrict = input.no_strict === true;
@@ -93,7 +92,6 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
   }
   return findings;
 }
-
 
 function resolveFailOn(input: SpecLintInput): Set<string> | null {
   if (input.fail_on === undefined) {

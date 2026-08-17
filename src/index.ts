@@ -5,6 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { RootsListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
 import pkg from "../package.json" with { type: "json" };
 import { loadConfig } from "./config/load.js";
+import { env } from "./env.js";
 import { buildServer } from "./mcp/server.js";
 import {
   normalizeProjectRoot,
@@ -19,7 +20,7 @@ import type { ToolContext } from "./tools/types.js";
 const VERSION: string = pkg.version;
 
 function discoverRootFallback(): string {
-  const fromEnv = process.env.CITADEL_SDD_ROOT;
+  const fromEnv = env.sddRoot;
   if (fromEnv && fromEnv.length > 0) {
     return normalizeProjectRoot(fromEnv);
   }

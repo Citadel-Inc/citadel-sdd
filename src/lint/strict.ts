@@ -1,4 +1,3 @@
-
 const LINE_SPLIT_RE = /\r?\n/;
 export type StrictCategory =
   | "strict-bullets"

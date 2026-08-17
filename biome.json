@@ -93,10 +93,21 @@
   },
   "overrides": [
     {
+      "includes": ["src/env.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["tests/**"],
       "linter": {
         "rules": {
           "style": {
+            "noProcessEnv": "off",
             "useNamingConvention": {
               "level": "info",
               "options": {

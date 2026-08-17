@@ -5,7 +5,10 @@ import { type locateSpec, slugLooksValid } from "../spec/repo.js";
 import type { SpecLintFinding } from "./spec_lint_rules.js";
 import type { ToolContext } from "./types.js";
 
-export function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecLintFinding[] {
+export function lintSingle(
+  loc: ReturnType<typeof locateSpec>,
+  ctx: ToolContext,
+): SpecLintFinding[] {
   if (!loc) {
     return [];
   }
@@ -125,4 +128,3 @@ export function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext)
 
   return findings;
 }
-
