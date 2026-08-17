@@ -47,7 +47,9 @@ function readIndex(
 } {
   const path = join(rootDir, specDir, "README.md");
   const out = { active: new Set<string>(), done: new Set<string>(), parked: new Set<string>() };
-  if (!existsSync(path)) return out;
+  if (!existsSync(path)) {
+    return out;
+  }
   let text: string;
   try {
     text = readFileSync(path, "utf8");
@@ -74,9 +76,13 @@ function readIndex(
       section = null;
       continue;
     }
-    if (section === null) continue;
+    if (section === null) {
+      continue;
+    }
     const m = /^\|\s*([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
-    if (m?.[1]) out[section].add(m[1]);
+    if (m?.[1]) {
+      out[section].add(m[1]);
+    }
   }
   return out;
 }
@@ -87,7 +93,9 @@ function escapeRegex(s: string): string {
 
 function readBlockersText(rootDir: string): string | null {
   const path = join(rootDir, "HUMAN_BLOCKERS.md");
-  if (!existsSync(path)) return null;
+  if (!existsSync(path)) {
+    return null;
+  }
   try {
     return readFileSync(path, "utf8");
   } catch {
@@ -225,7 +233,7 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
   return findings;
 }
 
-export const CROSS_CUTTING_CATEGORIES: ReadonlyArray<string> = [
+export const CROSS_CUTTING_CATEGORIES: readonly string[] = [
   "ready-to-close",
   "not-indexed",
   "orphan-indexed",

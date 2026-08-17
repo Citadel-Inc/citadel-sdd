@@ -46,7 +46,9 @@ function injectBlockingSection(rawMd: string, reason: string): string {
   let insertAt = lines.length;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     if (line.startsWith("## Summary") || line.startsWith("## Decisions")) {
       insertAt = i;
       break;
@@ -63,7 +65,9 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
   }
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
@@ -72,7 +76,9 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
 
   assertTransitionEnabled("spec_block", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_block");
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
   const newStatus = { state: transition.to, dtg, tail: input.reason };

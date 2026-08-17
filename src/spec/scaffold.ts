@@ -14,7 +14,9 @@ const BUCKETS = ["active", "done", "parked"] as const;
  */
 export function ensureSpecBucketDirs(ctx: RepoContext): string[] {
   const root = specsRoot(ctx);
-  if (!existsSync(root)) return [];
+  if (!existsSync(root)) {
+    return [];
+  }
 
   const created: string[] = [];
   const specDirPosix = ctx.specDir.replace(/\\/g, "/");

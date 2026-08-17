@@ -25,7 +25,9 @@ describe("parseBlockers", () => {
     );
     const b = parseBlockers(temp.rootDir, new Date(Date.UTC(2026, 4, 8, 12, 0, 0)));
     expect(b).not.toBeNull();
-    if (!b) return;
+    if (!b) {
+      return;
+    }
     expect(b.count).toBe(1);
     expect(b.entries[0]?.dtg).toBe("011900ZMAY26");
     expect(b.entries[0]?.title).toBe("Vendor lib");
@@ -40,7 +42,9 @@ describe("parseBlockers", () => {
       "# B\n\n### 011900ZMAY26 — Empty\n\n### 020900ZMAY26 — Resolved one\n\nRESOLVED on 020900ZMAY26.\n",
     );
     const b = parseBlockers(temp.rootDir);
-    if (!b) throw new Error("expected blockers");
+    if (!b) {
+      throw new Error("expected blockers");
+    }
     expect(b.entries[0]?.isStub).toBe(true);
     expect(b.entries[1]?.isStub).toBe(true);
   });
@@ -52,7 +56,9 @@ describe("parseBlockers", () => {
       "# B\n\n### 011900ZMAY26 — X\n\nBlocked on fe-account-export and go-mcp-oauth landing.\n",
     );
     const b = parseBlockers(temp.rootDir);
-    if (!b) throw new Error("expected blockers");
+    if (!b) {
+      throw new Error("expected blockers");
+    }
     const refs = b.entries[0]?.referencedSpecs ?? [];
     expect(refs).toContain("fe-account-export");
     expect(refs).toContain("go-mcp-oauth");
@@ -65,7 +71,9 @@ describe("parseBlockers", () => {
       "# B\n\n### 011900ZMAY26 — X\n\nBlocked on auth-service and sso-login landing.\n",
     );
     const b = parseBlockers(temp.rootDir);
-    if (!b) throw new Error("expected blockers");
+    if (!b) {
+      throw new Error("expected blockers");
+    }
     const refs = b.entries[0]?.referencedSpecs ?? [];
     expect(refs).toContain("auth-service");
     expect(refs).toContain("sso-login");
@@ -89,7 +97,9 @@ Refs go-nonexistent.
 `,
     );
     const b = parseBlockers(temp.rootDir, new Date(Date.UTC(2026, 4, 11, 12, 0, 0)));
-    if (!b) throw new Error("expected blockers");
+    if (!b) {
+      throw new Error("expected blockers");
+    }
     const activeSlugs = new Set(["fe-account-export"]);
     const activeWithHuman = new Set<string>();
     const findings = blockerLint(b, {

@@ -27,14 +27,20 @@ function repoCtx(ctx: ToolContext): RepoContext {
 }
 
 function specsAlreadyPopulated(specRoot: string): boolean {
-  if (!existsSync(specRoot)) return false;
+  if (!existsSync(specRoot)) {
+    return false;
+  }
   const entries = readdirSync(specRoot, { withFileTypes: true });
   for (const entry of entries) {
-    if (entry.name === ".gitkeep") continue;
+    if (entry.name === ".gitkeep") {
+      continue;
+    }
     if (entry.isDirectory()) {
       const sub = readdirSync(join(specRoot, entry.name), { withFileTypes: true });
       const meaningful = sub.filter((e) => e.name !== ".gitkeep");
-      if (meaningful.length > 0) return true;
+      if (meaningful.length > 0) {
+        return true;
+      }
     } else {
       return true;
     }

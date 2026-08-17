@@ -24,7 +24,9 @@ afterEach(() => {
 const CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0));
 
 function ctx(): ToolContext {
-  if (!temp) throw new Error("temp repo not initialized");
+  if (!temp) {
+    throw new Error("temp repo not initialized");
+  }
   return { rootDir: temp.rootDir, profile: resolveBuiltIn("bastion"), clock: CLOCK };
 }
 

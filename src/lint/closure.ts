@@ -44,10 +44,18 @@ export function computeClosureReason(
   counts: ClosureCounts,
   opts: { slug: string; indexedActive?: ReadonlySet<string> },
 ): ClosureReason {
-  if (counts.done === 0 && counts.open === 0) return "uninitialised";
-  if (counts.human > 0) return "open_human";
-  if (counts.open > 0) return "open_tasks";
-  if (counts.hasProgress) return "progress_file";
+  if (counts.done === 0 && counts.open === 0) {
+    return "uninitialised";
+  }
+  if (counts.human > 0) {
+    return "open_human";
+  }
+  if (counts.open > 0) {
+    return "open_tasks";
+  }
+  if (counts.hasProgress) {
+    return "progress_file";
+  }
   if (opts.indexedActive && opts.indexedActive.size > 0 && !opts.indexedActive.has(opts.slug)) {
     return "not_indexed";
   }

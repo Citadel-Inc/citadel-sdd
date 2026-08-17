@@ -18,7 +18,9 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  if (workdir) rmSync(workdir, { recursive: true, force: true });
+  if (workdir) {
+    rmSync(workdir, { recursive: true, force: true });
+  }
 });
 
 function ctx(): ToolContext {

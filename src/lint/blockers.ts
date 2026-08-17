@@ -37,13 +37,17 @@ const MONTHS_MIL: Record<string, number> = {
 
 function parseDtgUtc(dtg: string): Date | null {
   const m = RE_DTG_MIL.exec(dtg);
-  if (!m) return null;
+  if (!m) {
+    return null;
+  }
   const dd = Number.parseInt(m[1] ?? "", 10);
   const hh = Number.parseInt(m[2] ?? "", 10);
   const mm = Number.parseInt(m[3] ?? "", 10);
   const mon = MONTHS_MIL[m[4] ?? ""];
   const yy = Number.parseInt(m[5] ?? "", 10);
-  if (Number.isNaN(dd) || Number.isNaN(hh) || mon === undefined || Number.isNaN(yy)) return null;
+  if (Number.isNaN(dd) || Number.isNaN(hh) || mon === undefined || Number.isNaN(yy)) {
+    return null;
+  }
   // Two-digit-year pivot: yy >= 70 → 19xx, yy < 70 → 20xx.
   // This correctly handles dates up to 2069; years 2070-2099 will be
   // misread as 1970-1999. Acceptable limitation for a DTG format whose
@@ -57,7 +61,9 @@ function daysSince(then: Date, now: Date): number {
 
 export function parseBlockers(rootDir: string, now: Date = new Date()): BlockerFile | null {
   const path = join(rootDir, "HUMAN_BLOCKERS.md");
-  if (!existsSync(path)) return null;
+  if (!existsSync(path)) {
+    return null;
+  }
   let rawText: string;
   try {
     rawText = readFileSync(path, "utf8");
@@ -102,7 +108,9 @@ function extractReferencedSpecs(body: string): string[] {
   const out = new Set<string>();
   const re = /\b[a-z][a-z0-9]*(?:-[a-z0-9]+)+\b/g;
   for (const m of body.matchAll(re)) {
-    if (m[0]) out.add(m[0]);
+    if (m[0]) {
+      out.add(m[0]);
+    }
   }
   return [...out];
 }
@@ -143,7 +151,9 @@ export function blockerLint(
     for (const slug of e.referencedSpecs) {
       // If allKnownSlugs is provided, skip tokens that don't match any known
       // spec slug to avoid false-positive orphan findings for hyphenated words.
-      if (options.allKnownSlugs !== undefined && !options.allKnownSlugs.has(slug)) continue;
+      if (options.allKnownSlugs !== undefined && !options.allKnownSlugs.has(slug)) {
+        continue;
+      }
       if (!options.activeSlugs.has(slug)) {
         findings.push({
           category: "blocker-orphan",
@@ -160,7 +170,7 @@ export function blockerLint(
   return findings;
 }
 
-export const BLOCKER_CATEGORIES: ReadonlyArray<string> = [
+export const BLOCKER_CATEGORIES: readonly string[] = [
   "blocker-stale",
   "blocker-stub",
   "blocker-orphan",

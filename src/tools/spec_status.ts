@@ -42,7 +42,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 
 export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatusOutput {
   const loc = locateSpec(repoCtx(ctx), input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const spec = parseSpec(readFileSync(loc.specMd, "utf8"));
   const tasks = parseTasks(readFileSync(loc.tasksMd, "utf8"));
@@ -89,7 +91,9 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     out.last_touched = last;
     const today = ctx.clock ? ctx.clock() : new Date();
     const days = daysBetween(last, today);
-    if (days !== null) out.days_since = days;
+    if (days !== null) {
+      out.days_since = days;
+    }
   }
   if (input.recent_limit !== undefined && input.recent_limit > 0) {
     const lines = recentCommits({
@@ -100,7 +104,9 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
       limit: input.recent_limit,
       since: input.since,
     });
-    if (lines.length > 0) out.recent_commits = lines;
+    if (lines.length > 0) {
+      out.recent_commits = lines;
+    }
   }
 
   if (loc.state === "active") {
@@ -128,7 +134,9 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
       bySource[key] = counts;
     }
   }
-  if (Object.keys(bySource).length > 0) out.by_source = bySource;
+  if (Object.keys(bySource).length > 0) {
+    out.by_source = bySource;
+  }
 
   return out;
 }
@@ -154,9 +162,13 @@ function readIndexedActive(rootDir: string, specDir: string): ReadonlySet<string
       inActive = false;
       continue;
     }
-    if (!inActive) continue;
+    if (!inActive) {
+      continue;
+    }
     const m = /^\|\s+([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
-    if (m?.[1]) out.add(m[1]);
+    if (m?.[1]) {
+      out.add(m[1]);
+    }
   }
   return out;
 }

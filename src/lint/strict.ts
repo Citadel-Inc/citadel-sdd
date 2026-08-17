@@ -122,7 +122,7 @@ export function scanPriorityInNontasks(filename: string, text: string): StrictFi
   return findings;
 }
 
-export const ALL_STRICT_CATEGORIES: ReadonlyArray<StrictCategory> = [
+export const ALL_STRICT_CATEGORIES: readonly StrictCategory[] = [
   "strict-bullets",
   "strict-numbered-checklist",
   "strict-alt-state",

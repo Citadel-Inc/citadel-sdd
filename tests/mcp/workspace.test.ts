@@ -8,7 +8,7 @@ import {
   rootUriToPath,
 } from "../../src/mcp/workspace.js";
 
-function makeTree(): { root: string; cleanup(): void } {
+function makeTree(): { root: string; cleanup: () => void } {
   const root = mkdtempSync(join(tmpdir(), "citadel-sdd-workspace-"));
   return {
     root,

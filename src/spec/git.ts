@@ -41,7 +41,9 @@ export function assertWorkingTreeClean(ctx: GitContext, ignorePaths: readonly st
 }
 
 export function gitAdd(ctx: GitContext, files: readonly string[]): void {
-  if (files.length === 0) return;
+  if (files.length === 0) {
+    return;
+  }
   git(ctx, ["add", "--", ...files], { silent: true });
 }
 

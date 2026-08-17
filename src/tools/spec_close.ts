@@ -42,7 +42,9 @@ function renderSummaryTemplate(tpl: string, slug: string, dtg: string): string {
 export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const hasSummary = input.summary && input.summary.trim().length > 0;
   if (!(hasSummary || ctx.profile.summary_template)) {
@@ -58,11 +60,15 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
 
   assertTransitionEnabled("spec_close", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_close");
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const allowOpen = new Set<Priority>(input.allow_open ?? []);
   for (const p of PRIORITIES) {
-    if (allowOpen.has(p)) continue;
+    if (allowOpen.has(p)) {
+      continue;
+    }
     // Items matching /spec.?close/i are auto-checked during close — exclude from the guard.
     const open = tasksParsed.phases[p].filter(
       (i) => !(i.checked || /spec.?close/i.test(i.text)),
@@ -83,7 +89,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
 
   let updatedTasks = setStatusOnTasks(tasksParsed, newStatus);
   for (const p of PRIORITIES) {
-    if (allowOpen.has(p)) continue;
+    if (allowOpen.has(p)) {
+      continue;
+    }
     let i = 0;
     for (const item of updatedTasks.phases[p]) {
       if (!item.checked) {

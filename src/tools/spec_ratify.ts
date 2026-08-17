@@ -30,7 +30,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatifyOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const raw = readFileSync(loc.specMd, "utf8");
   const spec = parseSpec(raw);

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { daysBetween, lastTouchedBulk, recentCommits } from "../../src/spec/git_history.js";
 
-function makeRepo(): { root: string; cleanup(): void } {
+function makeRepo(): { root: string; cleanup: () => void } {
   const root = mkdtempSync(join(tmpdir(), "citadel-sdd-git-"));
   execFileSync("git", ["-C", root, "init", "--initial-branch=main"], { stdio: "ignore" });
   execFileSync("git", ["-C", root, "config", "user.name", "T"], { stdio: "ignore" });

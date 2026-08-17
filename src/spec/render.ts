@@ -12,7 +12,9 @@ import { PRIORITIES } from "./types.js";
 export function renderStatusValue(s: StatusValue): string {
   const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state;
   const head = s.bold ? `**${stateStr}**` : stateStr;
-  if (!s.tail) return head;
+  if (!s.tail) {
+    return head;
+  }
   return `${head} — ${s.tail}`;
 }
 
@@ -59,7 +61,9 @@ export function renderFrontmatterInline(fm: Frontmatter): string {
 }
 
 export function renderQTable(rows: readonly QTableRow[]): string {
-  if (rows.length === 0) return "";
+  if (rows.length === 0) {
+    return "";
+  }
   const lines: string[] = [
     "| # | Question | Proposed default | NOMAD |",
     "|---|----------|------------------|-------|",

@@ -55,7 +55,9 @@ function deepMerge(
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { ...parent };
   for (const [k, v] of Object.entries(child)) {
-    if (v === undefined) continue;
+    if (v === undefined) {
+      continue;
+    }
     if (isPlainObject(v) && isPlainObject(out[k])) {
       out[k] = deepMerge(out[k] as Record<string, unknown>, v);
     } else {
@@ -88,7 +90,9 @@ export function resolveProfile(
   while (chain.length <= 64) {
     chain.push(current);
     const parentName = current.extends;
-    if (parentName === undefined) break;
+    if (parentName === undefined) {
+      break;
+    }
 
     let next: ProfileFragment;
     if (BUILT_IN_PROFILES.has(parentName)) {
@@ -127,7 +131,7 @@ export function resolveProfile(
     const fragmentRecord = chain[i] as Record<string, unknown>;
     merged = deepMerge(merged, fragmentRecord);
   }
-  delete merged.extends;
+  merged.extends = undefined;
   return ProfileSchema.parse(merged);
 }
 

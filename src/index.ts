@@ -20,7 +20,9 @@ const VERSION: string = pkg.version;
 
 function discoverRootFallback(): string {
   const fromEnv = process.env.CITADEL_SDD_ROOT;
-  if (fromEnv && fromEnv.length > 0) return normalizeProjectRoot(fromEnv);
+  if (fromEnv && fromEnv.length > 0) {
+    return normalizeProjectRoot(fromEnv);
+  }
   try {
     return normalizeProjectRoot(gitRevParseShowToplevel(process.cwd()));
   } catch {
@@ -36,7 +38,9 @@ async function main(): Promise<void> {
   const listClientRootPaths = async (): Promise<string[]> => {
     try {
       const caps = server.server.getClientCapabilities();
-      if (!caps?.roots) return cachedFileRoots;
+      if (!caps?.roots) {
+        return cachedFileRoots;
+      }
       const result = await server.server.listRoots();
       cachedFileRoots = result.roots
         .map((root) => rootUriToPath(root.uri))

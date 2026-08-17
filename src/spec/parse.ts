@@ -19,8 +19,12 @@ interface PipeTableExtraction {
 function findFirstPipeLine(lines: readonly string[], from = 0): number {
   for (let i = from; i < lines.length; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
-    if (line.trim().startsWith("|")) return i;
+    if (line === undefined) {
+      continue;
+    }
+    if (line.trim().startsWith("|")) {
+      return i;
+    }
   }
   return -1;
 }
@@ -59,9 +63,13 @@ function extractPipeTable(lines: readonly string[], startIdx: number): PipeTable
   let i = startIdx;
   while (i < lines.length) {
     const raw = lines[i];
-    if (raw === undefined) break;
+    if (raw === undefined) {
+      break;
+    }
     const line = raw.trim();
-    if (!line.startsWith("|")) break;
+    if (!line.startsWith("|")) {
+      break;
+    }
     if (isSeparatorRow(line)) {
       i++;
       continue;
@@ -105,7 +113,9 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
   let status: StatusValue | null = null;
   let pastTitle = false;
   for (const raw of lines) {
-    if (raw === undefined) continue;
+    if (raw === undefined) {
+      continue;
+    }
     // Skip the title line itself (first # heading), but note when we've seen it.
     if (!pastTitle && (raw.startsWith("# ") || raw.startsWith("## "))) {
       pastTitle = true;
@@ -117,12 +127,16 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
     }
     const m = /^([A-Z][A-Za-z _-]*?):\s+(.+)$/.exec(raw);
     if (!m) {
-      if (status !== null) break;
+      if (status !== null) {
+        break;
+      }
       continue;
     }
     const key = (m[1] ?? "").trim();
     const value = (m[2] ?? "").trim();
-    if (!key) continue;
+    if (!key) {
+      continue;
+    }
     fields.push([key, value] as const);
     if (key.toLowerCase() === "status") {
       try {
@@ -132,7 +146,9 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
       }
     }
   }
-  if (!status) return null;
+  if (!status) {
+    return null;
+  }
   return { status, fields };
 }
 
@@ -141,18 +157,26 @@ export function parseFrontmatter(md: string): Frontmatter {
   const startIdx = findFirstPipeLine(lines);
   if (startIdx === -1) {
     const inline = parseInlineFrontmatter(md);
-    if (inline) return inline;
+    if (inline) {
+      return inline;
+    }
     throw new Error("frontmatter_missing");
   }
   const { rows } = extractPipeTable(lines, startIdx);
   const fields: Array<readonly [string, string]> = [];
   let status: StatusValue | null = null;
   for (const row of rows) {
-    if (row.length !== 2) continue;
+    if (row.length !== 2) {
+      continue;
+    }
     const key = row[0];
     const value = row[1];
-    if (key === undefined || value === undefined) continue;
-    if (!key) continue;
+    if (key === undefined || value === undefined) {
+      continue;
+    }
+    if (!key) {
+      continue;
+    }
     fields.push([key, value] as const);
     if (key.toLowerCase() === "status") {
       status = parseStatusValue(value);
@@ -169,22 +193,30 @@ export function parseQTable(md: string): QTableRow[] {
   let headerIdx = -1;
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
-    if (raw === undefined) continue;
+    if (raw === undefined) {
+      continue;
+    }
     const line = raw.trim();
     if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
       // Require the very next line to be a markdown table separator row.
       const nextRaw = lines[i + 1];
-      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) continue;
+      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) {
+        continue;
+      }
       headerIdx = i;
       break;
     }
   }
-  if (headerIdx === -1) return [];
+  if (headerIdx === -1) {
+    return [];
+  }
   const { rows } = extractPipeTable(lines, headerIdx);
   const dataRows = rows.slice(1);
   const out: QTableRow[] = [];
   for (const row of dataRows) {
-    if (row.length !== 4) continue;
+    if (row.length !== 4) {
+      continue;
+    }
     const id = row[0];
     const question = row[1];
     const proposedDefault = row[2];
@@ -208,7 +240,9 @@ export function parseTasks(md: string): ParsedTasks {
   const phases: PhaseMap = { P0: [], P1: [], P2: [] };
   let current: Priority | null = null;
   for (const raw of lines) {
-    if (raw === undefined) continue;
+    if (raw === undefined) {
+      continue;
+    }
     const line = raw;
     const phaseMatch = /^##\s+(P[012])\b/.exec(line);
     if (phaseMatch) {
@@ -224,12 +258,16 @@ export function parseTasks(md: string): ParsedTasks {
       current = null;
       continue;
     }
-    if (current === null) continue;
+    if (current === null) {
+      continue;
+    }
     const itemMatch = /^- \[([ xX])\] (.*)$/.exec(line);
     if (itemMatch) {
       const mark = itemMatch[1];
       const text = itemMatch[2];
-      if (mark === undefined || text === undefined) continue;
+      if (mark === undefined || text === undefined) {
+        continue;
+      }
       phases[current].push({
         checked: mark.toLowerCase() === "x",
         text,

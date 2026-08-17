@@ -82,12 +82,16 @@ export function specList(
       continue;
     }
 
-    if (requested === "blocked" && spec.frontmatter.status.state !== "BLOCKED") continue;
+    if (requested === "blocked" && spec.frontmatter.status.state !== "BLOCKED") {
+      continue;
+    }
 
     const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
     const owner = ownerField?.[1] ?? "";
 
-    if (input.mine === true && ctx.principal !== undefined && owner !== ctx.principal) continue;
+    if (input.mine === true && ctx.principal !== undefined && owner !== ctx.principal) {
+      continue;
+    }
 
     const approvedField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "approved");
     const approvedDtg = approvedField?.[1] && approvedField[1] !== "TBD" ? approvedField[1] : null;

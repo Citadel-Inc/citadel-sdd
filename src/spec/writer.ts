@@ -16,9 +16,15 @@ interface BlockRange {
 function insertAfterTitle(lines: readonly string[], block: string): string {
   // Locate insertion point: after any leading blanks + the title line + its trailing blanks.
   let i = 0;
-  while (i < lines.length && (lines[i] ?? "").trim() === "") i++;
-  if (i < lines.length) i++; // advance past title line
-  while (i < lines.length && (lines[i] ?? "").trim() === "") i++;
+  while (i < lines.length && (lines[i] ?? "").trim() === "") {
+    i++;
+  }
+  if (i < lines.length) {
+    i++; // advance past title line
+  }
+  while (i < lines.length && (lines[i] ?? "").trim() === "") {
+    i++;
+  }
   return [...lines.slice(0, i), ...block.split("\n"), "", ...lines.slice(i)]
     .join("\n")
     .replace(/\n{3,}/g, "\n\n");
@@ -28,18 +34,26 @@ function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | nu
   let start = -1;
   for (let i = from; i < lines.length; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     if (line.trim().startsWith("|")) {
       start = i;
       break;
     }
   }
-  if (start === -1) return null;
+  if (start === -1) {
+    return null;
+  }
   let end = start;
   while (end < lines.length) {
     const line = lines[end];
-    if (line === undefined) break;
-    if (!line.trim().startsWith("|")) break;
+    if (line === undefined) {
+      break;
+    }
+    if (!line.trim().startsWith("|")) {
+      break;
+    }
     end++;
   }
   return { start, end };
@@ -48,18 +62,26 @@ function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | nu
 function findQTableBlock(lines: readonly string[]): BlockRange | null {
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
-    if (raw === undefined) continue;
+    if (raw === undefined) {
+      continue;
+    }
     const line = raw.trim();
     if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
       // Require the very next line to be a markdown table separator row,
       // so we don't mistake prose tables for Q-tables.
       const nextRaw = lines[i + 1];
-      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) continue;
+      if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) {
+        continue;
+      }
       let end = i;
       while (end < lines.length) {
         const cur = lines[end];
-        if (cur === undefined) break;
-        if (!cur.trim().startsWith("|")) break;
+        if (cur === undefined) {
+          break;
+        }
+        if (!cur.trim().startsWith("|")) {
+          break;
+        }
         end++;
       }
       return { start: i, end };
@@ -117,7 +139,9 @@ export function spliceFrontmatter(
     }
     const stripped = lines.filter((line, idx) => {
       // Only strip inline-key lines that fall within the frontmatter region.
-      if (idx <= titleIdx || idx >= fmEnd) return true;
+      if (idx <= titleIdx || idx >= fmEnd) {
+        return true;
+      }
       const m = ReInline.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
@@ -136,10 +160,14 @@ export function spliceFrontmatter(
   let found = false;
   const newLines = lines.map((line) => {
     const m = /^([A-Za-z][A-Za-z _-]*?):\s+/.exec(line);
-    if (!m) return line;
+    if (!m) {
+      return line;
+    }
     const keyLower = (m[1] ?? "").trim().toLowerCase();
     const entry = fieldMap.get(keyLower);
-    if (!entry) return line;
+    if (!entry) {
+      return line;
+    }
     found = true;
     return `${entry.key}: ${entry.value}`;
   });
@@ -158,7 +186,9 @@ export function spliceQTable(rawMd: string, newRows: readonly QTableRow[]): stri
   const rendered = renderQTable(newRows);
 
   if (!block) {
-    if (rendered.length === 0) return rawMd;
+    if (rendered.length === 0) {
+      return rawMd;
+    }
     throw new Error("qtable_anchor_missing: cannot splice into spec without existing Q-table");
   }
   const before = lines.slice(0, block.start);
@@ -172,7 +202,9 @@ function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRang
   let start = -1;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     if (
       line.startsWith(heading) &&
       (line.length === heading.length || line[heading.length] === " ")
@@ -181,12 +213,18 @@ function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRang
       break;
     }
   }
-  if (start === -1) return null;
+  if (start === -1) {
+    return null;
+  }
   let end = start + 1;
   while (end < lines.length) {
     const line = lines[end];
-    if (line === undefined) break;
-    if (line.startsWith("## ")) break;
+    if (line === undefined) {
+      break;
+    }
+    if (line.startsWith("## ")) {
+      break;
+    }
     end++;
   }
   return { start, end };

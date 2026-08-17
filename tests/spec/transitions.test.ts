@@ -3,7 +3,7 @@ import { canTransition, nextState, type Transition } from "../../src/spec/transi
 import type { SpecState } from "../../src/spec/types.js";
 import { SPEC_STATES } from "../../src/spec/types.js";
 
-const ALL_STATES: ReadonlyArray<SpecState> = [
+const ALL_STATES: readonly SpecState[] = [
   "DRAFT",
   "APPROVED",
   "IN_PROGRESS",
@@ -12,7 +12,7 @@ const ALL_STATES: ReadonlyArray<SpecState> = [
   "PARKED",
 ];
 
-const ALL_TRANSITIONS: ReadonlyArray<Transition> = [
+const ALL_TRANSITIONS: readonly Transition[] = [
   "spec_approve",
   "spec_claim",
   "spec_close",
@@ -27,61 +27,81 @@ describe("canTransition — legal moves", () => {
   test("spec_approve: DRAFT → APPROVED", () => {
     const r = canTransition("DRAFT", "spec_approve");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("APPROVED");
+    if (r.ok) {
+      expect(r.to).toBe("APPROVED");
+    }
   });
 
   test("spec_claim: APPROVED → IN_PROGRESS (no claimer-is-author needed)", () => {
     const r = canTransition("APPROVED", "spec_claim");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
+    if (r.ok) {
+      expect(r.to).toBe("IN_PROGRESS");
+    }
   });
 
   test("spec_claim: DRAFT → IN_PROGRESS allowed when claimer is author", () => {
     const r = canTransition("DRAFT", "spec_claim", { claimerIsAuthor: true });
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
+    if (r.ok) {
+      expect(r.to).toBe("IN_PROGRESS");
+    }
   });
 
   test("spec_close: IN_PROGRESS → DONE", () => {
     const r = canTransition("IN_PROGRESS", "spec_close");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("DONE");
+    if (r.ok) {
+      expect(r.to).toBe("DONE");
+    }
   });
 
   test("spec_close: PARKED → DONE (abandon parked spec)", () => {
     const r = canTransition("PARKED", "spec_close");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("DONE");
+    if (r.ok) {
+      expect(r.to).toBe("DONE");
+    }
   });
 
   test("spec_unpark: PARKED → IN_PROGRESS", () => {
     const r = canTransition("PARKED", "spec_unpark");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
+    if (r.ok) {
+      expect(r.to).toBe("IN_PROGRESS");
+    }
   });
 
   test("spec_block: IN_PROGRESS → BLOCKED", () => {
     const r = canTransition("IN_PROGRESS", "spec_block");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("BLOCKED");
+    if (r.ok) {
+      expect(r.to).toBe("BLOCKED");
+    }
   });
 
   test("spec_unblock: BLOCKED → IN_PROGRESS", () => {
     const r = canTransition("BLOCKED", "spec_unblock");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("IN_PROGRESS");
+    if (r.ok) {
+      expect(r.to).toBe("IN_PROGRESS");
+    }
   });
 
   test("spec_park: DRAFT → PARKED", () => {
     const r = canTransition("DRAFT", "spec_park");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("PARKED");
+    if (r.ok) {
+      expect(r.to).toBe("PARKED");
+    }
   });
 
   test("spec_park: IN_PROGRESS → PARKED", () => {
     const r = canTransition("IN_PROGRESS", "spec_park");
     expect(r.ok).toBe(true);
-    if (r.ok) expect(r.to).toBe("PARKED");
+    if (r.ok) {
+      expect(r.to).toBe("PARKED");
+    }
   });
 
   test("spec_park: DONE rejected", () => {
@@ -94,7 +114,9 @@ describe("canTransition — illegal moves", () => {
   test("spec_claim: DRAFT without claimer-is-author is rejected", () => {
     const r = canTransition("DRAFT", "spec_claim", { claimerIsAuthor: false });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("spec author");
+    if (!r.ok) {
+      expect(r.error).toContain("spec author");
+    }
   });
 
   test("spec_claim: DRAFT with no context is rejected", () => {
@@ -105,7 +127,9 @@ describe("canTransition — illegal moves", () => {
   test("spec_approve from APPROVED rejected", () => {
     const r = canTransition("APPROVED", "spec_approve");
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("requires DRAFT");
+    if (!r.ok) {
+      expect(r.error).toContain("requires DRAFT");
+    }
   });
 
   test("spec_close from APPROVED rejected (must claim first)", () => {
@@ -121,7 +145,9 @@ describe("canTransition — illegal moves", () => {
   test("spec_close from BLOCKED rejected with unblock hint", () => {
     const r = canTransition("BLOCKED", "spec_close");
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toContain("spec_unblock");
+    if (!r.ok) {
+      expect(r.error).toContain("spec_unblock");
+    }
   });
 
   test("spec_unpark from IN_PROGRESS rejected", () => {

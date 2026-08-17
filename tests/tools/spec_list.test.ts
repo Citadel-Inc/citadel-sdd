@@ -14,7 +14,9 @@ afterEach(() => {
 });
 
 function ctx(principal?: string): ToolContext {
-  if (!temp) throw new Error("temp repo not initialized");
+  if (!temp) {
+    throw new Error("temp repo not initialized");
+  }
   return {
     rootDir: temp.rootDir,
     profile: resolveBuiltIn("default"),
@@ -126,7 +128,9 @@ describe("specList", () => {
     expect(out).toHaveLength(1);
     const row = out[0];
     expect(row).toBeDefined();
-    if (!row) return;
+    if (!row) {
+      return;
+    }
     expect(Object.keys(row).sort()).toEqual(
       ["slug", "state", "dtg", "owner", "p0", "p1", "p2", "tasks"].sort(),
     );

@@ -56,22 +56,30 @@ export function findSingleRoot(start: string, specDir = "specs"): DiscoveredRoot
       return asDiscovered(cur, join(cur, specDir));
     }
     const parent = resolve(cur, "..");
-    if (parent === cur) return null;
+    if (parent === cur) {
+      return null;
+    }
     cur = parent;
   }
 }
 
-export function resolveRoots(paths: ReadonlyArray<string>, specDir = "specs"): DiscoveredRoot[] {
+export function resolveRoots(paths: readonly string[], specDir = "specs"): DiscoveredRoot[] {
   const out: DiscoveredRoot[] = [];
   const seen = new Set<string>();
   for (const raw of paths) {
     const trimmed = raw.trim();
-    if (!trimmed) continue;
+    if (!trimmed) {
+      continue;
+    }
     const p = resolve(trimmed);
     const meta = basename(p) === specDir ? resolve(p, "..") : p;
     const specs = join(meta, specDir);
-    if (!isDir(join(specs, "active"))) continue;
-    if (seen.has(specs)) continue;
+    if (!isDir(join(specs, "active"))) {
+      continue;
+    }
+    if (seen.has(specs)) {
+      continue;
+    }
     seen.add(specs);
     out.push(asDiscovered(meta, specs));
   }
@@ -88,11 +96,15 @@ export function scanNested(opts: ScanNestedOptions): DiscoveredRoot[] {
   const parent = resolve(opts.parent);
   const depth = opts.depth ?? 3;
   const specDir = opts.specDir ?? "specs";
-  if (!isDir(parent)) return [];
+  if (!isDir(parent)) {
+    return [];
+  }
   const found = new Map<string, DiscoveredRoot>();
 
   const walk = (p: string, remaining: number): void => {
-    if (remaining < 0) return;
+    if (remaining < 0) {
+      return;
+    }
     let entries: string[];
     try {
       entries = readdirSync(p);
@@ -110,12 +122,20 @@ export function scanNested(opts: ScanNestedOptions): DiscoveredRoot[] {
         found.set(specs, asDiscovered(meta, specs));
       }
     }
-    if (remaining === 0) return;
+    if (remaining === 0) {
+      return;
+    }
     for (const name of entries) {
-      if (NOISE_DIRS.has(name)) continue;
+      if (NOISE_DIRS.has(name)) {
+        continue;
+      }
       const full = join(p, name);
-      if (isSymlink(full)) continue;
-      if (!isDir(full)) continue;
+      if (isSymlink(full)) {
+        continue;
+      }
+      if (!isDir(full)) {
+        continue;
+      }
       walk(full, remaining - 1);
     }
   };
@@ -127,7 +147,7 @@ export function scanNested(opts: ScanNestedOptions): DiscoveredRoot[] {
 export function selectRoots(input: {
   rootDir: string;
   specDir: string;
-  roots?: ReadonlyArray<string>;
+  roots?: readonly string[];
   scan_nested?: { parent: string; depth?: number };
 }): DiscoveredRoot[] {
   if (input.scan_nested) {

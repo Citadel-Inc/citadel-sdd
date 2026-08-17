@@ -43,7 +43,9 @@ export interface SpecTaskCheckOutput {
 }
 
 function normalizeItems(input: SpecTaskCheckInput): TaskCheckItem[] {
-  if (input.items.length > 0) return input.items;
+  if (input.items.length > 0) {
+    return input.items;
+  }
   throw new Error("items_missing: spec_task_check requires a non-empty items[]");
 }
 
@@ -54,7 +56,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): SpecTaskCheckOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const raw = readFileSync(loc.tasksMd, "utf8");
   let tasks = parseTasks(raw);

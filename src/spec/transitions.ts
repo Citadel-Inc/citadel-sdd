@@ -23,13 +23,19 @@ export function canTransition(
 ): TransitionResult {
   switch (via) {
     case "spec_approve":
-      if (from === "DRAFT") return { ok: true, to: "APPROVED" };
+      if (from === "DRAFT") {
+        return { ok: true, to: "APPROVED" };
+      }
       return { ok: false, error: `state_invalid: spec_approve requires DRAFT, got ${from}` };
 
     case "spec_claim":
-      if (from === "APPROVED") return { ok: true, to: "IN_PROGRESS" };
+      if (from === "APPROVED") {
+        return { ok: true, to: "IN_PROGRESS" };
+      }
       if (from === "DRAFT") {
-        if (ctx.claimerIsAuthor === true) return { ok: true, to: "IN_PROGRESS" };
+        if (ctx.claimerIsAuthor === true) {
+          return { ok: true, to: "IN_PROGRESS" };
+        }
         return {
           ok: false,
           error: "state_invalid: spec_claim from DRAFT requires claimer to be the spec author",
@@ -41,8 +47,12 @@ export function canTransition(
       };
 
     case "spec_close":
-      if (from === "IN_PROGRESS") return { ok: true, to: "DONE" };
-      if (from === "PARKED") return { ok: true, to: "DONE" };
+      if (from === "IN_PROGRESS") {
+        return { ok: true, to: "DONE" };
+      }
+      if (from === "PARKED") {
+        return { ok: true, to: "DONE" };
+      }
       if (from === "BLOCKED") {
         return {
           ok: false,
@@ -56,15 +66,21 @@ export function canTransition(
       };
 
     case "spec_block":
-      if (from === "IN_PROGRESS") return { ok: true, to: "BLOCKED" };
+      if (from === "IN_PROGRESS") {
+        return { ok: true, to: "BLOCKED" };
+      }
       return { ok: false, error: `state_invalid: spec_block requires IN_PROGRESS, got ${from}` };
 
     case "spec_unblock":
-      if (from === "BLOCKED") return { ok: true, to: "IN_PROGRESS" };
+      if (from === "BLOCKED") {
+        return { ok: true, to: "IN_PROGRESS" };
+      }
       return { ok: false, error: `state_invalid: spec_unblock requires BLOCKED, got ${from}` };
 
     case "spec_reopen":
-      if (from === "DONE") return { ok: true, to: "IN_PROGRESS" };
+      if (from === "DONE") {
+        return { ok: true, to: "IN_PROGRESS" };
+      }
       return { ok: false, error: `state_invalid: spec_reopen requires DONE, got ${from}` };
 
     case "spec_park":
@@ -77,7 +93,9 @@ export function canTransition(
       };
 
     case "spec_unpark":
-      if (from === "PARKED") return { ok: true, to: "IN_PROGRESS" };
+      if (from === "PARKED") {
+        return { ok: true, to: "IN_PROGRESS" };
+      }
       return { ok: false, error: `state_invalid: spec_unpark requires PARKED, got ${from}` };
   }
 }
@@ -88,7 +106,9 @@ export function nextState(
   ctx: TransitionContext = {},
 ): SpecState {
   const result = canTransition(from, via, ctx);
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) {
+    throw new Error(result.error);
+  }
   return result.to;
 }
 

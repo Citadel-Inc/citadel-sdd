@@ -31,7 +31,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHandoffOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const raw = readFileSync(loc.specMd, "utf8");
   const spec = parseSpec(raw);
@@ -48,8 +50,12 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   const beforeOwner = beforeOwnerField?.[1] ?? "";
 
   const newOwner = (() => {
-    if (input.new_owner && input.new_owner.trim().length > 0) return input.new_owner.trim();
-    if (ctx.profile.default_owner.length > 0) return ctx.profile.default_owner;
+    if (input.new_owner && input.new_owner.trim().length > 0) {
+      return input.new_owner.trim();
+    }
+    if (ctx.profile.default_owner.length > 0) {
+      return ctx.profile.default_owner;
+    }
     throw new Error(
       "new_owner_missing: spec_handoff requires new_owner or default_owner in profile",
     );

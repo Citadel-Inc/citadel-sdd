@@ -22,7 +22,9 @@ export function mutateStatus(fm: Frontmatter, next: StatusValue): Frontmatter {
 function formatStatusForFrontmatter(s: StatusValue): string {
   const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state;
   const head = s.bold ? `**${stateStr}**` : stateStr;
-  if (!s.tail) return head;
+  if (!s.tail) {
+    return head;
+  }
   return `${head} — ${s.tail}`;
 }
 
@@ -55,7 +57,9 @@ export interface RatifyOptions {
 
 export function ratifyQTable(rows: readonly QTableRow[], opts: RatifyOptions): QTableRow[] {
   return rows.map((row) => {
-    if (row.ratified.toLowerCase() !== "tbd") return row;
+    if (row.ratified.toLowerCase() !== "tbd") {
+      return row;
+    }
     const decision = opts.decisions?.[row.id];
     if (decision !== undefined) {
       return { ...row, ratified: decision.text };
@@ -73,14 +77,18 @@ export function findTaskIndex(tasks: ParsedTasks, m: TaskMatch): number {
   const items = tasks.phases[m.phase];
   if (typeof m.match === "number") {
     const idx = m.match - 1;
-    if (idx < 0 || idx >= items.length) return -1;
+    if (idx < 0 || idx >= items.length) {
+      return -1;
+    }
     return idx;
   }
   const needle = m.match;
   const matches: number[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    if (item?.text.startsWith(needle)) matches.push(i);
+    if (item?.text.startsWith(needle)) {
+      matches.push(i);
+    }
   }
   if (matches.length > 1) {
     throw new Error(
@@ -95,7 +103,9 @@ export function resolveTaskMatch(
   m: TaskMatch,
 ): { idx: number; text: string } | null {
   const idx = findTaskIndex(tasks, m);
-  if (idx === -1) return null;
+  if (idx === -1) {
+    return null;
+  }
   const item = tasks.phases[m.phase][idx];
   return item ? { idx, text: item.text } : null;
 }
@@ -113,7 +123,9 @@ export function setTaskChecked(tasks: ParsedTasks, m: TaskMatch, checked: boolea
   const phase = m.phase;
   const items = tasks.phases[phase].slice();
   const target = items[resolved.idx];
-  if (!target) throw new Error("task_not_found: index resolved to undefined");
+  if (!target) {
+    throw new Error("task_not_found: index resolved to undefined");
+  }
   items[resolved.idx] = { ...target, checked };
   const phases: PhaseMap = { ...tasks.phases, [phase]: items };
   return { ...tasks, phases };

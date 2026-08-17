@@ -59,12 +59,18 @@ function buildLocation(ctx: RepoContext, state: SpecLifecycleState, slug: string
 }
 
 export function locateSpec(ctx: RepoContext, slug: string): SpecLocation | null {
-  if (!slugLooksValid(slug)) return null;
+  if (!slugLooksValid(slug)) {
+    return null;
+  }
   for (const state of ["active", "done", "parked"] as const) {
     const dir = join(specsRoot(ctx), state, slug);
-    if (!existsSync(dir)) continue;
+    if (!existsSync(dir)) {
+      continue;
+    }
     const stat = lstatSync(dir);
-    if (!stat.isDirectory() || stat.isSymbolicLink()) continue;
+    if (!stat.isDirectory() || stat.isSymbolicLink()) {
+      continue;
+    }
     return buildLocation(ctx, state, slug);
   }
   return null;
@@ -78,9 +84,13 @@ export function listSpecs(
   const states: SpecLifecycleState[] = scope === "all" ? ["active", "done", "parked"] : [scope];
   for (const state of states) {
     const dir = join(specsRoot(ctx), state);
-    if (!existsSync(dir)) continue;
+    if (!existsSync(dir)) {
+      continue;
+    }
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (!entry.isDirectory() || entry.isSymbolicLink()) continue;
+      if (!entry.isDirectory() || entry.isSymbolicLink()) {
+        continue;
+      }
       out.push(buildLocation(ctx, state, entry.name));
     }
   }

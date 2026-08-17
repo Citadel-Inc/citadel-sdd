@@ -31,7 +31,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 export function specTaskAdd(input: SpecTaskAddInput, ctx: ToolContext): SpecTaskAddOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const raw = readFileSync(loc.tasksMd, "utf8");
   const tasks = parseTasks(raw);

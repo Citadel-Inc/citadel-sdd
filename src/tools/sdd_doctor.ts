@@ -24,7 +24,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 
 function inferProfile(rootDir: string, specDir: string): string {
   const path = join(rootDir, specDir, "config.yaml");
-  if (!existsSync(path)) return "unknown";
+  if (!existsSync(path)) {
+    return "unknown";
+  }
   try {
     const raw = readFileSync(path, "utf8");
     const parsed = parseYaml(raw) as Record<string, unknown> | null;

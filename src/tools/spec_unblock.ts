@@ -42,7 +42,9 @@ export function specUnblock(input: SpecUnblockInput, ctx: ToolContext): SpecUnbl
   }
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
@@ -51,7 +53,9 @@ export function specUnblock(input: SpecUnblockInput, ctx: ToolContext): SpecUnbl
 
   assertTransitionEnabled("spec_unblock", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_unblock");
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
   const newStatus = {

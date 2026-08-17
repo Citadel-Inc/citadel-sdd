@@ -22,7 +22,9 @@ afterEach(() => {
 });
 
 function ctx(): RepoContext {
-  if (!temp) throw new Error("temp repo not initialized");
+  if (!temp) {
+    throw new Error("temp repo not initialized");
+  }
   return { rootDir: temp.rootDir, specDir: "specs" };
 }
 
@@ -109,7 +111,9 @@ describe("readSpec / readTasks / readPlan", () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
     const loc = locateSpec(ctx(), "approved-ratified");
     expect(loc).not.toBeNull();
-    if (!loc) return;
+    if (!loc) {
+      return;
+    }
     const parsed = readSpec(loc);
     expect(parsed.frontmatter.status.state).toBe("APPROVED");
     expect(parsed.qTable).toHaveLength(3);
@@ -118,7 +122,9 @@ describe("readSpec / readTasks / readPlan", () => {
   test("readTasks parses fixture", () => {
     temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
     const loc = locateSpec(ctx(), "in-progress-midway");
-    if (!loc) return;
+    if (!loc) {
+      return;
+    }
     const tasks = readTasks(loc);
     expect(tasks.frontmatter.status.state).toBe("IN_PROGRESS");
     expect(tasks.phases.P0).toHaveLength(5);
@@ -127,7 +133,9 @@ describe("readSpec / readTasks / readPlan", () => {
   test("readPlan returns raw markdown", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const loc = locateSpec(ctx(), "draft-minimal");
-    if (!loc) return;
+    if (!loc) {
+      return;
+    }
     expect(readPlan(loc)).toContain("Draft minimal — Plan");
   });
 });
@@ -144,7 +152,9 @@ describe("assertRegularFile", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const loc = locateSpec(ctx(), "draft-minimal");
     expect(loc).not.toBeNull();
-    if (!loc) return;
+    if (!loc) {
+      return;
+    }
     expect(() => assertRegularFile(loc.specMd)).not.toThrow();
   });
 
@@ -152,7 +162,9 @@ describe("assertRegularFile", () => {
     temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
     const loc = locateSpec(ctx(), "draft-minimal");
     expect(loc).not.toBeNull();
-    if (!loc) return;
+    if (!loc) {
+      return;
+    }
     const symlinkPath = join(loc.dir, "symlinked-spec.md");
     symlinkSync(loc.specMd, symlinkPath);
     expect(() => assertRegularFile(symlinkPath)).toThrow("path_is_symlink");
@@ -166,7 +178,9 @@ describe("readSpec / readTasks / readPlan — symlink rejection", () => {
     const locSrc = locateSpec(ctx(), "approved-ratified");
     expect(locDst).not.toBeNull();
     expect(locSrc).not.toBeNull();
-    if (!(locDst && locSrc)) return;
+    if (!(locDst && locSrc)) {
+      return;
+    }
     // Replace spec.md with a symlink pointing to another spec's file
     unlinkSync(locDst.specMd);
     symlinkSync(locSrc.specMd, locDst.specMd);

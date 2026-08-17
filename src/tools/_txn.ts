@@ -36,7 +36,9 @@ function git(rootDir: string, args: readonly string[]): string {
  * Uses `git status --porcelain -- <paths>` which is pathspec-filtered by git itself.
  */
 function assertScopeClean(rootDir: string, scopePaths: string[]): void {
-  if (scopePaths.length === 0) return;
+  if (scopePaths.length === 0) {
+    return;
+  }
   const out = git(rootDir, ["status", "--porcelain", "--", ...scopePaths]);
   const dirty = out
     .split("\n")
@@ -60,7 +62,9 @@ function assertNoSymlinks(writeTargets: string[]): void {
       }
     } catch (e: unknown) {
       // ENOENT: file doesn't exist yet — fine, it's new
-      if ((e as NodeJS.ErrnoException).code === "ENOENT") continue;
+      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
+        continue;
+      }
       throw e;
     }
   }
@@ -73,7 +77,9 @@ function assertNoSymlinks(writeTargets: string[]): void {
  * (e.g. afterRelDir from a gitMv) cannot abort restoration of sibling paths.
  */
 function rollback(rootDir: string, scopePaths: string[]): void {
-  if (scopePaths.length === 0) return;
+  if (scopePaths.length === 0) {
+    return;
+  }
 
   // 1. Unstage everything under the scope in one call (reset tolerates unknown paths).
   try {

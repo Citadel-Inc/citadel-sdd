@@ -33,16 +33,22 @@ function repoCtx(ctx: ToolContext): RepoContext {
 }
 
 function defaultClaimer(ctx: ToolContext): string {
-  if (ctx.profile.default_claimer.length > 0) return ctx.profile.default_claimer;
+  if (ctx.profile.default_claimer.length > 0) {
+    return ctx.profile.default_claimer;
+  }
   const fromGit = gitConfigUserName({ rootDir: ctx.rootDir });
-  if (fromGit.length > 0) return fromGit;
+  if (fromGit.length > 0) {
+    return fromGit;
+  }
   return "Bastion";
 }
 
 export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOutput {
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
@@ -62,7 +68,9 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
   const transition = canTransition(spec.frontmatter.status.state, "spec_claim", {
     claimerIsAuthor: author === claimer,
   });
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const ratifyEnabled = input.ratify ?? true;
   const hasTbd = spec.qTable.some((r) => r.ratified.toLowerCase() === "tbd");

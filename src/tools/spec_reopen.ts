@@ -36,7 +36,9 @@ export function specReopen(input: SpecReopenInput, ctx: ToolContext): SpecReopen
   }
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   const specRaw = readFileSync(loc.specMd, "utf8");
   const tasksRaw = readFileSync(loc.tasksMd, "utf8");
@@ -45,7 +47,9 @@ export function specReopen(input: SpecReopenInput, ctx: ToolContext): SpecReopen
 
   assertTransitionEnabled("spec_reopen", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_reopen");
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
   const newStatus = {

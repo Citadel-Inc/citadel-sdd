@@ -10,7 +10,7 @@ import {
   selectRoots,
 } from "../../src/discovery/roots.js";
 
-function makeTree(): { root: string; cleanup(): void } {
+function makeTree(): { root: string; cleanup: () => void } {
   const root = mkdtempSync(join(tmpdir(), "citadel-sdd-disc-"));
   return {
     root,

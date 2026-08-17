@@ -19,7 +19,9 @@ afterEach(() => {
 });
 
 function repo(): { rootDir: string; specDir: string } {
-  if (!temp) throw new Error("temp not set");
+  if (!temp) {
+    throw new Error("temp not set");
+  }
   return { rootDir: temp.rootDir, specDir: "specs" };
 }
 

@@ -54,4 +54,4 @@ export const SPEC_STATES: ReadonlySet<SpecState> = new Set([
   "PARKED",
 ]);
 
-export const PRIORITIES: ReadonlyArray<Priority> = ["P0", "P1", "P2"];
+export const PRIORITIES: readonly Priority[] = ["P0", "P1", "P2"];

@@ -38,7 +38,9 @@ export function specPark(input: SpecParkInput, ctx: ToolContext): SpecParkOutput
 
   const repo = repoCtx(ctx);
   const loc = locateSpec(repo, input.slug);
-  if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${input.slug}`);
+  }
 
   if (loc.state !== "active") {
     throw new Error(
@@ -53,7 +55,9 @@ export function specPark(input: SpecParkInput, ctx: ToolContext): SpecParkOutput
 
   assertTransitionEnabled("spec_park", ctx.profile.disabled_transitions);
   const transition = canTransition(spec.frontmatter.status.state, "spec_park");
-  if (!transition.ok) throw new Error(transition.error);
+  if (!transition.ok) {
+    throw new Error(transition.error);
+  }
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
   const newStatus = { state: transition.to, dtg, tail: resolution };

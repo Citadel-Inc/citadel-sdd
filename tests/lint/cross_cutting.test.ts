@@ -13,7 +13,9 @@ afterEach(() => {
 });
 
 function repo(): RepoContext {
-  if (!temp) throw new Error("temp repo not initialized");
+  if (!temp) {
+    throw new Error("temp repo not initialized");
+  }
   return { rootDir: temp.rootDir, specDir: "specs" };
 }
 

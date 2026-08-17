@@ -9,10 +9,10 @@ import { writeSpecReadmeFull } from "../spec/spec_readme.js";
 import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
-export type SpecIndexRebuildInput = {
+export interface SpecIndexRebuildInput {
   commit?: boolean;
   dryRun?: boolean;
-};
+}
 
 export interface SpecIndexRebuildOutput {
   active_count: number;
@@ -34,7 +34,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
  * Used to guard gitCommit when writeSpecReadmeFull produces identical content.
  */
 function hasStagedChanges(rootDir: string, files: readonly string[]): boolean {
-  if (files.length === 0) return false;
+  if (files.length === 0) {
+    return false;
+  }
   try {
     execFileSync("git", ["-C", rootDir, "diff", "--cached", "--quiet", "--", ...files], {
       stdio: ["ignore", "ignore", "ignore"],

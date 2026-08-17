@@ -55,7 +55,9 @@ export function buildRow(loc: SpecLocation): IndexRow {
 function sortByRecencyDesc(a: IndexRow, b: IndexRow): number {
   const kb = dtgToRecencySortKey(b.dtg);
   const ka = dtgToRecencySortKey(a.dtg);
-  if (kb !== ka) return kb - ka;
+  if (kb !== ka) {
+    return kb - ka;
+  }
   return a.slug.localeCompare(b.slug);
 }
 

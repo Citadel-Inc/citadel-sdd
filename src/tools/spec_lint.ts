@@ -22,8 +22,8 @@ export interface SpecLintInput {
   /** When true, include `specs/parked/` in repo-wide scans (no slug). */
   include_parked?: boolean;
   no_strict?: boolean;
-  fail_on?: ReadonlyArray<string> | "all";
-  roots?: ReadonlyArray<string>;
+  fail_on?: readonly string[] | "all";
+  roots?: readonly string[];
   scan_nested?: { parent: string; depth?: number };
   stale_days?: number;
 }
@@ -47,8 +47,12 @@ export interface SpecLintOutput {
 
 function treeScanDirs(input: SpecLintInput): SpecLifecycleState[] {
   const dirs: SpecLifecycleState[] = ["active"];
-  if (input.include_done === true) dirs.push("done");
-  if (input.include_parked === true) dirs.push("parked");
+  if (input.include_done === true) {
+    dirs.push("done");
+  }
+  if (input.include_parked === true) {
+    dirs.push("parked");
+  }
   return dirs;
 }
 
@@ -57,7 +61,9 @@ function repoCtx(ctx: ToolContext): RepoContext {
 }
 
 function lintFilePresence(loc: ReturnType<typeof locateSpec>): SpecLintFinding[] {
-  if (!loc) return [];
+  if (!loc) {
+    return [];
+  }
   const findings: SpecLintFinding[] = [];
   const checks: ReadonlyArray<{ code: string; abs: string; msg: string }> = [
     { code: "missing-tasks", abs: loc.tasksMd, msg: `${loc.slug}: missing tasks.md` },
@@ -99,9 +105,13 @@ function lintStaleDays(repo: RepoContext, staleDays: number, today: Date): SpecL
   });
   for (const loc of listSpecs(repo, "active")) {
     const last = map.get(loc.slug);
-    if (last === undefined) continue;
+    if (last === undefined) {
+      continue;
+    }
     const days = daysBetween(last, today);
-    if (days === null) continue;
+    if (days === null) {
+      continue;
+    }
     if (days >= staleDays) {
       findings.push({
         severity: "warning",
@@ -122,8 +132,9 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
   if (input.slug === undefined) {
     for (const section of treeScanDirs(input)) {
       for (const loc of listSpecs(repo, section)) {
-        if (loc.state === "active" || loc.state === "parked")
+        if (loc.state === "active" || loc.state === "parked") {
           findings.push(...lintFilePresence(loc));
+        }
         findings.push(...lintSingle(loc, ctx));
         findings.push(...lintStrict(loc, ctx, noStrict));
       }
@@ -144,7 +155,9 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
   } else {
     const loc = locateSpec(repo, input.slug);
     if (loc) {
-      if (loc.state === "active" || loc.state === "parked") findings.push(...lintFilePresence(loc));
+      if (loc.state === "active" || loc.state === "parked") {
+        findings.push(...lintFilePresence(loc));
+      }
       findings.push(...lintSingle(loc, ctx));
       findings.push(...lintStrict(loc, ctx, noStrict));
     } else {
@@ -160,7 +173,9 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
 }
 
 function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecLintFinding[] {
-  if (!loc) return [];
+  if (!loc) {
+    return [];
+  }
   const findings: SpecLintFinding[] = [];
 
   if (!slugLooksValid(loc.slug)) {
@@ -281,8 +296,12 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
 function detectFrontmatterFormat(text: string): "pipe-table" | "inline" {
   const lines = text.split(/\r?\n/);
   for (const line of lines) {
-    if (line.trim().startsWith("|")) return "pipe-table";
-    if (/^[A-Za-z][A-Za-z _-]*?:\s+/.test(line)) return "inline";
+    if (line.trim().startsWith("|")) {
+      return "pipe-table";
+    }
+    if (/^[A-Za-z][A-Za-z _-]*?:\s+/.test(line)) {
+      return "inline";
+    }
   }
   return "inline";
 }
@@ -293,9 +312,15 @@ function applyLintRules(
 ): SpecLintFinding[] {
   return findings.flatMap((f) => {
     const level = rules[f.code];
-    if (level === "off") return [];
-    if (level === "error") return [{ ...f, severity: "error" as LintSeverity }];
-    if (level === "warn") return [{ ...f, severity: "warning" as LintSeverity }];
+    if (level === "off") {
+      return [];
+    }
+    if (level === "error") {
+      return [{ ...f, severity: "error" as LintSeverity }];
+    }
+    if (level === "warn") {
+      return [{ ...f, severity: "warning" as LintSeverity }];
+    }
     return [f];
   });
 }
@@ -305,7 +330,9 @@ function lintStrict(
   ctx: ToolContext,
   noStrict: boolean,
 ): SpecLintFinding[] {
-  if (!loc || noStrict) return [];
+  if (!loc || noStrict) {
+    return [];
+  }
   const findings: SpecLintFinding[] = [];
   const fmtEnforcement = ctx.profile.frontmatter_format;
 
@@ -358,7 +385,9 @@ function lintStrict(
 }
 
 function resolveFailOn(input: SpecLintInput): Set<string> | null {
-  if (input.fail_on === undefined) return null;
+  if (input.fail_on === undefined) {
+    return null;
+  }
   if (input.fail_on === "all") {
     return new Set<string>([
       ...ALL_STRICT_CATEGORIES,
@@ -396,7 +425,9 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
     for (const d of discovered) {
       const repo: RepoContext = { rootDir: d.metaRoot, specDir: ctx.profile.spec_dir };
       const sub = lintOneRoot(repo, ctx, input);
-      for (const f of sub) findings.push({ ...f, root: d.key });
+      for (const f of sub) {
+        findings.push({ ...f, root: d.key });
+      }
     }
     const exit = computeExit(findings, resolveFailOn(input));
     return { findings, exit_code: exit, roots: discovered.map((d) => d.key) };
@@ -408,7 +439,7 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
   return { findings, exit_code: exit };
 }
 
-function computeExit(findings: ReadonlyArray<SpecLintFinding>, failOn: Set<string> | null): number {
+function computeExit(findings: readonly SpecLintFinding[], failOn: Set<string> | null): number {
   let exitCode = findings.some((f) => f.severity === "error") ? 1 : 0;
   if (failOn !== null) {
     const triggered = findings.some(

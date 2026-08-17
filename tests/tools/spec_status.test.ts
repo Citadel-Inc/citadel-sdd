@@ -12,7 +12,9 @@ afterEach(() => {
 });
 
 function ctx(): ToolContext {
-  if (!temp) throw new Error("temp repo not initialized");
+  if (!temp) {
+    throw new Error("temp repo not initialized");
+  }
   return { rootDir: temp.rootDir, profile: resolveBuiltIn("default") };
 }
 

@@ -72,7 +72,9 @@ function parseSectionTable(
   let headerIdx = -1;
   for (let i = start + 1; i < nextSectionStart; i++) {
     const line = lines[i];
-    if (line === undefined) continue;
+    if (line === undefined) {
+      continue;
+    }
     const t = line.trim();
     if (/^##\s/.test(t)) {
       throw new Error(
@@ -101,10 +103,16 @@ function parseSectionTable(
   let j = dataStart;
   while (j < nextSectionStart) {
     const line = lines[j];
-    if (line === undefined) break;
-    if (/^##\s/.test(line.trim())) break;
+    if (line === undefined) {
+      break;
+    }
+    if (/^##\s/.test(line.trim())) {
+      break;
+    }
     const t = line.trimStart();
-    if (!t.startsWith("|")) break;
+    if (!t.startsWith("|")) {
+      break;
+    }
     j++;
   }
 
@@ -131,7 +139,9 @@ function extractDataLines(lines: string[], p: ParsedSection): string[] {
  */
 export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
   const loc = locateSpec(repo, slug);
-  if (!loc) throw new Error(`spec_not_found: ${slug}`);
+  if (!loc) {
+    throw new Error(`spec_not_found: ${slug}`);
+  }
   const row = buildRow(loc);
   if (!row) {
     throw new Error(

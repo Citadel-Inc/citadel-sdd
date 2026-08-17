@@ -9,7 +9,7 @@ const FIXTURES_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "spec-
 
 export interface TempRepo {
   rootDir: string;
-  cleanup(): void;
+  cleanup: () => void;
 }
 
 function git(rootDir: string, args: readonly string[]): void {
