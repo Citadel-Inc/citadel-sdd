@@ -82,14 +82,10 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
       writeFileSync(loc.specMd, newSpecRaw);
       writeFileSync(loc.tasksMd, newTasksRaw);
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-      const subject =
-        ctx.profile.commit_style === "conventional"
-          ? input.note
-            ? `spec(${loc.slug}): APPROVED — ${input.note}`
-            : `spec(${loc.slug}): APPROVED`
-          : input.note
-            ? `Approve ${loc.slug}: ${input.note}`
-            : `Approve ${loc.slug}`;
+      const conventional = ctx.profile.commit_style === "conventional";
+      const base = conventional ? `spec(${loc.slug}): APPROVED` : `Approve ${loc.slug}`;
+      const noteSep = conventional ? " — " : ": ";
+      const subject = input.note ? `${base}${noteSep}${input.note}` : base;
       gitAdd({ rootDir: ctx.rootDir }, [
         `${loc.relDir}/spec.md`,
         `${loc.relDir}/tasks.md`,

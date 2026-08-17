@@ -97,6 +97,8 @@ export function canTransition(
         return { ok: true, to: "IN_PROGRESS" };
       }
       return { ok: false, error: `state_invalid: spec_unpark requires PARKED, got ${from}` };
+    default:
+      return { ok: false, error: `transition_unknown: ${String(via)}` };
   }
 }
 

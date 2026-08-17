@@ -164,6 +164,8 @@ export function specTransition(input: SpecTransitionInput, ctx: ToolContext): Sp
       return specUnblock({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
     case "unpark":
       return specUnpark({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
+    default:
+      throw new Error(`transition_unknown: ${String(input.to)}`);
   }
 }
 

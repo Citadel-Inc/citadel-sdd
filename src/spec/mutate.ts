@@ -138,7 +138,7 @@ export function addTaskItem(
 ): ParsedTasks {
   const newItem: TaskItem = {
     checked: false,
-    text: blocker ? (text.startsWith("[BLOCKED]") ? text : `[BLOCKED] ${text}`) : text,
+    text: blocker && !text.startsWith("[BLOCKED]") ? `[BLOCKED] ${text}` : text,
     isHumanGate: text.trimStart().startsWith("[HUMAN]"),
   };
   const items = [...tasks.phases[phase], newItem];
