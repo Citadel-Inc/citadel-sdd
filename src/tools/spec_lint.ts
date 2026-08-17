@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { selectRoots } from "../discovery/roots.js";
 import { CROSS_CUTTING_CATEGORIES, crossCutting } from "../lint/cross_cutting.js";
-import type { StrictCategory } from "../lint/strict.js";
 import { ALL_STRICT_CATEGORIES, scanPriorityInNontasks, scanStrictFile } from "../lint/strict.js";
 import { daysBetween, lastTouchedBulk } from "../spec/git_history.js";
 import { checkSlugInCorrectDir, checkSpecTasksStatusAlign } from "../spec/invariants.js";
@@ -457,4 +456,4 @@ function computeExit(findings: readonly SpecLintFinding[], failOn: Set<string> |
   return exitCode;
 }
 
-export type { StrictCategory };
+export type { StrictCategory } from "../lint/strict.js";

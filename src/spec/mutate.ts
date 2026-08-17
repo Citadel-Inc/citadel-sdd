@@ -5,7 +5,6 @@ import type {
   PhaseMap,
   Priority,
   QTableRow,
-  SpecState,
   StatusValue,
   TaskItem,
 } from "./types.js";
@@ -164,4 +163,4 @@ export function setStatusOnTasks(tasks: ParsedTasks, next: StatusValue): ParsedT
   return { ...tasks, frontmatter: mutateStatus(tasks.frontmatter, next) };
 }
 
-export type { Priority, SpecState, StatusValue };
+export type { Priority, SpecState, StatusValue } from "./types.js";

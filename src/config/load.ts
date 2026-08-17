@@ -14,8 +14,8 @@ export function loadConfig(opts: LoadOptions): Profile {
   let raw: string;
   try {
     raw = readFileSync(path, "utf8");
-  } catch {
-    throw new Error(`config_missing: ${path}`);
+  } catch (e) {
+    throw new Error(`config_missing: ${path}`, { cause: e });
   }
   let fragment: unknown;
   try {
@@ -24,7 +24,7 @@ export function loadConfig(opts: LoadOptions): Profile {
     // The YAML parser message can embed raw source-line content; extract just
     // the first line (the human-readable summary) to keep the error concise.
     const yamlMsg = (e as Error).message.split("\n")[0] ?? "YAML parse error";
-    throw new Error(`config_invalid: ${path}: ${yamlMsg}`);
+    throw new Error(`config_invalid: ${path}: ${yamlMsg}`, { cause: e });
   }
   if (fragment === null || typeof fragment !== "object" || Array.isArray(fragment)) {
     throw new Error(`config_invalid: ${path}: top-level must be a YAML object`);
@@ -36,12 +36,12 @@ export function loadConfig(opts: LoadOptions): Profile {
     // Zod and profile errors can be verbose; surface only the first line so
     // the client sees a single actionable message, not a full stack dump.
     const detail = (e as Error).message.split("\n")[0] ?? "invalid profile";
-    throw new Error(`config_invalid: ${path}: ${detail}`);
+    throw new Error(`config_invalid: ${path}: ${detail}`, { cause: e });
   }
   try {
     resolveRepoSubdir(opts.rootDir, profile.spec_dir);
   } catch (e) {
-    throw new Error(`config_invalid: ${path}: ${(e as Error).message}`);
+    throw new Error(`config_invalid: ${path}: ${(e as Error).message}`, { cause: e });
   }
   return profile;
 }
