@@ -57,7 +57,7 @@ describe("resolveRoots", () => {
         join(t.root, "b"),
         join(t.root, "missing"),
       ]);
-      expect(out.map((d) => d.key).sort()).toEqual(["a", "b"]);
+      expect(out.map((d) => d.key).sort((a, b) => a.localeCompare(b))).toEqual(["a", "b"]);
     } finally {
       t.cleanup();
     }
@@ -86,7 +86,7 @@ describe("scanNested", () => {
         recursive: true,
       });
       const found = scanNested({ parent: t.root, depth: 3 });
-      const keys = found.map((d) => d.key).sort();
+      const keys = found.map((d) => d.key).sort((a, b) => a.localeCompare(b));
       expect(keys).toContain("x");
       expect(keys).toContain("y");
     } finally {
@@ -131,7 +131,7 @@ describe("selectRoots", () => {
         roots: [join(t.root, "a")],
         scan_nested: { parent: t.root, depth: 2 },
       });
-      const keys = out.map((d) => d.key).sort();
+      const keys = out.map((d) => d.key).sort((a, b) => a.localeCompare(b));
       expect(keys).toContain("a");
       expect(keys).toContain("b");
     } finally {

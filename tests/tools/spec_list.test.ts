@@ -31,7 +31,7 @@ describe("specList", () => {
       doneFixtures: ["done"],
     });
     const out = specList({}, ctx());
-    expect(out.map((e) => e.slug).sort()).toEqual(["draft-minimal", "in-progress-midway"]);
+    expect(out.map((e) => e.slug).sort((a, b) => a.localeCompare(b))).toEqual(["draft-minimal", "in-progress-midway"]);
   });
 
   test("state=all returns active + done", () => {
@@ -40,7 +40,7 @@ describe("specList", () => {
       doneFixtures: ["done"],
     });
     const out = specList({ state: "all" }, ctx());
-    expect(out.map((e) => e.slug).sort()).toEqual(["done", "draft-minimal"]);
+    expect(out.map((e) => e.slug).sort((a, b) => a.localeCompare(b))).toEqual(["done", "draft-minimal"]);
   });
 
   test("state=blocked filters to BLOCKED specs only", () => {
@@ -72,7 +72,7 @@ describe("specList", () => {
       activeFixtures: ["draft-minimal", "approved-ratified"],
     });
     const all = specList({ mine: true }, ctx("TestAgent"));
-    expect(all.map((e) => e.slug).sort()).toEqual(["approved-ratified", "draft-minimal"]);
+    expect(all.map((e) => e.slug).sort((a, b) => a.localeCompare(b))).toEqual(["approved-ratified", "draft-minimal"]);
 
     const none = specList({ mine: true }, ctx("OtherAgent"));
     expect(none).toEqual([]);
