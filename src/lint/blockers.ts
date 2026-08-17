@@ -22,20 +22,20 @@ export interface BlockerFile {
 const RE_HEADING = /^###\s+(\S+)\s+[—-]\s+(.+)$/;
 const RE_RESOLVED = /\bRESOLVED\b|\bresolved on\b|\bSUPERSEDED\b|\bCLOSED\b/i;
 const RE_DTG_MIL = /^(\d{2})(\d{2})(\d{2})Z([A-Z]{3})(\d{2})$/;
-const MONTHS_MIL: Record<string, number> = {
-  JAN: 0,
-  FEB: 1,
-  MAR: 2,
-  APR: 3,
-  MAY: 4,
-  JUN: 5,
-  JUL: 6,
-  AUG: 7,
-  SEP: 8,
-  OCT: 9,
-  NOV: 10,
-  DEC: 11,
-};
+const MONTHS_MIL = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
+] as const;
 
 function parseDtgUtc(dtg: string): Date | null {
   const m = RE_DTG_MIL.exec(dtg);
@@ -45,9 +45,9 @@ function parseDtgUtc(dtg: string): Date | null {
   const dd = Number.parseInt(m[1] ?? "", 10);
   const hh = Number.parseInt(m[2] ?? "", 10);
   const mm = Number.parseInt(m[3] ?? "", 10);
-  const mon = MONTHS_MIL[m[4] ?? ""];
+  const mon = MONTHS_MIL.indexOf((m[4] ?? "") as (typeof MONTHS_MIL)[number]);
   const yy = Number.parseInt(m[5] ?? "", 10);
-  if (Number.isNaN(dd) || Number.isNaN(hh) || mon === undefined || Number.isNaN(yy)) {
+  if (Number.isNaN(dd) || Number.isNaN(hh) || mon === -1 || Number.isNaN(yy)) {
     return null;
   }
   // Two-digit-year pivot: yy >= 70 → 19xx, yy < 70 → 20xx.

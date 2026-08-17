@@ -30,11 +30,11 @@
             "conventions": [
               {
                 "selector": { "kind": "typeProperty" },
-                "formats": ["camelCase", "snake_case", "PascalCase", "CONSTANT_CASE"]
+                "match": "P[0-2]|[a-z][a-zA-Z0-9]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*"
               },
               {
                 "selector": { "kind": "objectLiteralProperty" },
-                "formats": ["camelCase", "snake_case", "PascalCase", "CONSTANT_CASE"]
+                "match": "P[0-2]|[a-z][a-zA-Z0-9]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*"
               },
               {
                 "selector": { "kind": "typeParameter" },
@@ -90,5 +90,28 @@
   },
   "files": {
     "includes": ["src/**/*", "tests/**/*", "*.json", "*.md", "!.mcp.json"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["tests/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "useNamingConvention": {
+              "level": "info",
+              "options": {
+                "strictCase": false,
+                "conventions": [
+                  {
+                    "selector": { "kind": "objectLiteralProperty" },
+                    "match": "Q[0-9]+|[A-Z][A-Z0-9_]*|[a-z][a-zA-Z0-9]*|[a-z][a-z0-9]*(?:_[a-z0-9]+)*"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }
