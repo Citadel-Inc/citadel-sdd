@@ -54,7 +54,7 @@
         "useQwikValidLexicalScope": "off",
         "useImportExtensions": {
           "level": "error",
-          "options": { "forceJsExtensions": true }
+          "options": { "extensionMappings": { "ts": "js", "tsx": "js" } }
         }
       },
       "security": {
@@ -90,17 +90,5 @@
   },
   "files": {
     "includes": ["src/**/*", "tests/**/*", "*.json", "*.md", "!.mcp.json"]
-  },
-  "overrides": [
-    {
-      "includes": ["src/index.ts"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "useImportExtensions": "off"
-          }
-        }
-      }
-    }
-  ]
+  }
 }
