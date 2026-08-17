@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface GitHistoryOptions {
   metaRoot: string;
   specsRoot: string;
@@ -44,7 +46,7 @@ export function lastTouchedBulk(opts: GitHistoryOptions): Map<string, string> {
   }
 
   let curDate: string | null = null;
-  for (const raw of out.split(/\r?\n/)) {
+  for (const raw of out.split(LINE_SPLIT_RE)) {
     if (!raw) {
       continue;
     }
@@ -86,7 +88,7 @@ export function recentCommits(opts: RecentCommitsOptions): string[] {
     return [];
   }
   return out
-    .split(/\r?\n/)
+    .split(LINE_SPLIT_RE)
     .map((s) => s.trimEnd())
     .filter((s) => s.length > 0);
 }

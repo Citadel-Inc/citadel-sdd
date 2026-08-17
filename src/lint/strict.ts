@@ -1,3 +1,5 @@
+
+const LINE_SPLIT_RE = /\r?\n/;
 export type StrictCategory =
   | "strict-bullets"
   | "strict-numbered-checklist"
@@ -28,7 +30,7 @@ const RE_PRIORITY_HEADING = /^\s{0,3}##\s+(P-?\d+)\b/;
 
 export function scanStrictFile(filename: string, text: string): StrictFinding[] {
   const findings: StrictFinding[] = [];
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(LINE_SPLIT_RE);
 
   if (lines.length > 0) {
     const first = lines[0] ?? "";
@@ -105,7 +107,7 @@ export function scanStrictFile(filename: string, text: string): StrictFinding[] 
 
 export function scanPriorityInNontasks(filename: string, text: string): StrictFinding[] {
   const findings: StrictFinding[] = [];
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(LINE_SPLIT_RE);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? "";
     const m = RE_PRIORITY_HEADING.exec(line);

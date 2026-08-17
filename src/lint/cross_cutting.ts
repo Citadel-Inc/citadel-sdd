@@ -4,6 +4,8 @@ import { parseTasks } from "../spec/parse.js";
 import { listSpecs, type RepoContext, type SpecLocation, specsRoot } from "../spec/repo.js";
 import { BLOCKER_CATEGORIES, blockerLint, parseBlockers } from "./blockers.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface CrossCuttingFinding {
   category: string;
   message: string;
@@ -56,7 +58,7 @@ function readIndex(
   } catch {
     return out;
   }
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(LINE_SPLIT_RE);
   let section: "active" | "done" | "parked" | null = null;
   for (const raw of lines) {
     const line = raw.trim();

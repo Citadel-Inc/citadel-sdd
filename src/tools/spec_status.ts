@@ -8,6 +8,8 @@ import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { QTableRow, SpecState } from "../spec/types.js";
 import type { ToolContext } from "./types.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface SpecStatusInput {
   slug: string;
   recent_limit?: number;
@@ -150,7 +152,7 @@ function readIndexedActive(rootDir: string, specDir: string): ReadonlySet<string
   } catch {
     return out;
   }
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(LINE_SPLIT_RE);
   let inActive = false;
   for (const raw of lines) {
     const line = raw.trim();

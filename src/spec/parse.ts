@@ -10,6 +10,19 @@ import {
   type StatusValue,
 } from "./types.js";
 
+const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/;
+const LEADING_PIPE_RE = /^\|/;
+const TRAILING_PIPE_RE = /\|$/;
+const BOLD_WRAPPED_RE = /^\*\*([^*]+?)\*\*(.*)$/;
+const STATUS_VALUE_RE = /^([A-Z_]+)(?:\s+(\S+)(?:\s+[—-]\s+(.*))?)?$/;
+const LINE_SPLIT_RE = /\r?\n/;
+const FRONTMATTER_FIELD_RE = /^([A-Z][A-Za-z _-]*?):\s+(.+)$/;
+const Q_HEADER_QUESTION_RE = /question/i;
+const Q_HEADER_DEFAULT_RE = /proposed\s*default/i;
+const PHASE_HEADING_RE = /^##\s+(P[012])\b/;
+const H2_RE = /^##\s+/;
+const TASK_ITEM_RE = /^- \[([ xX])\] (.*)$/;
+
 interface PipeTableExtraction {
   rows: string[][];
   startIdx: number;
@@ -30,11 +43,11 @@ function findFirstPipeLine(lines: readonly string[], from = 0): number {
 }
 
 function isSeparatorRow(line: string): boolean {
-  return /^\|[\s:|-]+\|$/.test(line.trim());
+  return SEPARATOR_ROW_RE.test(line.trim());
 }
 
 function splitPipeRow(line: string): string[] {
-  const inner = line.replace(/^\|/, "").replace(/\|$/, "");
+  const inner = line.replace(LEADING_PIPE_RE, "").replace(TRAILING_PIPE_RE, "");
   const cells: string[] = [];
   let cell = "";
   for (let i = 0; i < inner.length; i++) {
@@ -86,14 +99,14 @@ export function parseStatusValue(raw: string): StatusValue {
 
   // Strip markdown bold from the whole value (**STATE DTG — tail**)
   // or from the state word only (**STATE** DTG — tail).
-  const boldMatch = /^\*\*([^*]+?)\*\*(.*)$/.exec(trimmed);
+  const boldMatch = BOLD_WRAPPED_RE.exec(trimmed);
   if (boldMatch) {
     bold = true;
     trimmed = `${boldMatch[1] ?? ""}${boldMatch[2] ?? ""}`.trim();
   }
 
   // DTG is optional — hand-written specs may omit it (e.g. "**DRAFT**" with no stamp).
-  const match = /^([A-Z_]+)(?:\s+(\S+)(?:\s+[—-]\s+(.*))?)?$/.exec(trimmed);
+  const match = STATUS_VALUE_RE.exec(trimmed);
   if (!match) {
     throw new Error(`status_unparseable: "${raw}"`);
   }
@@ -108,7 +121,7 @@ export function parseStatusValue(raw: string): StatusValue {
 }
 
 function parseInlineFrontmatter(md: string): Frontmatter | null {
-  const lines = md.split(/\r?\n/);
+  const lines = md.split(LINE_SPLIT_RE);
   const fields: Array<readonly [string, string]> = [];
   let status: StatusValue | null = null;
   let pastTitle = false;
@@ -125,7 +138,7 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
     if (pastTitle && (raw.startsWith("# ") || raw.startsWith("## "))) {
       break;
     }
-    const m = /^([A-Z][A-Za-z _-]*?):\s+(.+)$/.exec(raw);
+    const m = FRONTMATTER_FIELD_RE.exec(raw);
     if (!m) {
       if (status !== null) {
         break;
@@ -153,7 +166,7 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
 }
 
 export function parseFrontmatter(md: string): Frontmatter {
-  const lines = md.split(/\r?\n/);
+  const lines = md.split(LINE_SPLIT_RE);
   const startIdx = findFirstPipeLine(lines);
   if (startIdx === -1) {
     const inline = parseInlineFrontmatter(md);
@@ -189,7 +202,7 @@ export function parseFrontmatter(md: string): Frontmatter {
 }
 
 export function parseQTable(md: string): QTableRow[] {
-  const lines = md.split(/\r?\n/);
+  const lines = md.split(LINE_SPLIT_RE);
   let headerIdx = -1;
   for (let i = 0; i < lines.length; i++) {
     const raw = lines[i];
@@ -197,7 +210,7 @@ export function parseQTable(md: string): QTableRow[] {
       continue;
     }
     const line = raw.trim();
-    if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
+    if (line.startsWith("|") && Q_HEADER_QUESTION_RE.test(line) && Q_HEADER_DEFAULT_RE.test(line)) {
       // Require the very next line to be a markdown table separator row.
       const nextRaw = lines[i + 1];
       if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) {
@@ -236,7 +249,7 @@ export function parseQTable(md: string): QTableRow[] {
 
 export function parseTasks(md: string): ParsedTasks {
   const frontmatter = parseFrontmatter(md);
-  const lines = md.split(/\r?\n/);
+  const lines = md.split(LINE_SPLIT_RE);
   const phases: PhaseMap = { P0: [], P1: [], P2: [] };
   let current: Priority | null = null;
   for (const raw of lines) {
@@ -244,7 +257,7 @@ export function parseTasks(md: string): ParsedTasks {
       continue;
     }
     const line = raw;
-    const phaseMatch = /^##\s+(P[012])\b/.exec(line);
+    const phaseMatch = PHASE_HEADING_RE.exec(line);
     if (phaseMatch) {
       const tag = phaseMatch[1];
       if (tag === "P0" || tag === "P1" || tag === "P2") {
@@ -254,14 +267,14 @@ export function parseTasks(md: string): ParsedTasks {
       }
       continue;
     }
-    if (/^##\s+/.test(line)) {
+    if (H2_RE.test(line)) {
       current = null;
       continue;
     }
     if (current === null) {
       continue;
     }
-    const itemMatch = /^- \[([ xX])\] (.*)$/.exec(line);
+    const itemMatch = TASK_ITEM_RE.exec(line);
     if (itemMatch) {
       const mark = itemMatch[1];
       const text = itemMatch[2];

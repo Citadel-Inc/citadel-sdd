@@ -8,6 +8,8 @@ import {
 import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from "./types.js";
 import { PRIORITIES } from "./types.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 interface BlockRange {
   start: number;
   end: number;
@@ -99,7 +101,7 @@ export function spliceFrontmatter(
   newFm: Frontmatter,
   format: FrontmatterFormat = "any",
 ): string {
-  const lines = rawMd.split(/\r?\n/);
+  const lines = rawMd.split(LINE_SPLIT_RE);
   const block = findFirstPipeBlock(lines);
   const hasPipe = block !== null;
 
@@ -181,7 +183,7 @@ export function spliceFrontmatter(
 }
 
 export function spliceQTable(rawMd: string, newRows: readonly QTableRow[]): string {
-  const lines = rawMd.split(/\r?\n/);
+  const lines = rawMd.split(LINE_SPLIT_RE);
   const block = findQTableBlock(lines);
   const rendered = renderQTable(newRows);
 
@@ -247,7 +249,7 @@ function splicePhase(
   priority: Priority,
   items: readonly { checked: boolean; text: string; isHumanGate: boolean }[],
 ): string {
-  const lines = rawMd.split(/\r?\n/);
+  const lines = rawMd.split(LINE_SPLIT_RE);
   const block = findPhaseBlock(lines, priority);
   if (!block) {
     return rawMd;
@@ -269,7 +271,7 @@ export function spliceSpecFile(
   format: FrontmatterFormat = "any",
 ): string {
   let out = spliceFrontmatter(rawMd, parsed.frontmatter, format);
-  if (parsed.qTable.length > 0 || findQTableBlock(out.split(/\r?\n/)) !== null) {
+  if (parsed.qTable.length > 0 || findQTableBlock(out.split(LINE_SPLIT_RE)) !== null) {
     out = spliceQTable(out, parsed.qTable);
   }
   return out;

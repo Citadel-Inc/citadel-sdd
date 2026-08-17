@@ -11,6 +11,8 @@ import { spliceFrontmatter } from "../spec/writer.js";
 import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface SpecBlockInput {
   slug: string;
   reason: string;
@@ -42,7 +44,7 @@ function injectBlockingSection(rawMd: string, reason: string): string {
   const blockingHeading = "## Blocking";
   // Strip any existing Blocking section(s) first to ensure idempotency.
   const stripped = removeBlockingSection(rawMd);
-  const lines = stripped.split(/\r?\n/);
+  const lines = stripped.split(LINE_SPLIT_RE);
   let insertAt = lines.length;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];

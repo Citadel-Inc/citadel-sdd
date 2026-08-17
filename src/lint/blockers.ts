@@ -1,6 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface BlockerEntry {
   dtg: string;
   title: string;
@@ -70,7 +72,7 @@ export function parseBlockers(rootDir: string, now: Date = new Date()): BlockerF
   } catch {
     return null;
   }
-  const lines = rawText.split(/\r?\n/);
+  const lines = rawText.split(LINE_SPLIT_RE);
   const entries: BlockerEntry[] = [];
   let current: { dtg: string; title: string; bodyLines: string[] } | null = null;
 

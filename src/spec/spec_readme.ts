@@ -13,6 +13,8 @@ import {
 } from "./index_render.js";
 import { locateSpec, type RepoContext, type SpecLifecycleState } from "./repo.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export const README_UNPARSEABLE = "readme_unparseable";
 
 function readmeAbsPath(repo: RepoContext): string {
@@ -157,7 +159,7 @@ export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
   }
 
   const raw = readFileSync(path, "utf8");
-  const lines = raw.split(/\r?\n/);
+  const lines = raw.split(LINE_SPLIT_RE);
 
   const pa = parseSectionTable(lines, "## Active", "## Done", SPEC_README_ACTIVE_HEADER);
   const pd = parseSectionTable(lines, "## Done", "## Parked", SPEC_README_DONE_OR_PARKED_HEADER);

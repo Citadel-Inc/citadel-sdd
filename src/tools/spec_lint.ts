@@ -16,6 +16,8 @@ import {
 } from "../spec/repo.js";
 import type { ToolContext } from "./types.js";
 
+const LINE_SPLIT_RE = /\r?\n/;
+
 export interface SpecLintInput {
   slug?: string;
   include_done?: boolean;
@@ -294,7 +296,7 @@ function lintSingle(loc: ReturnType<typeof locateSpec>, ctx: ToolContext): SpecL
 }
 
 function detectFrontmatterFormat(text: string): "pipe-table" | "inline" {
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(LINE_SPLIT_RE);
   for (const line of lines) {
     if (line.trim().startsWith("|")) {
       return "pipe-table";

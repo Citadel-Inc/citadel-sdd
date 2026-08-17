@@ -1,3 +1,5 @@
+
+const LINE_SPLIT_RE = /\r?\n/;
 export interface ChecklistCounts {
   open: number;
   done: number;
@@ -8,7 +10,7 @@ const RE_ITEM = /^\s*-\s*\[([ xX])\]\s+(.*)$/;
 
 export function scanChecklist(text: string): ChecklistCounts {
   const out: ChecklistCounts = { open: 0, done: 0, human: 0 };
-  for (const raw of text.split(/\r?\n/)) {
+  for (const raw of text.split(LINE_SPLIT_RE)) {
     const m = RE_ITEM.exec(raw);
     if (!m) {
       continue;
