@@ -1,5 +1,7 @@
 import type { Profile } from "../profile/types.js";
 
+const BASTION_DTG_RE = /^(\d{2})(\d{2})(\d{2})Z([A-Z]{3})(\d{2})$/;
+
 export type DtgFormat = Profile["dtg_format"];
 
 export const MONTHS_UPPER: readonly string[] = [
@@ -58,7 +60,7 @@ export function dtgToRecencySortKey(dtg: string): number {
     return DTG_SORT_UNKNOWN;
   }
 
-  const bastion = /^(\d{2})(\d{2})(\d{2})Z([A-Z]{3})(\d{2})$/.exec(s);
+  const bastion = BASTION_DTG_RE.exec(s);
   if (bastion) {
     const day = Number.parseInt(bastion[1] ?? "", 10);
     const hour = Number.parseInt(bastion[2] ?? "", 10);

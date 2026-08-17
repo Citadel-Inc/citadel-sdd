@@ -7,6 +7,8 @@ import { specClose } from "../../src/tools/spec_close.js";
 import type { ToolContext } from "../../src/tools/types.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
+const SPEC_UNBLOCK_RE = /spec_unblock/;
+
 let temp: TempRepo | undefined;
 
 afterEach(() => {
@@ -189,7 +191,7 @@ describe("specClose", () => {
   test("rejects from BLOCKED with spec_unblock hint", () => {
     temp = makeTempRepo({ activeFixtures: ["blocked-reason"] });
     expect(() => specClose({ slug: "blocked-reason", summary: "abandon" }, ctx())).toThrow(
-      /spec_unblock/,
+      SPEC_UNBLOCK_RE,
     );
   });
 

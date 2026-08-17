@@ -14,6 +14,8 @@ import {
 } from "../../src/spec/render.js";
 import { loadAllFixtures, loadFixture } from "../fixtures.js";
 
+const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/;
+
 describe("renderStatusValue", () => {
   test("DRAFT no tail", () => {
     expect(renderStatusValue({ state: "DRAFT", dtg: "011900ZMAY26", tail: "" })).toBe(
@@ -67,7 +69,7 @@ describe("renderFrontmatter", () => {
     const dataLines = rendered
       .split("\n")
       .slice(2)
-      .filter((l) => l.startsWith("|") && !/^\|[\s:|-]+\|$/.test(l));
+      .filter((l) => l.startsWith("|") && !SEPARATOR_ROW_RE.test(l));
     expect(dataLines[0]).toContain("Status");
     expect(dataLines[1]).toContain("Owner");
     expect(dataLines[2]).toContain("Approved");

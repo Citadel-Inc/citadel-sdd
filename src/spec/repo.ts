@@ -3,6 +3,8 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseSpec, parseTasks } from "./parse.js";
 import type { ParsedSpec, ParsedTasks } from "./types.js";
 
+const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
 /**
  * Throws if `path` is a symbolic link (or does not exist).
  * Call this before readFileSync to prevent symlink-following attacks.
@@ -113,5 +115,5 @@ export function readPlan(loc: SpecLocation): string {
 }
 
 export function slugLooksValid(slug: string): boolean {
-  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
+  return SLUG_RE.test(slug);
 }

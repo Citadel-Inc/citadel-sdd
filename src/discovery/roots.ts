@@ -1,6 +1,8 @@
 import { existsSync, lstatSync, readdirSync, statSync } from "node:fs";
 import { basename, isAbsolute, join, resolve } from "node:path";
 
+const SPECS_SUFFIX_RE = /\/specs\/?$/;
+
 export interface DiscoveredRoot {
   metaRoot: string;
   specsRoot: string;
@@ -24,7 +26,7 @@ const NOISE_DIRS = new Set([
 
 export function rootKey(specsRoot: string): string {
   const meta = isAbsolute(specsRoot) ? specsRoot : resolve(specsRoot);
-  const parent = meta.replace(/\/specs\/?$/, "");
+  const parent = meta.replace(SPECS_SUFFIX_RE, "");
   return basename(parent) || parent;
 }
 

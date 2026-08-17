@@ -8,6 +8,11 @@ import {
 import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from "./types.js";
 import { PRIORITIES } from "./types.js";
 
+const Q_HEADER_QUESTION_RE = /question/i;
+const Q_HEADER_DEFAULT_RE = /proposed\s*default/i;
+const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/;
+const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 interface BlockRange {
@@ -68,7 +73,7 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
       continue;
     }
     const line = raw.trim();
-    if (line.startsWith("|") && /question/i.test(line) && /proposed\s*default/i.test(line)) {
+    if (line.startsWith("|") && Q_HEADER_QUESTION_RE.test(line) && Q_HEADER_DEFAULT_RE.test(line)) {
       // Require the very next line to be a markdown table separator row,
       // so we don't mistake prose tables for Q-tables.
       const nextRaw = lines[i + 1];
@@ -93,7 +98,7 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
 }
 
 function isSeparatorRow(line: string): boolean {
-  return /^\|[\s:|-]+\|$/.test(line);
+  return SEPARATOR_ROW_RE.test(line);
 }
 
 export function spliceFrontmatter(
@@ -118,7 +123,6 @@ export function spliceFrontmatter(
     // from the frontmatter region only (between the title line and the next heading), then
     // insert the pipe block after the title.
     const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
-    const ReInline = /^([A-Za-z][A-Za-z _-]*?):\s+/;
     // Locate the frontmatter region: after the title line up to (not including) the next heading.
     let titleIdx = -1;
     for (let i = 0; i < lines.length; i++) {
@@ -144,7 +148,7 @@ export function spliceFrontmatter(
       if (idx <= titleIdx || idx >= fmEnd) {
         return true;
       }
-      const m = ReInline.exec(line);
+      const m = FIELD_PREFIX_RE.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
     return insertAfterTitle(stripped, renderFrontmatter(newFm));
@@ -161,7 +165,7 @@ export function spliceFrontmatter(
   const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]));
   let found = false;
   const newLines = lines.map((line) => {
-    const m = /^([A-Za-z][A-Za-z _-]*?):\s+/.exec(line);
+    const m = FIELD_PREFIX_RE.exec(line);
     if (!m) {
       return line;
     }

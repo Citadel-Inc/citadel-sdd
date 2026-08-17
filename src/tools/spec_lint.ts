@@ -16,6 +16,8 @@ import {
 } from "../spec/repo.js";
 import type { ToolContext } from "./types.js";
 
+const FIELD_PREFIX_RE = /^[A-Za-z][A-Za-z _-]*?:\s+/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 export interface SpecLintInput {
@@ -301,7 +303,7 @@ function detectFrontmatterFormat(text: string): "pipe-table" | "inline" {
     if (line.trim().startsWith("|")) {
       return "pipe-table";
     }
-    if (/^[A-Za-z][A-Za-z _-]*?:\s+/.test(line)) {
+    if (FIELD_PREFIX_RE.test(line)) {
       return "inline";
     }
   }

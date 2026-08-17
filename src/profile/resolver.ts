@@ -10,6 +10,8 @@ import {
   ProfileSchema,
 } from "./types.js";
 
+const PROFILE_NAME_RE = /^[a-z][a-z0-9_-]*$/;
+
 const PROFILE_DIR = dirname(fileURLToPath(import.meta.url));
 
 export type ResolveExtra = (name: string) => Record<string, unknown> | undefined;
@@ -24,7 +26,7 @@ function loadBuiltInFragment(name: string): ProfileFragment {
   }
   // Defense-in-depth: reject names that could escape the profile directory even
   // if the BUILT_IN_PROFILES set were somehow bypassed or misused downstream.
-  if (!/^[a-z][a-z0-9_-]*$/.test(name) || name.includes("..")) {
+  if (!PROFILE_NAME_RE.test(name) || name.includes("..")) {
     throw new Error(`profile_unknown: invalid profile name "${name}"`);
   }
   const raw = readFileSync(join(PROFILE_DIR, `${name}.yaml`), "utf8");

@@ -6,6 +6,8 @@ import { specTaskAdd } from "../../src/tools/spec_task_add.js";
 import type { ToolContext } from "../../src/tools/types.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
+const STATUS_LINE_RE = /^Status:/m;
+
 let temp: TempRepo | undefined;
 
 afterEach(() => {
@@ -68,6 +70,6 @@ describe("specTaskAdd", () => {
       "utf8",
     );
     expect(tasks).toContain("- [ ] Extra cleanup");
-    expect(tasks).toMatch(/^Status:/m);
+    expect(tasks).toMatch(STATUS_LINE_RE);
   });
 });

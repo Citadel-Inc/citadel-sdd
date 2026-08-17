@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { parseFrontmatter } from "../../src/spec/parse.js";
 import { spliceFrontmatter, spliceQTable } from "../../src/spec/writer.js";
 
+const STATUS_LINE_RE = /^Status:/m;
+
 const MINIMAL_FM = parseFrontmatter(
   "| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n| Owner | TestAgent |",
 );
@@ -60,7 +62,7 @@ describe("spliceFrontmatter — format conversion", () => {
     const raw = "# Tasks\n\nStatus: DRAFT 011900ZMAY26\nOwner: TestAgent\n\n## P0\n";
     const out = spliceFrontmatter(raw, MINIMAL_FM, "pipe-table");
     expect(out).toContain("| Status | DRAFT 011900ZMAY26 |");
-    expect(out).not.toMatch(/^Status:/m);
+    expect(out).not.toMatch(STATUS_LINE_RE);
     expect(out.indexOf("# Tasks")).toBeLessThan(out.indexOf("| Status |"));
     expect(out.indexOf("| Status |")).toBeLessThan(out.indexOf("## P0"));
   });
@@ -85,7 +87,7 @@ describe("spliceFrontmatter — inline→pipe strips only frontmatter region", (
     const out = spliceFrontmatter(raw, fm, "pipe-table");
     // The pipe-table should be inserted, inline keys stripped from frontmatter region
     expect(out).toContain("| Status | DRAFT 011900ZMAY26 |");
-    expect(out).not.toMatch(/^Status:/m);
+    expect(out).not.toMatch(STATUS_LINE_RE);
     // But body prose should survive
     expect(out).toContain("Note: this is prose that should not be stripped.");
   });

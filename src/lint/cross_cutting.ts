@@ -4,6 +4,12 @@ import { parseTasks } from "../spec/parse.js";
 import { listSpecs, type RepoContext, type SpecLocation, specsRoot } from "../spec/repo.js";
 import { BLOCKER_CATEGORIES, blockerLint, parseBlockers } from "./blockers.js";
 
+const ACTIVE_HEADING_RE = /^##\s+Active\b/i;
+const DONE_HEADING_RE = /^##\s+Done\b/i;
+const PARKED_HEADING_RE = /^##\s+Parked\b/i;
+const H2_RE = /^##\s+/;
+const SLUG_ROW_RE = /^\|\s*([a-z0-9][a-z0-9-]*)\s*\|/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 export interface CrossCuttingFinding {
@@ -62,26 +68,26 @@ function readIndex(
   let section: "active" | "done" | "parked" | null = null;
   for (const raw of lines) {
     const line = raw.trim();
-    if (/^##\s+Active\b/i.test(line)) {
+    if (ACTIVE_HEADING_RE.test(line)) {
       section = "active";
       continue;
     }
-    if (/^##\s+Done\b/i.test(line)) {
+    if (DONE_HEADING_RE.test(line)) {
       section = "done";
       continue;
     }
-    if (/^##\s+Parked\b/i.test(line)) {
+    if (PARKED_HEADING_RE.test(line)) {
       section = "parked";
       continue;
     }
-    if (/^##\s+/.test(line)) {
+    if (H2_RE.test(line)) {
       section = null;
       continue;
     }
     if (section === null) {
       continue;
     }
-    const m = /^\|\s*([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
+    const m = SLUG_ROW_RE.exec(line);
     if (m?.[1]) {
       out[section].add(m[1]);
     }

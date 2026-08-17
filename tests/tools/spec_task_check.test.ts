@@ -6,6 +6,8 @@ import { specTaskCheck } from "../../src/tools/spec_task_check.js";
 import type { ToolContext } from "../../src/tools/types.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
+const STATUS_LINE_RE = /^Status:/m;
+
 let temp: TempRepo | undefined;
 
 afterEach(() => {
@@ -111,7 +113,7 @@ describe("specTaskCheck", () => {
       "utf8",
     );
     expect(tasks).toContain("- [x] Land renderer");
-    expect(tasks).toMatch(/^Status:/m);
+    expect(tasks).toMatch(STATUS_LINE_RE);
   });
 
   test("output includes matched_text and matched_index", () => {

@@ -9,6 +9,8 @@ import {
 } from "../../src/spec/spec_readme.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
+const APPROVED_RATIFIED_ROW_RE = /^\| approved-ratified \|/;
+
 const FIXTURES_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "spec-fixtures");
 
 let temp: TempRepo | undefined;
@@ -66,7 +68,7 @@ describe("spec_readme", () => {
     expect(i).toBeGreaterThan(-1);
     const afterSep = activeChunk.slice(i + sep.length).trimStart();
     const firstLine = afterSep.split("\n")[0] ?? "";
-    expect(firstLine).toMatch(/^\| approved-ratified \|/);
+    expect(firstLine).toMatch(APPROVED_RATIFIED_ROW_RE);
   });
 
   test("upsert preserves trailing content after Parked table", () => {

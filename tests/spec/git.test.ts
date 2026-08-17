@@ -17,6 +17,8 @@ import {
 } from "../../src/spec/git.js";
 import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
 
+const SHA1_RE = /^[a-f0-9]{40}$/;
+
 let temp: TempRepo | undefined;
 
 afterEach(() => {
@@ -79,7 +81,7 @@ describe("gitAdd + gitCommit", () => {
     writeFileSync(join(temp.rootDir, "new.txt"), "hello");
     gitAdd({ rootDir: temp.rootDir }, ["new.txt"]);
     const sha = gitCommit({ rootDir: temp.rootDir }, "test commit");
-    expect(sha).toMatch(/^[a-f0-9]{40}$/);
+    expect(sha).toMatch(SHA1_RE);
     const r = gitWorkingTreeDirty({ rootDir: temp.rootDir });
     expect(r.dirty).toBe(false);
   });

@@ -12,6 +12,8 @@ import { spliceFrontmatter, spliceTasksFile } from "../spec/writer.js";
 import { runSpecTxn } from "./_txn.js";
 import type { ToolContext } from "./types.js";
 
+const SPEC_CLOSE_RE = /spec.?close/i;
+
 export interface SpecCloseInput {
   slug: string;
   summary?: string;
@@ -69,9 +71,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     if (allowOpen.has(p)) {
       continue;
     }
-    // Items matching /spec.?close/i are auto-checked during close — exclude from the guard.
+    // Items matching SPEC_CLOSE_RE are auto-checked during close — exclude from the guard.
     const open = tasksParsed.phases[p].filter(
-      (i) => !(i.checked || /spec.?close/i.test(i.text)),
+      (i) => !(i.checked || SPEC_CLOSE_RE.test(i.text)),
     ).length;
     if (open > 0) {
       throw new Error(`tasks_open: ${p} has ${open} unchecked item(s); use allow_open to bypass`);

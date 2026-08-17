@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { findTaskIndex, resolveTaskMatch, setTaskChecked } from "../../src/spec/mutate.js";
 import { parseTasks } from "../../src/spec/parse.js";
 
+const TASK_NOT_FOUND_RE = /task_not_found.*First task.*Second task/s;
+
 const TASKS = parseTasks(
   "# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011900ZMAY26 |\n\n## P0\n\n- [ ] First task\n- [ ] Second task\n\n## P1\n\n## P2\n",
 );
@@ -30,7 +32,7 @@ describe("task match + mutate", () => {
     expect(out.phases.P0[1]?.checked).toBe(false);
 
     expect(() => setTaskChecked(TASKS, { phase: "P0", match: "Ghost" }, true)).toThrow(
-      /task_not_found.*First task.*Second task/s,
+      TASK_NOT_FOUND_RE,
     );
     // Empty phase: error fires without preview tail.
     expect(() => setTaskChecked(TASKS, { phase: "P1", match: 1 }, true)).toThrow("task_not_found");

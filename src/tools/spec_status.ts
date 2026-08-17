@@ -8,6 +8,10 @@ import { locateSpec, type RepoContext } from "../spec/repo.js";
 import type { QTableRow, SpecState } from "../spec/types.js";
 import type { ToolContext } from "./types.js";
 
+const ACTIVE_HEADING_RE = /^##\s+Active\b/i;
+const H2_RE = /^##\s+/;
+const SLUG_ROW_RE = /^\|\s+([a-z0-9][a-z0-9-]*)\s*\|/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 export interface SpecStatusInput {
@@ -156,18 +160,18 @@ function readIndexedActive(rootDir: string, specDir: string): ReadonlySet<string
   let inActive = false;
   for (const raw of lines) {
     const line = raw.trim();
-    if (/^##\s+Active\b/i.test(line)) {
+    if (ACTIVE_HEADING_RE.test(line)) {
       inActive = true;
       continue;
     }
-    if (/^##\s+/.test(line)) {
+    if (H2_RE.test(line)) {
       inActive = false;
       continue;
     }
     if (!inActive) {
       continue;
     }
-    const m = /^\|\s+([a-z0-9][a-z0-9-]*)\s*\|/.exec(line);
+    const m = SLUG_ROW_RE.exec(line);
     if (m?.[1]) {
       out.add(m[1]);
     }

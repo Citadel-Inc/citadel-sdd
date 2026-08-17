@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 
+const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 export interface GitHistoryOptions {
@@ -94,7 +96,7 @@ export function recentCommits(opts: RecentCommitsOptions): string[] {
 }
 
 export function daysBetween(isoDate: string, today: Date): number | null {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(isoDate);
+  const m = ISO_DATE_RE.exec(isoDate);
   if (!m) {
     return null;
   }

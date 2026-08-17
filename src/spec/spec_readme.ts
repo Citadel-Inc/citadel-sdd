@@ -13,6 +13,9 @@ import {
 } from "./index_render.js";
 import { locateSpec, type RepoContext, type SpecLifecycleState } from "./repo.js";
 
+const SEPARATOR_ROW_RE = /^\|\s*-+/;
+const H2_RE = /^##\s/;
+
 const LINE_SPLIT_RE = /\r?\n/;
 
 export const README_UNPARSEABLE = "readme_unparseable";
@@ -39,7 +42,7 @@ function firstTableCell(line: string): string {
 }
 
 function isSeparatorLine(line: string): boolean {
-  return /^\|\s*-+/.test(line.trim());
+  return SEPARATOR_ROW_RE.test(line.trim());
 }
 
 interface ParsedSection {
@@ -78,7 +81,7 @@ function parseSectionTable(
       continue;
     }
     const t = line.trim();
-    if (/^##\s/.test(t)) {
+    if (H2_RE.test(t)) {
       throw new Error(
         `${README_UNPARSEABLE}: unexpected heading before ${sectionHeading} table header; run spec_index_rebuild`,
       );
@@ -108,7 +111,7 @@ function parseSectionTable(
     if (line === undefined) {
       break;
     }
-    if (/^##\s/.test(line.trim())) {
+    if (H2_RE.test(line.trim())) {
       break;
     }
     const t = line.trimStart();
