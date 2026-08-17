@@ -41,7 +41,7 @@ export function resolveWorkspaceRoot(
     return normalizeProjectRoot(explicit);
   }
 
-  const primary = fileRoots[0];
+  const [primary] = fileRoots;
   if (primary) {
     return normalizeProjectRoot(primary);
   }

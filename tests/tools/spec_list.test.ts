@@ -126,7 +126,7 @@ describe("specList", () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
     const out = specList({ slim: true }, ctx());
     expect(out).toHaveLength(1);
-    const row = out[0];
+    const [row] = out;
     expect(row).toBeDefined();
     if (!row) {
       return;

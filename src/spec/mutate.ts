@@ -119,7 +119,7 @@ export function setTaskChecked(tasks: ParsedTasks, m: TaskMatch, checked: boolea
         (preview ? `; available: [${preview}]` : ""),
     );
   }
-  const phase = m.phase;
+  const { phase } = m;
   const items = tasks.phases[phase].slice();
   const target = items[resolved.idx];
   if (!target) {

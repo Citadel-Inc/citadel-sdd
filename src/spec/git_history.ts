@@ -61,7 +61,7 @@ export function lastTouchedBulk(opts: GitHistoryOptions): Map<string, string> {
       continue;
     }
     const rest = raw.slice(prefix.length);
-    const name = rest.split("/", 1)[0];
+    const [name] = rest.split("/", 1);
     if (name && !result.has(name)) {
       result.set(name, curDate);
     }

@@ -182,8 +182,7 @@ export function parseFrontmatter(md: string): Frontmatter {
     if (row.length !== 2) {
       continue;
     }
-    const key = row[0];
-    const value = row[1];
+    const [key, value] = row;
     if (key === undefined || value === undefined) {
       continue;
     }
@@ -230,10 +229,7 @@ export function parseQTable(md: string): QTableRow[] {
     if (row.length !== 4) {
       continue;
     }
-    const id = row[0];
-    const question = row[1];
-    const proposedDefault = row[2];
-    const ratified = row[3];
+    const [id, question, proposedDefault, ratified] = row;
     if (
       id === undefined ||
       question === undefined ||
@@ -259,7 +255,7 @@ export function parseTasks(md: string): ParsedTasks {
     const line = raw;
     const phaseMatch = PHASE_HEADING_RE.exec(line);
     if (phaseMatch) {
-      const tag = phaseMatch[1];
+      const [, tag] = phaseMatch;
       if (tag === "P0" || tag === "P1" || tag === "P2") {
         current = tag;
       } else {
@@ -276,8 +272,7 @@ export function parseTasks(md: string): ParsedTasks {
     }
     const itemMatch = TASK_ITEM_RE.exec(line);
     if (itemMatch) {
-      const mark = itemMatch[1];
-      const text = itemMatch[2];
+      const [, mark, text] = itemMatch;
       if (mark === undefined || text === undefined) {
         continue;
       }
