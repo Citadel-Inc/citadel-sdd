@@ -24,13 +24,13 @@ function insertAfterTitle(lines: readonly string[], block: string): string {
   // Locate insertion point: after any leading blanks + the title line + its trailing blanks.
   let i = 0;
   while (i < lines.length && (lines[i] ?? "").trim() === "") {
-    i++;
+    i += 1;
   }
   if (i < lines.length) {
-    i++; // advance past title line
+    i += 1; // advance past title line
   }
   while (i < lines.length && (lines[i] ?? "").trim() === "") {
-    i++;
+    i += 1;
   }
   return [...lines.slice(0, i), ...block.split("\n"), "", ...lines.slice(i)]
     .join("\n")
@@ -39,7 +39,7 @@ function insertAfterTitle(lines: readonly string[], block: string): string {
 
 function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | null {
   let start = -1;
-  for (let i = from; i < lines.length; i++) {
+  for (let i = from; i < lines.length; i += 1) {
     const line = lines[i];
     if (line === undefined) {
       continue;
@@ -61,13 +61,13 @@ function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | nu
     if (!line.trim().startsWith("|")) {
       break;
     }
-    end++;
+    end += 1;
   }
   return { start, end };
 }
 
 function findQTableBlock(lines: readonly string[]): BlockRange | null {
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const raw = lines[i];
     if (raw === undefined) {
       continue;
@@ -89,7 +89,7 @@ function findQTableBlock(lines: readonly string[]): BlockRange | null {
         if (!cur.trim().startsWith("|")) {
           break;
         }
-        end++;
+        end += 1;
       }
       return { start: i, end };
     }
@@ -125,7 +125,7 @@ export function spliceFrontmatter(
     const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
     // Locate the frontmatter region: after the title line up to (not including) the next heading.
     let titleIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
+    for (let i = 0; i < lines.length; i += 1) {
       const l = lines[i] ?? "";
       if (l.startsWith("# ") || l.startsWith("## ")) {
         titleIdx = i;
@@ -135,7 +135,7 @@ export function spliceFrontmatter(
     // The frontmatter region is strictly AFTER the title line.
     let fmEnd = lines.length;
     if (titleIdx !== -1) {
-      for (let i = titleIdx + 1; i < lines.length; i++) {
+      for (let i = titleIdx + 1; i < lines.length; i += 1) {
         const l = lines[i] ?? "";
         if (l.startsWith("# ") || l.startsWith("## ")) {
           fmEnd = i;
@@ -206,7 +206,7 @@ export function spliceQTable(rawMd: string, newRows: readonly QTableRow[]): stri
 function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRange | null {
   const heading = `## ${priority}`;
   let start = -1;
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     if (line === undefined) {
       continue;
@@ -231,7 +231,7 @@ function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRang
     if (line.startsWith("## ")) {
       break;
     }
-    end++;
+    end += 1;
   }
   return { start, end };
 }

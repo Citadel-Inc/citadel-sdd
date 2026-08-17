@@ -30,7 +30,7 @@ interface PipeTableExtraction {
 }
 
 function findFirstPipeLine(lines: readonly string[], from = 0): number {
-  for (let i = from; i < lines.length; i++) {
+  for (let i = from; i < lines.length; i += 1) {
     const line = lines[i];
     if (line === undefined) {
       continue;
@@ -50,13 +50,13 @@ function splitPipeRow(line: string): string[] {
   const inner = line.replace(LEADING_PIPE_RE, "").replace(TRAILING_PIPE_RE, "");
   const cells: string[] = [];
   let cell = "";
-  for (let i = 0; i < inner.length; i++) {
+  for (let i = 0; i < inner.length; i += 1) {
     const char = inner[i];
     if (char === "\\") {
       const next = inner[i + 1];
       if (next === "\\" || next === "|") {
         cell += next;
-        i++;
+        i += 1;
       } else {
         cell += char;
       }
@@ -84,11 +84,11 @@ function extractPipeTable(lines: readonly string[], startIdx: number): PipeTable
       break;
     }
     if (isSeparatorRow(line)) {
-      i++;
+      i += 1;
       continue;
     }
     rows.push(splitPipeRow(line));
-    i++;
+    i += 1;
   }
   return { rows, startIdx, endIdx: i };
 }
@@ -204,7 +204,7 @@ export function parseFrontmatter(md: string): Frontmatter {
 export function parseQTable(md: string): QTableRow[] {
   const lines = md.split(LINE_SPLIT_RE);
   let headerIdx = -1;
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const raw = lines[i];
     if (raw === undefined) {
       continue;

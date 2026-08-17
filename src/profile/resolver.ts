@@ -129,7 +129,7 @@ export function resolveProfile(
   }
 
   let merged: Record<string, unknown> = {};
-  for (let i = chain.length - 1; i >= 0; i--) {
+  for (let i = chain.length - 1; i >= 0; i -= 1) {
     const fragmentRecord = chain[i] as Record<string, unknown>;
     merged = deepMerge(merged, fragmentRecord);
   }

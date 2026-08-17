@@ -44,7 +44,7 @@ export function scanStrictFile(filename: string, text: string): StrictFinding[] 
     }
   }
 
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i] ?? "";
     const lineNum = i + 1;
     if (RE_STRICT_STAR_BULLET.test(line)) {
@@ -108,7 +108,7 @@ export function scanStrictFile(filename: string, text: string): StrictFinding[] 
 export function scanPriorityInNontasks(filename: string, text: string): StrictFinding[] {
   const findings: StrictFinding[] = [];
   const lines = text.split(LINE_SPLIT_RE);
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i] ?? "";
     const m = RE_PRIORITY_HEADING.exec(line);
     if (m) {

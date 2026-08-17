@@ -84,7 +84,7 @@ export function findTaskIndex(tasks: ParsedTasks, m: TaskMatch): number {
   }
   const needle = m.match;
   const matches: number[] = [];
-  for (let i = 0; i < items.length; i++) {
+  for (let i = 0; i < items.length; i += 1) {
     const item = items[i];
     if (item?.text.startsWith(needle)) {
       matches.push(i);

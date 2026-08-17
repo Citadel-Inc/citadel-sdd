@@ -99,7 +99,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
       if (!item.checked) {
         updatedTasks = setTaskChecked(updatedTasks, { phase: p, match: i + 1 }, true);
       }
-      i++;
+      i += 1;
     }
   }
 

@@ -75,7 +75,7 @@ function parseSectionTable(
   }
 
   let headerIdx = -1;
-  for (let i = start + 1; i < nextSectionStart; i++) {
+  for (let i = start + 1; i < nextSectionStart; i += 1) {
     const line = lines[i];
     if (line === undefined) {
       continue;
@@ -118,7 +118,7 @@ function parseSectionTable(
     if (!t.startsWith("|")) {
       break;
     }
-    j++;
+    j += 1;
   }
 
   return { start, dataStart, dataEndExclusive: j, nextSectionStart };

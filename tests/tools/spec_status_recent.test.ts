@@ -23,7 +23,7 @@ function ctx(): ToolContext {
 
 function touchAndCommit(rootDir: string, n: number) {
   const path = join(rootDir, "specs", "active", "in-progress-midway", "tasks.md");
-  for (let i = 0; i < n; i++) {
+  for (let i = 0; i < n; i += 1) {
     writeFileSync(path, `touch ${i}\n`, { flag: "a" });
     execFileSync("git", ["-C", rootDir, "add", "specs/active/in-progress-midway/tasks.md"], {
       stdio: "ignore",

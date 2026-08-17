@@ -46,7 +46,7 @@ function injectBlockingSection(rawMd: string, reason: string): string {
   const stripped = removeBlockingSection(rawMd);
   const lines = stripped.split(LINE_SPLIT_RE);
   let insertAt = lines.length;
-  for (let i = 0; i < lines.length; i++) {
+  for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     if (line === undefined) {
       continue;
