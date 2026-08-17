@@ -94,7 +94,7 @@ export function spliceFrontmatter(
     // from the frontmatter region only (between the title line and the next heading), then
     // insert the pipe block after the title.
     const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
-    const RE_INLINE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
+    const ReInline = /^([A-Za-z][A-Za-z _-]*?):\s+/;
     // Locate the frontmatter region: after the title line up to (not including) the next heading.
     let titleIdx = -1;
     for (let i = 0; i < lines.length; i++) {
@@ -118,7 +118,7 @@ export function spliceFrontmatter(
     const stripped = lines.filter((line, idx) => {
       // Only strip inline-key lines that fall within the frontmatter region.
       if (idx <= titleIdx || idx >= fmEnd) return true;
-      const m = RE_INLINE.exec(line);
+      const m = ReInline.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
     return insertAfterTitle(stripped, renderFrontmatter(newFm));

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { execFileSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
+import process from "node:process";
 import { resolveBuiltIn } from "../../src/profile/resolver.js";
 import { specLint } from "../../src/tools/spec_lint.js";
 import type { ToolContext } from "../../src/tools/types.js";
@@ -36,9 +37,9 @@ function backdateCommit(rootDir: string, daysAgo: number) {
       "-C",
       rootDir,
       "-c",
-      `user.name=Test`,
+      "user.name=Test",
       "-c",
-      `user.email=t@e`,
+      "user.email=t@e",
       "commit",
       "-m",
       "backdated touch",

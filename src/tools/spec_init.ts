@@ -53,7 +53,7 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
   const config = { extends: input.profile, ...(input.overrides ?? {}) };
   const yamlText = stringifyYaml(config);
 
-  const created_files: string[] = [];
+  const createdFiles: string[] = [];
   const configPath = join(root, "config.yaml");
   const activeKeep = join(root, "active", ".gitkeep");
   const doneKeep = join(root, "done", ".gitkeep");
@@ -82,48 +82,48 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
     `${repo.specDir}/parked/.gitkeep`,
   ];
 
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    mkdirSync(root, { recursive: true });
+    ensureSpecBucketDirs(repo);
+    writeFileSync(configPath, yamlText);
+    createdFiles.push(`${repo.specDir}/config.yaml`);
+    writeFileSync(activeKeep, "");
+    createdFiles.push(`${repo.specDir}/active/.gitkeep`);
+    writeFileSync(doneKeep, "");
+    createdFiles.push(`${repo.specDir}/done/.gitkeep`);
+    writeFileSync(parkedKeep, "");
+    createdFiles.push(`${repo.specDir}/parked/.gitkeep`);
+    writeSpecReadmeFull(repo);
+    createdFiles.push(`${repo.specDir}/README.md`);
+  } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [] }, () => {
       mkdirSync(root, { recursive: true });
       ensureSpecBucketDirs(repo);
       writeFileSync(configPath, yamlText);
-      created_files.push(`${repo.specDir}/config.yaml`);
+      createdFiles.push(`${repo.specDir}/config.yaml`);
       writeFileSync(activeKeep, "");
-      created_files.push(`${repo.specDir}/active/.gitkeep`);
+      createdFiles.push(`${repo.specDir}/active/.gitkeep`);
       writeFileSync(doneKeep, "");
-      created_files.push(`${repo.specDir}/done/.gitkeep`);
+      createdFiles.push(`${repo.specDir}/done/.gitkeep`);
       writeFileSync(parkedKeep, "");
-      created_files.push(`${repo.specDir}/parked/.gitkeep`);
+      createdFiles.push(`${repo.specDir}/parked/.gitkeep`);
       writeSpecReadmeFull(repo);
-      created_files.push(`${repo.specDir}/README.md`);
+      createdFiles.push(`${repo.specDir}/README.md`);
       const subject =
         ctx.profile.commit_style === "conventional"
           ? `chore(spec): init SDD scaffold (profile: ${input.profile})`
           : `Initialize SDD scaffold (profile: ${input.profile})`;
-      gitAdd({ rootDir: ctx.rootDir }, created_files);
-      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      gitAdd({ rootDir: ctx.rootDir }, createdFiles);
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
     });
-  } else {
-    mkdirSync(root, { recursive: true });
-    ensureSpecBucketDirs(repo);
-    writeFileSync(configPath, yamlText);
-    created_files.push(`${repo.specDir}/config.yaml`);
-    writeFileSync(activeKeep, "");
-    created_files.push(`${repo.specDir}/active/.gitkeep`);
-    writeFileSync(doneKeep, "");
-    created_files.push(`${repo.specDir}/done/.gitkeep`);
-    writeFileSync(parkedKeep, "");
-    created_files.push(`${repo.specDir}/parked/.gitkeep`);
-    writeSpecReadmeFull(repo);
-    created_files.push(`${repo.specDir}/README.md`);
   }
 
   return {
-    created_files,
+    created_files: createdFiles,
     profile_resolved: input.profile,
-    commit_sha,
+    commit_sha: commitSha,
     dryRun: false,
   };
 }

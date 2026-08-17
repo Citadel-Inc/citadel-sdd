@@ -119,21 +119,7 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
   const findings: SpecLintFinding[] = [];
   const noStrict = input.no_strict === true;
 
-  if (input.slug !== undefined) {
-    const loc = locateSpec(repo, input.slug);
-    if (!loc) {
-      findings.push({
-        severity: "error",
-        code: "spec_not_found",
-        message: `spec "${input.slug}" not found in active/, done/, or parked/`,
-        slug: input.slug,
-      });
-    } else {
-      if (loc.state === "active" || loc.state === "parked") findings.push(...lintFilePresence(loc));
-      findings.push(...lintSingle(loc, ctx));
-      findings.push(...lintStrict(loc, ctx, noStrict));
-    }
-  } else {
+  if (input.slug === undefined) {
     for (const section of treeScanDirs(input)) {
       for (const loc of listSpecs(repo, section)) {
         if (loc.state === "active" || loc.state === "parked")
@@ -154,6 +140,20 @@ function lintOneRoot(repo: RepoContext, ctx: ToolContext, input: SpecLintInput):
     if (effectiveStaleDays !== undefined && effectiveStaleDays >= 0) {
       const today = ctx.clock ? ctx.clock() : new Date();
       findings.push(...lintStaleDays(repo, effectiveStaleDays, today));
+    }
+  } else {
+    const loc = locateSpec(repo, input.slug);
+    if (loc) {
+      if (loc.state === "active" || loc.state === "parked") findings.push(...lintFilePresence(loc));
+      findings.push(...lintSingle(loc, ctx));
+      findings.push(...lintStrict(loc, ctx, noStrict));
+    } else {
+      findings.push({
+        severity: "error",
+        code: "spec_not_found",
+        message: `spec "${input.slug}" not found in active/, done/, or parked/`,
+        slug: input.slug,
+      });
     }
   }
   return findings;
@@ -409,7 +409,7 @@ export function specLint(input: SpecLintInput, ctx: ToolContext): SpecLintOutput
 }
 
 function computeExit(findings: ReadonlyArray<SpecLintFinding>, failOn: Set<string> | null): number {
-  let exit_code = findings.some((f) => f.severity === "error") ? 1 : 0;
+  let exitCode = findings.some((f) => f.severity === "error") ? 1 : 0;
   if (failOn !== null) {
     const triggered = findings.some(
       (f) =>
@@ -417,9 +417,9 @@ function computeExit(findings: ReadonlyArray<SpecLintFinding>, failOn: Set<strin
         (failOn.has("error") && f.severity === "error") ||
         (failOn.has("warning") && f.severity === "warning"),
     );
-    exit_code = triggered ? 1 : 0;
+    exitCode = triggered ? 1 : 0;
   }
-  return exit_code;
+  return exitCode;
 }
 
 export type { StrictCategory };

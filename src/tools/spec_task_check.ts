@@ -105,9 +105,11 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
     };
   }
 
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    writeFileSync(loc.tasksMd, newRaw);
+  } else {
     runSpecTxn(
       ctx.rootDir,
       { scopePaths: [`${loc.relDir}/tasks.md`], writeTargets: [loc.tasksMd] },
@@ -118,14 +120,12 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
         const phases = [...new Set(results.map((r) => r.phase))].join("+");
         const subject =
           ctx.profile.commit_style === "conventional"
-            ? `spec(${loc.slug}): ${verb} ${count} ${phases} task${count !== 1 ? "s" : ""}`
-            : `${verb} ${count} ${phases} task${count !== 1 ? "s" : ""} in ${loc.slug}`;
+            ? `spec(${loc.slug}): ${verb} ${count} ${phases} task${count === 1 ? "" : "s"}`
+            : `${verb} ${count} ${phases} task${count === 1 ? "" : "s"} in ${loc.slug}`;
         gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
       },
     );
-  } else {
-    writeFileSync(loc.tasksMd, newRaw);
   }
 
   return {
@@ -135,7 +135,7 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
     matched_index: first.matched_index,
     before: first.before,
     after: first.after,
-    commit_sha,
+    commit_sha: commitSha,
     dryRun: false,
   };
 }

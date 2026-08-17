@@ -119,9 +119,13 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     `${loc.relDir}/tasks.md`,
     `${repo.specDir}/README.md`,
   ];
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
+  } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
       writeFileSync(loc.specMd, newSpecRaw);
       writeFileSync(loc.tasksMd, newTasksRaw);
@@ -136,12 +140,8 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
         `${loc.relDir}/tasks.md`,
         readmeRel,
       ]);
-      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
     });
-  } else {
-    writeFileSync(loc.specMd, newSpecRaw);
-    writeFileSync(loc.tasksMd, newTasksRaw);
-    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return {
@@ -149,7 +149,7 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     before,
     after,
     ratified_q_count: ratifiedCount,
-    commit_sha,
+    commit_sha: commitSha,
     dryRun: false,
   };
 }

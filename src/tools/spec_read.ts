@@ -29,27 +29,27 @@ export function specRead(input: SpecReadInput, ctx: ToolContext): SpecReadOutput
   const parts = new Set<SpecReadPart>(input.parts ?? ["spec", "plan", "tasks"]);
   const specMd = readFileSync(loc.specMd, "utf8");
 
-  let plan_md: string | null = null;
+  let planMd: string | null = null;
   if (parts.has("plan")) {
     if (!existsSync(loc.planMd)) {
       throw new Error(`file_not_found: plan.md missing for spec ${loc.slug} at ${loc.planMd}`);
     }
-    plan_md = readFileSync(loc.planMd, "utf8");
+    planMd = readFileSync(loc.planMd, "utf8");
   }
 
-  let tasks_md: string | null = null;
+  let tasksMd: string | null = null;
   if (parts.has("tasks")) {
     if (!existsSync(loc.tasksMd)) {
       throw new Error(`file_not_found: tasks.md missing for spec ${loc.slug} at ${loc.tasksMd}`);
     }
-    tasks_md = readFileSync(loc.tasksMd, "utf8");
+    tasksMd = readFileSync(loc.tasksMd, "utf8");
   }
 
   return {
     slug: loc.slug,
     state: loc.state,
     spec_md: parts.has("spec") ? specMd : null,
-    plan_md,
-    tasks_md,
+    plan_md: planMd,
+    tasks_md: tasksMd,
   };
 }

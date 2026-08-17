@@ -90,7 +90,7 @@ export function specList(
     if (input.mine === true && ctx.principal !== undefined && owner !== ctx.principal) continue;
 
     const approvedField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "approved");
-    const approved_dtg = approvedField?.[1] && approvedField[1] !== "TBD" ? approvedField[1] : null;
+    const approvedDtg = approvedField?.[1] && approvedField[1] !== "TBD" ? approvedField[1] : null;
 
     const ratified =
       spec.qTable.length > 0 && spec.qTable.every((r) => r.ratified.toLowerCase() !== "tbd");
@@ -110,7 +110,7 @@ export function specList(
       state: spec.frontmatter.status.state,
       dtg: spec.frontmatter.status.dtg,
       owner,
-      approved_dtg,
+      approved_dtg: approvedDtg,
       ratified,
       p0_remaining: remaining("P0"),
       p1_remaining: remaining("P1"),
@@ -135,7 +135,7 @@ export function specList(
   const offset = Math.max(0, input.offset ?? 0);
   const limit = input.limit !== undefined && input.limit >= 0 ? input.limit : undefined;
   const sliced =
-    limit !== undefined ? entries.slice(offset, offset + limit) : entries.slice(offset);
+    limit === undefined ? entries.slice(offset) : entries.slice(offset, offset + limit);
 
   if (input.slim === true) {
     return sliced.map(

@@ -36,27 +36,27 @@ export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatify
   const spec = parseSpec(raw);
 
   const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
-  const default_disposition = input.default_disposition ?? `Ratified ${dtg}`;
+  const defaultDisposition = input.default_disposition ?? `Ratified ${dtg}`;
 
   const updated = ratifySpec(spec, {
     decisions: input.decisions,
-    default_disposition,
+    default_disposition: defaultDisposition,
     dtg,
   });
 
-  const ratified_q_count = updated.qTable.filter(
+  const ratifiedQCount = updated.qTable.filter(
     (r, i) => r.ratified !== spec.qTable[i]?.ratified,
   ).length;
 
   const newRaw = spliceQTable(raw, updated.qTable);
 
   if (input.dryRun === true) {
-    return { slug: loc.slug, ratified_q_count, commit_sha: null, dryRun: true };
+    return { slug: loc.slug, ratified_q_count: ratifiedQCount, commit_sha: null, dryRun: true };
   }
 
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false && ratified_q_count > 0) {
+  if (input.commit !== false && ratifiedQCount > 0) {
     runSpecTxn(
       ctx.rootDir,
       { scopePaths: [`${loc.relDir}/spec.md`], writeTargets: [loc.specMd] },
@@ -64,15 +64,15 @@ export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatify
         writeFileSync(loc.specMd, newRaw);
         const subject =
           ctx.profile.commit_style === "conventional"
-            ? `spec(${loc.slug}): ratify ${ratified_q_count} Q-row(s)`
-            : `Ratify ${ratified_q_count} Q-rows in ${loc.slug}`;
+            ? `spec(${loc.slug}): ratify ${ratifiedQCount} Q-row(s)`
+            : `Ratify ${ratifiedQCount} Q-rows in ${loc.slug}`;
         gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`]);
-        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
       },
     );
   } else {
     writeFileSync(loc.specMd, newRaw);
   }
 
-  return { slug: loc.slug, ratified_q_count, commit_sha, dryRun: false };
+  return { slug: loc.slug, ratified_q_count: ratifiedQCount, commit_sha: commitSha, dryRun: false };
 }

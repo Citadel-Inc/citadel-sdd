@@ -90,8 +90,8 @@ export function parseStatusValue(raw: string): StatusValue {
     throw new Error(`status_unparseable: "${raw}"`);
   }
   const stateRaw = match[1] ?? "";
-  const STATE_ALIASES: Record<string, SpecState> = { CLOSED: "DONE" };
-  const aliased = STATE_ALIASES[stateRaw];
+  const StateAliases: Record<string, SpecState> = { CLOSED: "DONE" };
+  const aliased = StateAliases[stateRaw];
   const state = (aliased ?? stateRaw) as SpecState;
   if (!SPEC_STATES.has(state)) {
     throw new Error(`state_unknown: "${stateRaw}" is not a recognised spec state`);

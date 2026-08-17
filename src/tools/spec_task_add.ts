@@ -36,16 +36,18 @@ export function specTaskAdd(input: SpecTaskAddInput, ctx: ToolContext): SpecTask
   const raw = readFileSync(loc.tasksMd, "utf8");
   const tasks = parseTasks(raw);
   const updated = addTaskItem(tasks, input.phase, input.text, input.blocker);
-  const added_index = updated.phases[input.phase].length;
+  const addedIndex = updated.phases[input.phase].length;
   const newRaw = spliceTasksFile(raw, updated, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
-    return { slug: loc.slug, added_index, commit_sha: null, dryRun: true };
+    return { slug: loc.slug, added_index: addedIndex, commit_sha: null, dryRun: true };
   }
 
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    writeFileSync(loc.tasksMd, newRaw);
+  } else {
     runSpecTxn(
       ctx.rootDir,
       { scopePaths: [`${loc.relDir}/tasks.md`], writeTargets: [loc.tasksMd] },
@@ -56,12 +58,10 @@ export function specTaskAdd(input: SpecTaskAddInput, ctx: ToolContext): SpecTask
             ? `spec(${loc.slug}): add ${input.phase} task`
             : `Add ${input.phase} task to ${loc.slug}`;
         gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/tasks.md`]);
-        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
       },
     );
-  } else {
-    writeFileSync(loc.tasksMd, newRaw);
   }
 
-  return { slug: loc.slug, added_index, commit_sha, dryRun: false };
+  return { slug: loc.slug, added_index: addedIndex, commit_sha: commitSha, dryRun: false };
 }

@@ -67,36 +67,36 @@ export function specIndexRebuild(
 
   mkdirSync(specsRoot(repo), { recursive: true });
 
-  let commit_sha: string | null = null;
-  let scaffold_repairs: string[] = [];
+  let commitSha: string | null = null;
+  let scaffoldRepairs: string[] = [];
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    scaffoldRepairs = ensureSpecBucketDirs(repo);
+    writeSpecReadmeFull(repo);
+  } else {
     runSpecTxn(ctx.rootDir, { scopePaths: [`${repo.specDir}/README.md`], writeTargets: [] }, () => {
-      scaffold_repairs = ensureSpecBucketDirs(repo);
+      scaffoldRepairs = ensureSpecBucketDirs(repo);
       writeSpecReadmeFull(repo);
       const subject =
         ctx.profile.commit_style === "conventional"
           ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
-          : `Rebuild specs/README.md`;
-      const toStage = [`${repo.specDir}/README.md`, ...scaffold_repairs];
+          : "Rebuild specs/README.md";
+      const toStage = [`${repo.specDir}/README.md`, ...scaffoldRepairs];
       gitAdd({ rootDir: ctx.rootDir }, toStage);
       // Skip commit if README content is identical to HEAD (nothing to commit).
       if (hasStagedChanges(ctx.rootDir, toStage)) {
-        commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
       }
     });
-  } else {
-    scaffold_repairs = ensureSpecBucketDirs(repo);
-    writeSpecReadmeFull(repo);
   }
 
   return {
     active_count: active.length,
     done_count: done.length,
     parked_count: parked.length,
-    commit_sha,
+    commit_sha: commitSha,
     dryRun: false,
     rendered,
-    scaffold_repairs,
+    scaffold_repairs: scaffoldRepairs,
   };
 }

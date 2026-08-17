@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import process from "node:process";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { RootsListChangedNotificationSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -52,7 +53,7 @@ async function main(): Promise<void> {
     try {
       profile = loadConfig({ rootDir });
     } catch (e) {
-      if (!(e instanceof Error) || !e.message.startsWith("config_missing:")) {
+      if (!(e instanceof Error && e.message.startsWith("config_missing:"))) {
         throw e;
       }
       profile = resolveBuiltIn("default");

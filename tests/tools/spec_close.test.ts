@@ -167,7 +167,7 @@ describe("specClose", () => {
 
     writeFileSync(
       join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
-      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] real work\n- [ ] E4. Spec close.\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+      "# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] real work\n- [ ] E4. Spec close.\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n",
     );
     execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
 
@@ -196,7 +196,7 @@ describe("specClose", () => {
 
     writeFileSync(
       join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
-      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+      "# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n",
     );
     execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
 
@@ -217,7 +217,7 @@ describe("specClose", () => {
 
     writeFileSync(
       join(temp.rootDir, "specs", "active", "in-progress-midway", "tasks.md"),
-      `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n`,
+      "# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n",
     );
     execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`);
     const out = specClose({ slug: "in-progress-midway", summary: "shipped", push: true }, ctx());

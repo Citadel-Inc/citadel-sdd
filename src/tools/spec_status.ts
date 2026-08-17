@@ -50,7 +50,7 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
   const approvedField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "approved");
 
-  const approved_dtg = approvedField?.[1] && approvedField[1] !== "TBD" ? approvedField[1] : null;
+  const approvedDtg = approvedField?.[1] && approvedField[1] !== "TBD" ? approvedField[1] : null;
 
   const ratified =
     spec.qTable.length > 0 && spec.qTable.every((r) => r.ratified.toLowerCase() !== "tbd");
@@ -71,7 +71,7 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     state: spec.frontmatter.status.state,
     dtg: spec.frontmatter.status.dtg,
     owner: ownerField?.[1] ?? "",
-    approved_dtg,
+    approved_dtg: approvedDtg,
     ratified,
     q_table: spec.qTable,
     task_counts: { P0: count("P0"), P1: count("P1"), P2: count("P2") },

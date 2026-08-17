@@ -41,9 +41,9 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
   const repo = repoCtx(ctx);
   const inferred = inferProfile(repo.rootDir, repo.specDir);
 
-  let scaffold_repairs: string[] = [];
+  let scaffoldRepairs: string[] = [];
   if (existsSync(specsRoot(repo))) {
-    scaffold_repairs = ensureSpecBucketDirs(repo);
+    scaffoldRepairs = ensureSpecBucketDirs(repo);
   }
 
   const lint = specLint({ include_done: true, include_parked: true }, ctx);
@@ -69,9 +69,9 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
     );
   }
 
-  if (scaffold_repairs.length > 0) {
+  if (scaffoldRepairs.length > 0) {
     recommendations.push(
-      `Repaired missing spec bucket paths: ${scaffold_repairs.join(", ")}. Commit if you want them tracked.`,
+      `Repaired missing spec bucket paths: ${scaffoldRepairs.join(", ")}. Commit if you want them tracked.`,
     );
   }
 
@@ -82,6 +82,6 @@ export function sddDoctor(_input: SddDoctorInput, ctx: ToolContext): SddDoctorOu
       (f) => f.severity === "error" || f.code === "status_drift" || f.code === "path_mismatch",
     ),
     recommendations,
-    scaffold_repairs,
+    scaffold_repairs: scaffoldRepairs,
   };
 }

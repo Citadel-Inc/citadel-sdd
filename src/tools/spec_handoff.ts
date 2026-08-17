@@ -45,9 +45,9 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   }
 
   const beforeOwnerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
-  const before_owner = beforeOwnerField?.[1] ?? "";
+  const beforeOwner = beforeOwnerField?.[1] ?? "";
 
-  const new_owner = (() => {
+  const newOwner = (() => {
     if (input.new_owner && input.new_owner.trim().length > 0) return input.new_owner.trim();
     if (ctx.profile.default_owner.length > 0) return ctx.profile.default_owner;
     throw new Error(
@@ -55,43 +55,43 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
     );
   })();
 
-  const updated = setOwner(spec, new_owner);
+  const updated = setOwner(spec, newOwner);
   const newRaw = spliceFrontmatter(raw, updated.frontmatter, ctx.profile.frontmatter_format);
 
   if (input.dryRun === true) {
     return {
       slug: loc.slug,
-      before_owner,
-      after_owner: new_owner,
+      before_owner: beforeOwner,
+      after_owner: newOwner,
       commit_sha: null,
       dryRun: true,
     };
   }
 
   const scopePaths = [`${loc.relDir}/spec.md`, `${repo.specDir}/README.md`];
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    writeFileSync(loc.specMd, newRaw);
+    upsertSpecReadmeRow(repo, loc.slug);
+  } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd] }, () => {
       writeFileSync(loc.specMd, newRaw);
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
       const subject =
         ctx.profile.commit_style === "conventional"
-          ? `spec(${loc.slug}): handoff to ${new_owner}${input.note ? ` — ${input.note}` : ""}`
-          : `Handoff ${loc.slug} to ${new_owner}`;
+          ? `spec(${loc.slug}): handoff to ${newOwner}${input.note ? ` — ${input.note}` : ""}`
+          : `Handoff ${loc.slug} to ${newOwner}`;
       gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel]);
-      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
     });
-  } else {
-    writeFileSync(loc.specMd, newRaw);
-    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   return {
     slug: loc.slug,
-    before_owner,
-    after_owner: new_owner,
-    commit_sha,
+    before_owner: beforeOwner,
+    after_owner: newOwner,
+    commit_sha: commitSha,
     dryRun: false,
   };
 }

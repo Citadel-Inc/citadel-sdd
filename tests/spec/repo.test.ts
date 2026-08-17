@@ -166,7 +166,7 @@ describe("readSpec / readTasks / readPlan — symlink rejection", () => {
     const locSrc = locateSpec(ctx(), "approved-ratified");
     expect(locDst).not.toBeNull();
     expect(locSrc).not.toBeNull();
-    if (!locDst || !locSrc) return;
+    if (!(locDst && locSrc)) return;
     // Replace spec.md with a symlink pointing to another spec's file
     unlinkSync(locDst.specMd);
     symlinkSync(locSrc.specMd, locDst.specMd);

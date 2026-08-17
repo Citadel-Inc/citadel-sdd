@@ -93,7 +93,7 @@ function buildEntry(
   const body = cur.bodyLines.join("\n").trim();
   const isStub = body.length === 0 || RE_RESOLVED.test(body);
   const dtgDate = parseDtgUtc(cur.dtg);
-  const daysSinceUtc = dtgDate !== null ? daysSince(dtgDate, now) : null;
+  const daysSinceUtc = dtgDate === null ? null : daysSince(dtgDate, now);
   const referencedSpecs = extractReferencedSpecs(body);
   return { dtg: cur.dtg, title: cur.title, body, isStub, daysSinceUtc, referencedSpecs };
 }

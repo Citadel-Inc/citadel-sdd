@@ -3,7 +3,7 @@ import { findTaskIndex, resolveTaskMatch, setTaskChecked } from "../../src/spec/
 import { parseTasks } from "../../src/spec/parse.js";
 
 const TASKS = parseTasks(
-  `# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011900ZMAY26 |\n\n## P0\n\n- [ ] First task\n- [ ] Second task\n\n## P1\n\n## P2\n`,
+  "# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011900ZMAY26 |\n\n## P0\n\n- [ ] First task\n- [ ] Second task\n\n## P1\n\n## P2\n",
 );
 
 describe("task match + mutate", () => {

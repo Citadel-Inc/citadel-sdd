@@ -8,7 +8,61 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "all",
+      "nursery": {
+        "preset": "none"
+      },
+      "style": {
+        "noTernary": "off",
+        "noContinue": "off",
+        "noMagicNumbers": "off",
+        "useExportsLast": "off",
+        "useFilenamingConvention": {
+          "level": "info",
+          "options": {
+            "filenameCases": ["camelCase", "kebab-case", "snake_case", "export"]
+          }
+        },
+        "useNamingConvention": {
+          "level": "info",
+          "options": {
+            "strictCase": false,
+            "conventions": [
+              {
+                "selector": { "kind": "typeProperty" },
+                "formats": ["camelCase", "snake_case"]
+              },
+              {
+                "selector": { "kind": "objectLiteralProperty" },
+                "formats": ["camelCase", "snake_case", "PascalCase"]
+              },
+              {
+                "selector": { "kind": "typeParameter" },
+                "match": "[A-Z][a-zA-Z0-9]*"
+              }
+            ]
+          }
+        }
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off",
+        "noExcessiveLinesPerFunction": "off"
+      },
+      "correctness": {
+        "noNodejsModules": "off",
+        "noUnresolvedImports": "off",
+        "useQwikValidLexicalScope": "off",
+        "useImportExtensions": {
+          "level": "error",
+          "options": { "forceJsExtensions": true }
+        }
+      },
+      "security": {
+        "noSecrets": {
+          "level": "error",
+          "options": { "entropyThreshold": 50 }
+        }
+      }
     }
   },
   "assist": {
@@ -36,5 +90,17 @@
   },
   "files": {
     "includes": ["src/**/*", "tests/**/*", "*.json", "*.md", "!.mcp.json"]
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/index.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useImportExtensions": "off"
+          }
+        }
+      }
+    }
+  ]
 }

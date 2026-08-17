@@ -45,7 +45,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   if (!loc) throw new Error(`spec_not_found: ${input.slug}`);
 
   const hasSummary = input.summary && input.summary.trim().length > 0;
-  if (!hasSummary && !ctx.profile.summary_template) {
+  if (!(hasSummary || ctx.profile.summary_template)) {
     throw new Error(
       "summary_missing: spec_close requires a non-empty summary or summary_template in profile",
     );
@@ -65,7 +65,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
     if (allowOpen.has(p)) continue;
     // Items matching /spec.?close/i are auto-checked during close — exclude from the guard.
     const open = tasksParsed.phases[p].filter(
-      (i) => !i.checked && !/spec.?close/i.test(i.text),
+      (i) => !(i.checked || /spec.?close/i.test(i.text)),
     ).length;
     if (open > 0) {
       throw new Error(`tasks_open: ${p} has ${open} unchecked item(s); use allow_open to bypass`);
@@ -118,9 +118,16 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   }
 
   const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`];
-  let commit_sha: string | null = null;
+  let commitSha: string | null = null;
 
-  if (input.commit !== false) {
+  if (input.commit === false) {
+    writeFileSync(loc.specMd, newSpecRaw);
+    writeFileSync(loc.tasksMd, newTasksRaw);
+    if (loc.state === "active" || loc.state === "parked") {
+      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
+    }
+    upsertSpecReadmeRow(repo, loc.slug);
+  } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
       writeFileSync(loc.specMd, newSpecRaw);
       writeFileSync(loc.tasksMd, newTasksRaw);
@@ -137,27 +144,20 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
         `${afterRelDir}/tasks.md`,
         readmeRel,
       ]);
-      commit_sha = gitCommit({ rootDir: ctx.rootDir }, subject);
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
     });
-  } else {
-    writeFileSync(loc.specMd, newSpecRaw);
-    writeFileSync(loc.tasksMd, newTasksRaw);
-    if (loc.state === "active" || loc.state === "parked") {
-      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir);
-    }
-    upsertSpecReadmeRow(repo, loc.slug);
   }
 
   let pushed = false;
-  let push_error: string | undefined;
+  let pushError: string | undefined;
   const wantPush =
     input.push ?? (ctx.profile.push_policy === "on_close" || ctx.profile.push_policy === "always");
-  if (wantPush && commit_sha !== null) {
+  if (wantPush && commitSha !== null) {
     try {
       gitPush({ rootDir: ctx.rootDir });
       pushed = true;
     } catch (e) {
-      push_error = e instanceof Error ? e.message : String(e);
+      pushError = e instanceof Error ? e.message : String(e);
     }
   }
 
@@ -169,9 +169,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
       path: beforePath,
     },
     after: { state: newStatus.state, dtg: newStatus.dtg, path: afterRelDir },
-    commit_sha,
+    commit_sha: commitSha,
     pushed,
-    ...(push_error !== undefined && { push_error }),
+    ...(pushError !== undefined && { push_error: pushError }),
     dryRun: false,
   };
 }
