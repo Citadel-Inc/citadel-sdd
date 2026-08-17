@@ -81,7 +81,8 @@ async function main(): Promise<void> {
   };
 
   server.server.oninitialized = () => {
-    void refreshRoots();
+    // Best-effort: the server still serves requests against the fallback root.
+    refreshRoots().catch(() => undefined);
   };
 
   server.server.setNotificationHandler(RootsListChangedNotificationSchema, async () => {

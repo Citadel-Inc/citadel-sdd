@@ -31,7 +31,7 @@ function repoCtx(ctx: ToolContext): RepoContext {
 }
 
 export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnparkOutput {
-  const resolution = input.resolution?.trim() ?? "";
+  const resolution = input.resolution.trim();
   if (resolution.length === 0) {
     throw new Error("resolution_missing: spec_unpark requires a non-empty resolution");
   }
