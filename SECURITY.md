@@ -19,13 +19,14 @@ When reporting, please include:
 `citadel-sdd` is an MCP server that performs **local file-system writes and git commits** within the consuming repository. It does **not** speak to any remote API in v1.
 
 ### File-System Write Risk
-- **Medium:** Tools edit `specs/active/*`, `specs/done/*`, `specs/README.md`, `HUMAN_BLOCKERS.md`.
-- All writes are scoped to the repo's `specs/` tree (and optionally `HUMAN_BLOCKERS.md` at repo root). The server refuses operations on paths outside `git rev-parse --show-toplevel`.
+- **Medium:** Tools edit `specs/active/*`, `specs/done/*`, `specs/parked/*`, and `specs/README.md`.
+- All writes are scoped to the repo's `specs/` tree. The server refuses operations on paths outside `git rev-parse --show-toplevel`.
+- `HUMAN_BLOCKERS.md` is read by lint only; no MCP tool writes it.
 - Every write tool supports `dryRun: true` for preview.
 - All-or-nothing atomicity: failed mid-operation tools restore pre-call state.
 
 ### Git Commit Risk
-- **Medium:** Composite write tools (`spec_claim`, `spec_close`, `spec_reopen`, `spec_block`, `spec_unblock`, `spec_index_rebuild`) emit conventional commits via local `git`.
+- **Medium:** Write tools that commit (`spec_transition`, `spec_handoff`, `spec_task_check`, `spec_task_add`, `spec_index_rebuild`, `spec_init`) emit conventional commits via local `git`.
 - Commits inherit `git config user.name` / `user.email` unless profile overrides.
 - Push policy is **profile-configurable**; default profile = `never`. The MCP never force-pushes.
 
@@ -48,11 +49,12 @@ When reporting, please include:
 - Symbolic links inside `specs/` not followed for write operations.
 
 ### Commit Safety
-- Pre-commit verification: refuse commits when the working tree has unstaged changes outside the operation's intended paths (`working_tree_dirty`).
+- Pre-commit verification: refuse when scope paths are not HEAD-clean before mutation (`working_tree_dirty` in `src/tools/_txn.ts`).
 - Commits use plain `git commit -m` with no hook or GPG bypass; pre-commit hooks run when configured.
 
 ### Dependency Management
-- Keep `@modelcontextprotocol/sdk`, `yaml`, `zod`, `simple-git` up-to-date.
+- Keep `@modelcontextprotocol/sdk`, `yaml`, `zod` up-to-date.
+- Git subprocess calls use `execFileSync("git", …)` in `src/spec/git.ts` and `src/tools/_txn.ts` — no git wrapper library.
 - Run `bun audit` regularly; address high/critical vulnerabilities.
 - Review major version updates for API contract changes.
 
@@ -62,8 +64,8 @@ Latest minor release on the active major.
 
 | Version | Supported |
 |---------|-----------|
-| 0.1.x   | ✅ Yes (post-v0.1.0) |
-| 0.0.x   | ⚠️ Pre-release; best-effort |
+| 0.7.x   | ✅ Yes |
+| 0.0.x – 0.6.x | ⚠️ Unsupported |
 
 ## Known Vulnerabilities
 
@@ -73,7 +75,7 @@ None currently known. Reports welcome via security@rethunk.tech.
 
 - **Bun runtime:** keep updated for security patches.
 - **`@modelcontextprotocol/sdk`:** monitor for updates.
-- **`simple-git`:** wraps local `git`; no network.
+- **Git CLI:** invoked via `execFileSync` in `src/spec/git.ts`; no network.
 - **`yaml`:** parses `specs/config.yaml`; deserializes plain data only (no anchors / `!!js/function` style attacks possible — `yaml` package safe-by-default).
 
 ## Testing & Validation
@@ -95,7 +97,3 @@ None currently known. Reports welcome via security@rethunk.tech.
 - **Security issues:** security@rethunk.tech
 - **General support:** support@rethunk.tech
 - **Website:** https://rethunk.tech
-
----
-
-**Last updated:** 2026-05-01

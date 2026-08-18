@@ -113,8 +113,8 @@ Both must hold; either failure blocks the tag.
 
 ## Adding a tool
 
-1. Create `src/tools/<tool_name>.ts` exporting `register<ToolName>Tool(server)`.
-2. Register in `src/mcp/server.ts`.
+1. Create `src/tools/<tool_name>.ts` exporting the tool handler (e.g. `specFoo`).
+2. Register in `src/mcp/server.ts` via `server.registerTool(...)` + `wrap()`.
 3. Add JSONSchema input via Zod in `src/mcp/schemas.ts`.
 4. Add test `src/tools/<tool_name>.test.ts`.
 5. Update [docs/mcp-tools.md](docs/mcp-tools.md), [docs/architecture.md § Tool taxonomy](docs/architecture.md#tool-taxonomy), and [HUMANS.md](HUMANS.md) goal-table.

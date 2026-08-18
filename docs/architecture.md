@@ -81,7 +81,7 @@ Transition rules:
 | `specs/done/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | Same shape; `done/` location. |
 | `specs/parked/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | PARKED state; intentionally not pursued. |
 | `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Rows are derived from each spec’s `spec.md` frontmatter. **`spec_init` and `spec_index_rebuild` alone** replace the entire file from `renderIndex`. **All other writers** apply targeted markdown table edits (see [docs/mcp-tools.md](mcp-tools.md)) so prose after the Parked table is preserved. Per bucket, the **mutated** slug is written as the first data row after the table separator; strict global DTG ordering of every row is restored only by `spec_index_rebuild`. |
-| `HUMAN_BLOCKERS.md` | ✓ | ✓ | Optional; created on first `spec_block` if absent. |
+| `HUMAN_BLOCKERS.md` | ✓ | — | Lint reads only; MCP tools do not write. |
 
 ## Write invariants
 

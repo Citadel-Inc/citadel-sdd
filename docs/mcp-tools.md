@@ -145,7 +145,7 @@ file-write behavior live in `src/tools/spec_*.ts` — this tool dispatches only.
 | `close` | IN_PROGRESS \| PARKED → DONE | `summary?`, `allow_open?: ("P0"\|"P1"\|"P2")[]`, `push?: boolean` | `summary` (or profile `summary_template`) | `before, after, commit_sha, pushed, push_error?` |
 | `reopen` | DONE → IN_PROGRESS | `reason` | `reason` | `before, after, commit_sha` |
 | `park` | DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED | `resolution` | `resolution` | `before, after, commit_sha` |
-| `block` | IN_PROGRESS → BLOCKED | `reason`, `blocker_path?` | `reason` | `before, after, commit_sha` |
+| `block` | IN_PROGRESS → BLOCKED | `reason` | `reason` | `before, after, commit_sha` |
 | `unblock` | BLOCKED → IN_PROGRESS | `resolution` | `resolution` | `before, after, commit_sha` |
 | `unpark` | PARKED → IN_PROGRESS | `resolution` | `resolution` | `before, after, commit_sha` |
 
