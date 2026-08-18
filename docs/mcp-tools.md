@@ -7,7 +7,7 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 ## Common parameters
 
 | Field | Default | Notes |
-|-------|---------|-------|
+| ------- | --------- | ------- |
 | `workspaceRoot` | first MCP file root | Project-root override. Usually omit it: MCP clients that support roots provide the active workspace automatically. |
 | `dryRun` | `false` | Preview only — no FS writes, no commits. Returns same diff as live call. |
 | `commit` | profile-default | When `false`, leaves edits staged but does not commit. |
@@ -19,7 +19,7 @@ All tools resolve their project root at call time from `workspaceRoot`, MCP clie
 ## Common failure codes
 
 | Code | Trigger |
-|------|---------|
+| ------ | --------- |
 | `state_invalid` | Requested transition not legal per [docs/architecture.md § State machine](architecture.md#state-machine). |
 | `slug_collision` | Slug already used under `active/`, `done/`, or `parked/`. Slugs are unique forever ([D-9](decisions.md)). |
 | `slug_invalid` | Slug fails canonical pattern (lowercase kebab-case, no path separators). |
@@ -88,7 +88,14 @@ Runs `spec_lint` with `include_done: true` and `include_parked: true` so parked 
 
 ### `specs/README.md` index edits
 
-Only **`spec_init`** and **`spec_index_rebuild`** perform a **full** rewrite of `${spec_dir}/README.md` via `renderIndex`. Every other tool that touches the index (`spec_handoff` and every `spec_transition` action except `ratify`) applies **targeted** edits through `src/spec/spec_readme.ts`: locate each section’s machine table header (`| Slug | State | DTG | Owner |` or `| Slug | DTG | Note |`) and separator, remove the slug from all three tables, restore `| _(none)_ |` placeholders when a table becomes empty, then insert the fresh row **immediately after the separator** in the destination bucket (first data row). Content after the Parked table (for example a trailing `## Notes`) is preserved. **Ordering:** partial updates move only the touched slug to the top of its bucket; **full** chronological sort of every row in every table is restored only by **`spec_index_rebuild`**. If the file is missing expected headings or headers, writers throw `readme_unparseable` — run **`spec_index_rebuild`** (or **`spec_init`** on a fresh tree).
+Implementation: `src/spec/spec_readme.ts` (targeted edits) and `src/spec/index_render.ts` (`renderIndex` full rewrite).
+
+| Mode | Tools | Behavior |
+| ------ | ------- | ---------- |
+| Full rewrite | `spec_init`, `spec_index_rebuild` | Replace `${spec_dir}/README.md` via `renderIndex`; chronological sort of every table row |
+| Targeted edit | `spec_handoff`, every `spec_transition` action except `ratify` | Find each machine table header (`\| Slug \| State \| DTG \| Owner \|` or `\| Slug \| DTG \| Note \|`), remove the slug from all three tables, restore `\| _(none)_ \|` when empty, insert the new row immediately after the separator in the destination bucket |
+
+Targeted edits preserve content after the Parked table (for example `## Notes`). Partial updates move only the touched slug to the top of its bucket. Missing headings or headers → `readme_unparseable`; run `spec_index_rebuild` or `spec_init` on a fresh tree.
 
 ---
 
@@ -124,15 +131,14 @@ Reassign owner without state flip.
 
 ## `spec_transition`
 
-Single MCP surface for every lifecycle-state transition (previously nine separate tools:
-`spec_approve`, `spec_ratify`, `spec_claim`, `spec_close`, `spec_reopen`, `spec_park`, `spec_block`,
-`spec_unblock`, `spec_unpark`). `to` selects the action; the underlying business logic, error codes,
-and file-write behavior are unchanged from the tools it replaces — this is a dispatch-only surface.
+Single MCP surface for every lifecycle-state transition. `to` selects the action (`approve`, `ratify`,
+`claim`, `close`, `reopen`, `park`, `block`, `unblock`, `unpark`); business logic, error codes, and
+file-write behavior live in `src/tools/spec_*.ts` — this tool dispatches only.
 
 **Shared inputs:** `{ slug, to: "approve"|"ratify"|"claim"|"close"|"reopen"|"park"|"block"|"unblock"|"unpark", commit?: boolean, dryRun?: boolean }` plus the per-action fields below.
 
 | `to` | Transition | Extra inputs | Required | Output (in addition to `slug`) |
-|------|-----------|--------------|----------|-------------------------------|
+| ------ | ----------- | -------------- | ---------- | ------------------------------- |
 | `approve` | DRAFT → APPROVED | `note?` | — | `before, after, commit_sha` |
 | `ratify` | Fill Q-table TBD rows with `Ratified <DTG>` | `decisions?: {[Q_id]:{text,as_of_dtg}}`, `default_disposition?` | — | `ratified_q_count, commit_sha` |
 | `claim` | DRAFT/APPROVED → IN_PROGRESS | `claimer?`, `ratify?: boolean` | — | `before, after, commit_sha, ratified_q_count` |
