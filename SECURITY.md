@@ -48,8 +48,8 @@ When reporting, please include:
 - Symbolic links inside `specs/` not followed for write operations.
 
 ### Commit Safety
-- Pre-commit verification: working tree dirty-check (per memory `batch_commit may pick up extra dirty files`); refuse to commit unless `--allow-dirty` set.
-- No `--no-verify` / `--no-gpg-sign` from the MCP. Hooks run if configured.
+- Pre-commit verification: refuse commits when the working tree has unstaged changes outside the operation's intended paths (`working_tree_dirty`).
+- Commits use plain `git commit -m` with no hook or GPG bypass; pre-commit hooks run when configured.
 
 ### Dependency Management
 - Keep `@modelcontextprotocol/sdk`, `yaml`, `zod`, `simple-git` up-to-date.
