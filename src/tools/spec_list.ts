@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { dtgToRecencySortKey } from "../spec/dtg.js";
 import { parseSpec, parseTasks } from "../spec/parse.js";
 import { listSpecs, type RepoContext } from "../spec/repo.js";
 import type { SpecState } from "../spec/types.js";
@@ -133,7 +134,16 @@ export function specList(
         (b.p0_remaining + b.p1_remaining + b.p2_remaining),
     );
   } else {
-    entries.sort((a, b) => b.dtg.localeCompare(a.dtg));
+    // Chronological recency, same key as specs/README.md — Bastion stamps are
+    // not lexicographic (011200ZJUN26 sorts before 311200ZMAY26 as strings).
+    entries.sort((a, b) => {
+      const kb = dtgToRecencySortKey(b.dtg);
+      const ka = dtgToRecencySortKey(a.dtg);
+      if (kb !== ka) {
+        return kb - ka;
+      }
+      return a.slug.localeCompare(b.slug);
+    });
   }
 
   const offset = Math.max(0, input.offset ?? 0);

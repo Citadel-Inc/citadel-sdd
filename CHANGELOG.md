@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`spec_list` sort is chronological.** Default ordering used string `localeCompare` on Bastion DTGs, so `011200ZJUN26` sorted after `311200ZMAY26`. It now uses the same recency key as `specs/README.md` (`dtgToRecencySortKey`); empty/unparseable stamps still sort last, slug still breaks ties.
+
 ## [0.7.0] — 2026-07-03
 
 Token-cost reduction pass: smaller schemas, smaller results, fewer tools. No lifecycle business logic
@@ -157,7 +161,7 @@ User-feedback driven ergonomics pass. Closes five pain points reported from live
 - **`spec_close` circular dependency** — closing a spec when the final task item is named something like "E4. Spec close." no longer requires manually pre-checking that item. Items whose text matches `/spec.?close/i` are skipped in the `tasks_open` guard; they are auto-checked during the close operation itself.
 - **`spec_task_check` opaque match error** — `task_not_found` now lists all available task text strings (up to 50 chars each) so callers can correct the `match` prefix without a follow-up read call.
 - **`parseStatusValue` — bold-only status** — `**DRAFT**` (bold, no DTG) previously threw `status_unparseable`. DTG is now optional in the regex. Fixes `spec_claim` and `spec_read` on hand-written specs that omit the timestamp.
-- **`renderStatusValue` + `formatStatusForFrontmatter` trailing space** — when `dtg` is empty (e.g. after parsing `**DRAFT**`), the rendered output previously included a trailing space (`DRAFT ` or `**DRAFT **`). Fixed to omit the space token when DTG is empty.
+- **`renderStatusValue` + `formatStatusForFrontmatter` trailing space** — when `dtg` is empty (e.g. after parsing `**DRAFT**`), the rendered output previously included a trailing space (`DRAFT` or `**DRAFT **`). Fixed to omit the space token when DTG is empty.
 - **`spliceFrontmatter` — insert instead of throw on missing frontmatter** — writing to a file with no existing frontmatter block previously threw `frontmatter_missing`. Now inserts a pipe-table after the title line. `format: "inline"` inserts inline key-value lines instead.
 - **`spliceFrontmatter` — inline→pipe-table insert position** — conversion from inline to pipe-table previously prepended the table before the document title. Now inserts after the title line using the new `insertAfterTitle` helper.
 

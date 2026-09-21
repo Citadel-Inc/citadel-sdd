@@ -120,6 +120,29 @@ describe("specList", () => {
     expect(out[1]?.slug).toBe("draft-minimal");
   });
 
+  test("default sort is chronological, not lexicographic DTG", () => {
+    temp = makeTempRepo();
+    const specs = [
+      ["may-end", "DRAFT 311200ZMAY26"],
+      ["jun-start", "DRAFT 011200ZJUN26"],
+    ] as const;
+    for (const [slug, status] of specs) {
+      const dir = join(temp.rootDir, "specs", "active", slug);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, "spec.md"),
+        `# ${slug}\n\n| | |\n|---|---|\n| Status | ${status} |\n| Owner | TestAgent |\n| Approved | TBD |\n\n## Summary\n\nFixture.\n`,
+      );
+      writeFileSync(
+        join(dir, "tasks.md"),
+        `# ${slug}\n\n| | |\n|---|---|\n| Status | ${status} |\n\n## P0\n\n- [ ] Gate\n`,
+      );
+      writeFileSync(join(dir, "plan.md"), `# ${slug} — Plan\n`);
+    }
+    const out = specList({}, ctx());
+    expect(out.map((e) => e.slug)).toEqual(["jun-start", "may-end"]);
+  });
+
   test("entry has tasks.{checked,total} aggregate", () => {
     temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
     const out = specList({}, ctx());
