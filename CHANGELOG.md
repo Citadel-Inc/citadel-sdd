@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **`spec_list` sort is chronological.** Default ordering used string `localeCompare` on Bastion DTGs, so `011200ZJUN26` sorted after `311200ZMAY26`. It now uses the same recency key as `specs/README.md` (`dtgToRecencySortKey`); empty/unparseable stamps still sort last, slug still breaks ties.
+- **Canonical GitHub home is `Citadel-Inc/citadel-sdd`.** Clone URLs, `package.json` repository/bugs/homepage, generated `specs/README.md` intros, issue-template security link, and GitHub Packages publish (`@citadel-inc/citadel-sdd`) no longer point at `Rethunk-AI/citadel-sdd`. npmjs remains `@rethunk/citadel-sdd`. Generated index copy names `spec_transition` instead of the retired `spec_park` / `spec_close` MCP tools.
 
 ## [0.7.0] — 2026-07-03
 

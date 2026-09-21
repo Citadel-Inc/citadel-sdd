@@ -11,28 +11,16 @@ Public OSS project (MIT). External PRs welcome. Process is the same as Rethunk-A
 ## Development setup
 
 ```bash
-git clone https://github.com/Rethunk-AI/citadel-sdd.git
+git clone https://github.com/Citadel-Inc/citadel-sdd.git
 cd citadel-sdd
 bun install
 bun run build       # tsc → dist/
 bun run lint       # Biome lint + format check
 bun run format   # auto-fix with Biome
-bun run test        # bun test src/
-bun run test:coverage  # bun test src/ --coverage
+bun run test        # bun test src/ tests/
+bun run test:coverage  # bun test src/ tests/ --coverage
+bun run ci         # lint + typecheck + test + build (same as GitHub Actions)
 ```
-
-(Build / test scripts land in Phase A.)
-
-## Git hooks
-
-`bun run setup-hooks` (Phase A) sets `core.hooksPath = .githooks`.
-
-| Hook | Runs |
-|------|------|
-| pre-commit | `bun run lint` + `bun run test` |
-| pre-push | frozen install + build + check + test (mirrors CI) |
-
-Set `SKIP_GIT_HOOKS=1` to bypass.
 
 ## Commit conventions
 
@@ -44,7 +32,7 @@ Not a file list. Not a summary of what the diff already shows.
 ```
 
 | Type | When |
-|------|------|
+| ------ | ------ |
 | `feat` | New capability |
 | `fix` | Bug corrected |
 | `docs` | Documentation only |
@@ -66,9 +54,7 @@ GitHub Actions runs on PRs and pushes to `main`:
 3. `bun run lint` (Biome)
 4. `bun run test:coverage` + 80% line coverage threshold
 
-Match CI steps locally before opening a PR.
-
-The CI workflow uses a phase-detect guard (`hashFiles('package.json')`) so pre-Phase-A pushes hit no-op skip steps.
+Match CI steps locally before opening a PR. `bun run ci` is the local gate.
 
 ## Testing strategy
 
@@ -138,4 +124,4 @@ TypeScript: `strict: true`, `noUncheckedIndexedAccess: true`, `verbatimModuleSyn
 
 ## Reporting bugs / requesting features
 
-GitHub Issues on `Rethunk-AI/citadel-sdd`. Security issues: see [SECURITY.md](SECURITY.md) — do **not** open public issues for vulnerabilities.
+GitHub Issues on `Citadel-Inc/citadel-sdd`. Security issues: see [SECURITY.md](SECURITY.md) — do **not** open public issues for vulnerabilities.

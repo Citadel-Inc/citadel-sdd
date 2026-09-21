@@ -73,15 +73,15 @@ export function buildIndex(ctx: RepoContext): {
 }
 
 function introActive(): string {
-  return `*In-flight specifications (DRAFT through BLOCKED) under \`specs/active/\`. Claim, block, unblock, park, and close via [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+  return `*In-flight specifications (DRAFT through BLOCKED) under \`specs/active/\`. Claim, block, unblock, park, and close via \`spec_transition\` in [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
 }
 
 function introDone(): string {
-  return `*Completed work (**DONE**) after \`spec_close\`; directories live under \`specs/done/\`. Lifecycle semantics and tools: [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+  return `*Completed work (**DONE**) after \`spec_transition\` (\`to: "close"\`); directories live under \`specs/done/\`. Lifecycle semantics and tools: [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
 }
 
 function introParked(): string {
-  return `*Deliberately not pursued (**PARKED**); superseded or withdrawn specs under \`specs/parked/\`. Use \`spec_park\` from [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
+  return `*Deliberately not pursued (**PARKED**); superseded or withdrawn specs under \`specs/parked/\`. Wake with \`spec_transition\` (\`to: "unpark"\`) from [\`@rethunk/citadel-sdd\`](${CITADEL_SDD_REPO_URL}).*`;
 }
 
 function renderActiveTable(rows: readonly IndexRow[]): string {

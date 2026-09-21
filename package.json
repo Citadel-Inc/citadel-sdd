@@ -29,7 +29,6 @@
     "test:coverage": "bun test src/ tests/ --coverage",
     "prepublishOnly": "bun run ci",
     "lint:citadel-parity": "bun scripts/lint-citadel-parity.ts",
-    "setup-hooks": "git config core.hooksPath .githooks",
     "lint": "biome check .",
     "format": "biome check --write .",
     "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
@@ -49,12 +48,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Rethunk-AI/citadel-sdd.git"
+    "url": "git+https://github.com/Citadel-Inc/citadel-sdd.git"
   },
   "bugs": {
-    "url": "https://github.com/Rethunk-AI/citadel-sdd/issues"
+    "url": "https://github.com/Citadel-Inc/citadel-sdd/issues"
   },
-  "homepage": "https://github.com/Rethunk-AI/citadel-sdd#readme",
+  "homepage": "https://github.com/Citadel-Inc/citadel-sdd#readme",
   "publishConfig": {
     "access": "public"
   },

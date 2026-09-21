@@ -1,6 +1,5 @@
 # Install
 
-
 ## Prerequisites
 
 - **Bun ≥ 1.3.11** — primary runtime + package manager.
@@ -39,7 +38,7 @@ Same shape under each client's MCP config block. The server speaks MCP over stdi
 ## From source
 
 ```bash
-git clone https://github.com/Rethunk-AI/citadel-sdd.git
+git clone https://github.com/Citadel-Inc/citadel-sdd.git
 cd citadel-sdd
 bun install
 bun run build

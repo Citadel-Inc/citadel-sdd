@@ -35,7 +35,8 @@ describe("specIndexRebuild", () => {
     const path = join(temp.rootDir, "specs", "README.md");
     const md = readFileSync(path, "utf8");
     expect(md).toContain("## Active");
-    expect(md).toContain("github.com/Rethunk-AI/citadel-sdd");
+    expect(md).toContain("github.com/Citadel-Inc/citadel-sdd");
+    expect(md).toContain("spec_transition");
     expect(md).toContain("@rethunk/citadel-sdd");
     expect(md).toContain("## Done");
     expect(md).toContain("## Parked");
@@ -52,7 +53,7 @@ describe("specIndexRebuild", () => {
     expect(out.parked_count).toBe(0);
     expect(out.scaffold_repairs).toEqual([]);
     expect(out.rendered).toContain("## Parked");
-    expect(out.rendered).toContain("github.com/Rethunk-AI/citadel-sdd");
+    expect(out.rendered).toContain("github.com/Citadel-Inc/citadel-sdd");
   });
 
   test("creates missing bucket dirs before writing README", () => {

@@ -12,9 +12,8 @@ Architecture taxonomy (read / write atomic / write composite / write infrastruct
 | `dryRun` | `false` | Preview only — no FS writes, no commits. Returns same diff as live call. |
 | `commit` | profile-default | When `false`, leaves edits staged but does not commit. |
 | `push` | profile-default | Push policy: `never` / `on_close` / `always`. |
-| `format` | `"json"` | `"markdown"` for human-readable rollup. |
 
-All tools resolve their project root at call time from `workspaceRoot`, MCP client roots, then process fallback. The fallback still honors `CITADEL_SDD_ROOT` for clients that do not support MCP roots, but normal client wiring does not require an environment variable.
+All tools resolve their project root at call time from `workspaceRoot`, MCP client roots, then process fallback. The fallback still honors `CITADEL_SDD_ROOT` for clients that do not support MCP roots, but normal client wiring does not require an environment variable. Results are compact JSON.
 
 ## Common failure codes
 
@@ -44,11 +43,11 @@ List specs by state, optionally filtered to caller.
 
 **Inputs:** `{ state?: "active"|"done"|"parked"|"blocked"|"all", mine?: boolean, slim?: boolean, limit?: number, offset?: number }`. Defaults: `state="active"`, `mine=false`, `slim=false`, no pagination.
 
-**Output (default):** ordered array of `{ slug, state, dtg, owner, approved_dtg, ratified, p0_remaining, p1_remaining, p2_remaining, blockers, tasks: { checked, total } }`. Sort by DTG descending unless `mine=true` (then by remaining-task count ascending).
+**Output (default):** ordered array of `{ slug, state, dtg, owner, approved_dtg, ratified, p0_remaining, p1_remaining, p2_remaining, blockers, tasks: { checked, total } }`. Sort by status DTG chronological recency (newest first; same key as `specs/README.md`) unless `mine=true` (then by remaining-task count ascending). Empty or unparseable DTGs sort last; slug breaks ties.
 
 **Output (slim):** when `slim: true`, each row is `{ slug, state, dtg, owner, p0, p1, p2, tasks: { checked, total } }` (~80 bytes/row).
 
-**Scaling note:** the default row is ~260 bytes; large backlogs (200+ specs across all buckets) with `state: "all"` exceed typical MCP client output caps (Rethunk-AI/citadel-sdd#2). Pass `slim: true` (~17 kB at 211 rows), or paginate with `{ limit, offset }`. The default `state: "active"` is intentionally narrow precisely so most callers stay under the cap.
+**Scaling note:** the default row is ~260 bytes; large backlogs (200+ specs across all buckets) with `state: "all"` exceed typical MCP client output caps (Citadel-Inc/citadel-sdd#2). Pass `slim: true` (~17 kB at 211 rows), or paginate with `{ limit, offset }`. The default `state: "active"` is intentionally narrow precisely so most callers stay under the cap.
 
 ### `spec_read`
 

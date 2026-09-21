@@ -6,7 +6,7 @@
 [![Version: 0.7.0](https://img.shields.io/badge/version-0.7.0-green.svg)](CHANGELOG.md)
 [![Runtime: Bun](https://img.shields.io/badge/runtime-Bun-black.svg)](https://bun.sh)
 [![Language: TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6.svg)](https://www.typescriptlang.org)
-[![Repo: Rethunk-AI](https://img.shields.io/badge/repo-Rethunk--AI-blue.svg)](https://github.com/Rethunk-AI/citadel-sdd)
+[![Repo: Citadel-Inc](https://img.shields.io/badge/repo-Citadel--Inc-blue.svg)](https://github.com/Citadel-Inc/citadel-sdd)
 
 </div>
 
@@ -30,7 +30,7 @@ The server ships two profiles out of the box (`default` and `bastion`) with prof
 ## Documentation
 
 | You are… | Start here |
-|----------|------------|
+| ---------- | ------------ |
 | An agent / LLM working in this repo | [AGENTS.md](AGENTS.md) |
 | Installing as a user | [HUMANS.md](HUMANS.md) → [docs/install.md](docs/install.md) |
 | Looking up a tool's schema | [docs/mcp-tools.md](docs/mcp-tools.md) |
