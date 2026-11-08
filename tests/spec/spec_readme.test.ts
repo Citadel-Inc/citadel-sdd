@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { cpSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { cpSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -88,6 +88,22 @@ describe("spec_readme", () => {
     const r = repo();
     writeFileSync(join(r.rootDir, "specs", "README.md"), "# Specs\n", "utf8");
     expect(() => upsertSpecReadmeRow(r, "draft-minimal")).toThrow(new RegExp(README_UNPARSEABLE));
+  });
+
+  test("upsert preserves the ENOENT error as cause when README is missing", () => {
+    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+    const r = repo();
+    rmSync(join(r.rootDir, "specs", "README.md"));
+    let caught: unknown;
+    try {
+      upsertSpecReadmeRow(r, "draft-minimal");
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(Error);
+    const err = caught as Error;
+    expect(err.message).toContain(README_UNPARSEABLE);
+    expect((err.cause as NodeJS.ErrnoException).code).toBe("ENOENT");
   });
 
   test("upsert after removing last Active row restores placeholder in Active", () => {

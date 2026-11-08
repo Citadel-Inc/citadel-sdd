@@ -162,6 +162,7 @@ export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
     if (err instanceof Error && "code" in err && err.code === "ENOENT") {
       throw new Error(
         `${README_UNPARSEABLE}: ${repo.specDir}/README.md missing; run spec_init or spec_index_rebuild`,
+        { cause: err },
       );
     }
     throw err;
