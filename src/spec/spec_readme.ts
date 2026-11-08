@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   buildRow,
@@ -155,13 +155,17 @@ export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
   }
 
   const path = readmeAbsPath(repo);
-  if (!existsSync(path)) {
-    throw new Error(
-      `${README_UNPARSEABLE}: ${repo.specDir}/README.md missing; run spec_init or spec_index_rebuild`,
-    );
+  let raw: string;
+  try {
+    raw = readFileSync(path, "utf8");
+  } catch (err) {
+    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+      throw new Error(
+        `${README_UNPARSEABLE}: ${repo.specDir}/README.md missing; run spec_init or spec_index_rebuild`,
+      );
+    }
+    throw err;
   }
-
-  const raw = readFileSync(path, "utf8");
   const lines = raw.split(LINE_SPLIT_RE);
 
   const pa = parseSectionTable(lines, "## Active", "## Done", SPEC_README_ACTIVE_HEADER);
