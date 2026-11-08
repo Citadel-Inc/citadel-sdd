@@ -96,7 +96,7 @@ export function recentCommits(opts: RecentCommitsOptions): string[] {
 }
 
 export function daysBetween(isoDate: string, today: Date): number | null {
-  const m = ISO_DATE_RE.exec(isoDate);
+  const m: RegExpExecArray | null = ISO_DATE_RE.exec(isoDate);
   if (!m) {
     return null;
   }

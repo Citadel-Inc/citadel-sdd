@@ -148,7 +148,7 @@ export function spliceFrontmatter(
       if (idx <= titleIdx || idx >= fmEnd) {
         return true;
       }
-      const m = FIELD_PREFIX_RE.exec(line);
+      const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line);
       return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
     });
     return insertAfterTitle(stripped, renderFrontmatter(newFm));
@@ -165,7 +165,7 @@ export function spliceFrontmatter(
   const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]));
   let found = false;
   const newLines = lines.map((line) => {
-    const m = FIELD_PREFIX_RE.exec(line);
+    const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line);
     if (!m) {
       return line;
     }

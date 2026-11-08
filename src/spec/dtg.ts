@@ -60,7 +60,7 @@ export function dtgToRecencySortKey(dtg: string): number {
     return DTG_SORT_UNKNOWN;
   }
 
-  const bastion = BASTION_DTG_RE.exec(s);
+  const bastion: RegExpExecArray | null = BASTION_DTG_RE.exec(s);
   if (bastion) {
     const day = Number.parseInt(bastion[1] ?? "", 10);
     const hour = Number.parseInt(bastion[2] ?? "", 10);

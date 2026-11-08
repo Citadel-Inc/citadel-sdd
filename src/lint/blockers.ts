@@ -38,7 +38,7 @@ const MONTHS_MIL = [
 ] as const;
 
 function parseDtgUtc(dtg: string): Date | null {
-  const m = RE_DTG_MIL.exec(dtg);
+  const m: RegExpExecArray | null = RE_DTG_MIL.exec(dtg);
   if (!m) {
     return null;
   }
@@ -77,7 +77,7 @@ export function parseBlockers(rootDir: string, now: Date = new Date()): BlockerF
   let current: { dtg: string; title: string; bodyLines: string[] } | null = null;
 
   for (const raw of lines) {
-    const m = RE_HEADING.exec(raw);
+    const m: RegExpExecArray | null = RE_HEADING.exec(raw);
     if (m) {
       if (current !== null) {
         entries.push(buildEntry(current, now));

@@ -109,7 +109,7 @@ export function scanPriorityInNontasks(filename: string, text: string): StrictFi
   const lines = text.split(LINE_SPLIT_RE);
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i] ?? "";
-    const m = RE_PRIORITY_HEADING.exec(line);
+    const m: RegExpExecArray | null = RE_PRIORITY_HEADING.exec(line);
     if (m) {
       const lineNum = i + 1;
       findings.push({

@@ -171,7 +171,7 @@ function readIndexedActive(rootDir: string, specDir: string): ReadonlySet<string
     if (!inActive) {
       continue;
     }
-    const m = SLUG_ROW_RE.exec(line);
+    const m: RegExpExecArray | null = SLUG_ROW_RE.exec(line);
     if (m?.[1]) {
       out.add(m[1]);
     }

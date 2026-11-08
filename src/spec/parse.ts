@@ -101,14 +101,14 @@ export function parseStatusValue(raw: string): StatusValue {
 
   // Strip markdown bold from the whole value (**STATE DTG — tail**)
   // or from the state word only (**STATE** DTG — tail).
-  const boldMatch = BOLD_WRAPPED_RE.exec(trimmed);
+  const boldMatch: RegExpExecArray | null = BOLD_WRAPPED_RE.exec(trimmed);
   if (boldMatch) {
     bold = true;
     trimmed = `${boldMatch[1] ?? ""}${boldMatch[2] ?? ""}`.trim();
   }
 
   // DTG is optional — hand-written specs may omit it (e.g. "**DRAFT**" with no stamp).
-  const match = STATUS_VALUE_RE.exec(trimmed);
+  const match: RegExpExecArray | null = STATUS_VALUE_RE.exec(trimmed);
   if (!match) {
     throw new Error(`status_unparseable: "${raw}"`);
   }
@@ -139,7 +139,7 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
     if (pastTitle && (raw.startsWith("# ") || raw.startsWith("## "))) {
       break;
     }
-    const m = FRONTMATTER_FIELD_RE.exec(raw);
+    const m: RegExpExecArray | null = FRONTMATTER_FIELD_RE.exec(raw);
     if (!m) {
       if (status !== null) {
         break;
@@ -254,7 +254,7 @@ export function parseTasks(md: string): ParsedTasks {
       continue;
     }
     const line = raw;
-    const phaseMatch = PHASE_HEADING_RE.exec(line);
+    const phaseMatch: RegExpExecArray | null = PHASE_HEADING_RE.exec(line);
     if (phaseMatch) {
       const [, tag] = phaseMatch;
       if (tag === "P0" || tag === "P1" || tag === "P2") {
@@ -271,7 +271,7 @@ export function parseTasks(md: string): ParsedTasks {
     if (current === null) {
       continue;
     }
-    const itemMatch = TASK_ITEM_RE.exec(line);
+    const itemMatch: RegExpExecArray | null = TASK_ITEM_RE.exec(line);
     if (itemMatch) {
       const [, mark, text] = itemMatch;
       if (mark === undefined || text === undefined) {

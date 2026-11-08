@@ -10,7 +10,7 @@ const RE_ITEM = /^\s*-\s*\[([ xX])\]\s+(.*)$/;
 export function scanChecklist(text: string): ChecklistCounts {
   const out: ChecklistCounts = { open: 0, done: 0, human: 0 };
   for (const raw of text.split(LINE_SPLIT_RE)) {
-    const m = RE_ITEM.exec(raw);
+    const m: RegExpExecArray | null = RE_ITEM.exec(raw);
     if (!m) {
       continue;
     }
