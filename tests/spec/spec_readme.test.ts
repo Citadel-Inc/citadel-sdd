@@ -100,10 +100,10 @@ describe("spec_readme", () => {
     } catch (err) {
       caught = err;
     }
-    const err = caught as Error | undefined;
-    expect(err instanceof Error).toBe(true);
-    expect(err?.message).toContain(README_UNPARSEABLE);
-    expect((err?.cause as NodeJS.ErrnoException | undefined)?.code).toBe("ENOENT");
+    const thrown = caught as Error | undefined;
+    expect(thrown instanceof Error).toBe(true);
+    expect(thrown?.message).toContain(README_UNPARSEABLE);
+    expect((thrown?.cause as NodeJS.ErrnoException | undefined)?.code).toBe("ENOENT");
   });
 
   test("upsert after removing last Active row restores placeholder in Active", () => {
