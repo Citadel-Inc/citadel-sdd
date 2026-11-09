@@ -1,0 +1,5 @@
+# gitleaks scans each staged change for secrets before the commit is made.
+pre-commit:
+  jobs:
+    - name: gitleaks
+      run: gitleaks git --pre-commit --staged --redact --no-banner --log-level warn
