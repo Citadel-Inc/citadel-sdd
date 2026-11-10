@@ -163,8 +163,9 @@ describe('specList', () => {
     if (!row) {
       return
     }
-    expect(Object.keys(row).sort()).toEqual(
-      ['slug', 'state', 'dtg', 'owner', 'p0', 'p1', 'p2', 'tasks'].sort(),
+    const byName = (a: string, b: string) => a.localeCompare(b)
+    expect(Object.keys(row).sort(byName)).toEqual(
+      ['slug', 'state', 'dtg', 'owner', 'p0', 'p1', 'p2', 'tasks'].sort(byName),
     )
     expect(row.p0).toBe(2)
     expect(row.tasks.total).toBe(5)

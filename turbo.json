@@ -10,6 +10,9 @@
     "lint": {
       "outputs": []
     },
+    "lint:citadel-parity": {
+      "env": ["CITADEL_PARITY_ROOT"]
+    },
     "test": {
       "outputs": []
     }

@@ -121,25 +121,29 @@ function readyToCloseFindings(summaries: readonly SpecSummary[]): CrossCuttingFi
     }))
 }
 
-function indexParityFindings(
-  disk: ReadonlySet<string>,
-  indexed: ReadonlySet<string>,
-  missing: { category: string; message: (slug: string) => string },
-  extra: { category: string; message: (slug: string) => string },
-  skipMissingWhenIndexEmpty: boolean,
-): CrossCuttingFinding[] {
+function indexParityFindings(opts: {
+  disk: ReadonlySet<string>
+  indexed: ReadonlySet<string>
+  missing: { category: string; message: (slug: string) => string }
+  extra: { category: string; message: (slug: string) => string }
+  skipMissingWhenIndexEmpty: boolean
+}): CrossCuttingFinding[] {
   const findings: CrossCuttingFinding[] = []
-  for (const slug of disk) {
-    if (skipMissingWhenIndexEmpty && indexed.size === 0) {
+  for (const slug of opts.disk) {
+    if (opts.skipMissingWhenIndexEmpty && opts.indexed.size === 0) {
       continue
     }
-    if (!indexed.has(slug)) {
-      findings.push({ category: missing.category, slug, message: missing.message(slug) })
+    if (!opts.indexed.has(slug)) {
+      findings.push({
+        category: opts.missing.category,
+        slug,
+        message: opts.missing.message(slug),
+      })
     }
   }
-  for (const slug of indexed) {
-    if (!disk.has(slug)) {
-      findings.push({ category: extra.category, slug, message: extra.message(slug) })
+  for (const slug of opts.indexed) {
+    if (!opts.disk.has(slug)) {
+      findings.push({ category: opts.extra.category, slug, message: opts.extra.message(slug) })
     }
   }
   return findings
@@ -190,47 +194,47 @@ export function crossCutting(repo: RepoContext): CrossCuttingFinding[] {
 
   if (runIndexParity) {
     findings.push(
-      ...indexParityFindings(
-        activeNames,
-        index.active,
-        {
+      ...indexParityFindings({
+        disk: activeNames,
+        indexed: index.active,
+        missing: {
           category: 'not-indexed',
           message: (slug) =>
             `${slug}: in specs/active/ but missing from specs/README.md Active table`,
         },
-        {
+        extra: {
           category: 'orphan-indexed',
           message: (slug) => `${slug}: listed in specs/README.md Active but not in specs/active/`,
         },
-        false,
-      ),
-      ...indexParityFindings(
-        doneNames,
-        index.done,
-        {
+        skipMissingWhenIndexEmpty: false,
+      }),
+      ...indexParityFindings({
+        disk: doneNames,
+        indexed: index.done,
+        missing: {
           category: 'orphan-done',
           message: (slug) => `${slug}: in specs/done/ but missing from specs/README.md Done table`,
         },
-        {
+        extra: {
           category: 'orphan-done',
           message: (slug) => `${slug}: listed in specs/README.md Done but not in specs/done/`,
         },
-        true,
-      ),
-      ...indexParityFindings(
-        parkedNames,
-        index.parked,
-        {
+        skipMissingWhenIndexEmpty: true,
+      }),
+      ...indexParityFindings({
+        disk: parkedNames,
+        indexed: index.parked,
+        missing: {
           category: 'orphan-parked',
           message: (slug) =>
             `${slug}: in specs/parked/ but missing from specs/README.md Parked table`,
         },
-        {
+        extra: {
           category: 'orphan-parked',
           message: (slug) => `${slug}: listed in specs/README.md Parked but not in specs/parked/`,
         },
-        false,
-      ),
+        skipMissingWhenIndexEmpty: false,
+      }),
     )
   }
 

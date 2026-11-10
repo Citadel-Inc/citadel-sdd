@@ -73,18 +73,18 @@ function checkOffCloseableTasks(tasks: ParsedTasks, allowOpen: Set<Priority>): P
   return updated
 }
 
-function writeClosedFiles(
-  loc: SpecLocation,
-  rootDir: string,
-  beforePath: string,
-  afterRelDir: string,
-  newSpecRaw: string,
-  newTasksRaw: string,
-): void {
-  writeFileSync(loc.specMd, newSpecRaw)
-  writeFileSync(loc.tasksMd, newTasksRaw)
-  if (loc.state === 'active' || loc.state === 'parked') {
-    gitMv({ rootDir }, beforePath, afterRelDir)
+function writeClosedFiles(opts: {
+  loc: SpecLocation
+  rootDir: string
+  beforePath: string
+  afterRelDir: string
+  newSpecRaw: string
+  newTasksRaw: string
+}): void {
+  writeFileSync(opts.loc.specMd, opts.newSpecRaw)
+  writeFileSync(opts.loc.tasksMd, opts.newTasksRaw)
+  if (opts.loc.state === 'active' || opts.loc.state === 'parked') {
+    gitMv({ rootDir: opts.rootDir }, opts.beforePath, opts.afterRelDir)
   }
 }
 
@@ -149,11 +149,25 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   let commitSha: string | null = null
 
   if (input.commit === false) {
-    writeClosedFiles(loc, ctx.rootDir, beforePath, afterRelDir, newSpecRaw, newTasksRaw)
+    writeClosedFiles({
+      loc,
+      rootDir: ctx.rootDir,
+      beforePath,
+      afterRelDir,
+      newSpecRaw,
+      newTasksRaw,
+    })
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeClosedFiles(loc, ctx.rootDir, beforePath, afterRelDir, newSpecRaw, newTasksRaw)
+      writeClosedFiles({
+        loc,
+        rootDir: ctx.rootDir,
+        beforePath,
+        afterRelDir,
+        newSpecRaw,
+        newTasksRaw,
+      })
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
       const subject =
         ctx.profile.commit_style === 'conventional'

@@ -46,7 +46,8 @@ describe('MCP server wiring', () => {
     temp = makeTempRepo()
     const { client, close } = await dial()
     const list = await client.listTools()
-    const names = list.tools.map((t) => t.name).sort()
+    const byName = (a: string, b: string) => a.localeCompare(b)
+    const names = list.tools.map((t) => t.name).sort(byName)
     expect(names).toEqual(
       [
         'sdd_doctor',
@@ -61,7 +62,7 @@ describe('MCP server wiring', () => {
         'spec_task_check',
         'spec_task_list',
         'spec_transition',
-      ].sort(),
+      ].sort(byName),
     )
     await close()
   })

@@ -56,30 +56,30 @@ function taskTotals(tasks: ReturnType<typeof parseTasks>): { checked: number; to
   return { checked, total }
 }
 
-function specListEntry(
-  loc: SpecLocation,
-  specMd: string,
-  tasksMd: string,
-  requested: NonNullable<SpecListInput['state']>,
-  mine: boolean,
-  principal: string | undefined,
-): SpecListEntry | null {
+function specListEntry(opts: {
+  loc: SpecLocation
+  specMd: string
+  tasksMd: string
+  requested: NonNullable<SpecListInput['state']>
+  mine: boolean
+  principal: string | undefined
+}): SpecListEntry | null {
   let spec: ReturnType<typeof parseSpec>
   let tasks: ReturnType<typeof parseTasks>
   try {
-    spec = parseSpec(specMd)
-    tasks = parseTasks(tasksMd)
+    spec = parseSpec(opts.specMd)
+    tasks = parseTasks(opts.tasksMd)
   } catch {
     return null
   }
 
-  if (requested === 'blocked' && spec.frontmatter.status.state !== 'BLOCKED') {
+  if (opts.requested === 'blocked' && spec.frontmatter.status.state !== 'BLOCKED') {
     return null
   }
 
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'owner')
   const owner = ownerField?.[1] ?? ''
-  if (mine && principal !== undefined && owner !== principal) {
+  if (opts.mine && opts.principal !== undefined && owner !== opts.principal) {
     return null
   }
 
@@ -87,7 +87,7 @@ function specListEntry(
   const approvedDtg = approvedField?.[1] && approvedField[1] !== 'TBD' ? approvedField[1] : null
 
   return {
-    slug: loc.slug,
+    slug: opts.loc.slug,
     state: spec.frontmatter.status.state,
     dtg: spec.frontmatter.status.dtg,
     owner,
@@ -157,7 +157,14 @@ export function specList(
     } catch {
       continue
     }
-    const entry = specListEntry(loc, specMd, tasksMd, requested, mine, ctx.principal)
+    const entry = specListEntry({
+      loc,
+      specMd,
+      tasksMd,
+      requested,
+      mine,
+      principal: ctx.principal,
+    })
     if (entry) {
       entries.push(entry)
     }
