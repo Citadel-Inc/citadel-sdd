@@ -1,32 +1,32 @@
-import { execFileSync } from "node:child_process";
-import { mkdirSync } from "node:fs";
-import { gitAdd, gitCommit } from "../spec/git.js";
-import { buildIndex, renderIndex } from "../spec/index_render.js";
-import type { RepoContext } from "../spec/repo.js";
-import { specsRoot } from "../spec/repo.js";
-import { ensureSpecBucketDirs } from "../spec/scaffold.js";
-import { writeSpecReadmeFull } from "../spec/spec_readme.js";
-import { runSpecTxn } from "./_txn.js";
-import type { ToolContext } from "./types.js";
+import { execFileSync } from 'node:child_process'
+import { mkdirSync } from 'node:fs'
+import { gitAdd, gitCommit } from '../spec/git.ts'
+import { buildIndex, renderIndex } from '../spec/index_render.ts'
+import type { RepoContext } from '../spec/repo.ts'
+import { specsRoot } from '../spec/repo.ts'
+import { ensureSpecBucketDirs } from '../spec/scaffold.ts'
+import { writeSpecReadmeFull } from '../spec/spec_readme.ts'
+import { runSpecTxn } from './_txn.ts'
+import type { ToolContext } from './types.ts'
 
 export interface SpecIndexRebuildInput {
-  commit?: boolean;
-  dryRun?: boolean;
+  commit?: boolean
+  dryRun?: boolean
 }
 
 export interface SpecIndexRebuildOutput {
-  active_count: number;
-  done_count: number;
-  parked_count: number;
-  commit_sha: string | null;
-  dryRun: boolean;
-  rendered: string;
+  active_count: number
+  done_count: number
+  parked_count: number
+  commit_sha: string | null
+  dryRun: boolean
+  rendered: string
   /** Repo-relative paths created while ensuring active/done/parked buckets (empty if unchanged). */
-  scaffold_repairs: string[];
+  scaffold_repairs: string[]
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
-  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir }
 }
 
 /**
@@ -35,15 +35,15 @@ function repoCtx(ctx: ToolContext): RepoContext {
  */
 function hasStagedChanges(rootDir: string, files: readonly string[]): boolean {
   if (files.length === 0) {
-    return false;
+    return false
   }
   try {
-    execFileSync("git", ["-C", rootDir, "diff", "--cached", "--quiet", "--", ...files], {
-      stdio: ["ignore", "ignore", "ignore"],
-    });
-    return false; // exit 0 means no diff → nothing staged
+    execFileSync('git', ['-C', rootDir, 'diff', '--cached', '--quiet', '--', ...files], {
+      stdio: ['ignore', 'ignore', 'ignore'],
+    })
+    return false // exit 0 means no diff → nothing staged
   } catch {
-    return true; // exit 1 means diff → something staged
+    return true // exit 1 means diff → something staged
   }
 }
 
@@ -51,9 +51,9 @@ export function specIndexRebuild(
   input: SpecIndexRebuildInput,
   ctx: ToolContext,
 ): SpecIndexRebuildOutput {
-  const repo = repoCtx(ctx);
-  const { active, done, parked } = buildIndex(repo);
-  const rendered = renderIndex(repo);
+  const repo = repoCtx(ctx)
+  const { active, done, parked } = buildIndex(repo)
+  const rendered = renderIndex(repo)
 
   if (input.dryRun === true) {
     return {
@@ -64,32 +64,32 @@ export function specIndexRebuild(
       dryRun: true,
       rendered,
       scaffold_repairs: [],
-    };
+    }
   }
 
-  mkdirSync(specsRoot(repo), { recursive: true });
+  mkdirSync(specsRoot(repo), { recursive: true })
 
-  let commitSha: string | null = null;
-  let scaffoldRepairs: string[] = [];
+  let commitSha: string | null = null
+  let scaffoldRepairs: string[] = []
 
   if (input.commit === false) {
-    scaffoldRepairs = ensureSpecBucketDirs(repo);
-    writeSpecReadmeFull(repo);
+    scaffoldRepairs = ensureSpecBucketDirs(repo)
+    writeSpecReadmeFull(repo)
   } else {
     runSpecTxn(ctx.rootDir, { scopePaths: [`${repo.specDir}/README.md`], writeTargets: [] }, () => {
-      scaffoldRepairs = ensureSpecBucketDirs(repo);
-      writeSpecReadmeFull(repo);
+      scaffoldRepairs = ensureSpecBucketDirs(repo)
+      writeSpecReadmeFull(repo)
       const subject =
-        ctx.profile.commit_style === "conventional"
+        ctx.profile.commit_style === 'conventional'
           ? `spec(index): rebuild specs/README.md (${active.length} active, ${done.length} done, ${parked.length} parked)`
-          : "Rebuild specs/README.md";
-      const toStage = [`${repo.specDir}/README.md`, ...scaffoldRepairs];
-      gitAdd({ rootDir: ctx.rootDir }, toStage);
+          : 'Rebuild specs/README.md'
+      const toStage = [`${repo.specDir}/README.md`, ...scaffoldRepairs]
+      gitAdd({ rootDir: ctx.rootDir }, toStage)
       // Skip commit if README content is identical to HEAD (nothing to commit).
       if (hasStagedChanges(ctx.rootDir, toStage)) {
-        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
+        commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
       }
-    });
+    })
   }
 
   return {
@@ -100,5 +100,5 @@ export function specIndexRebuild(
     dryRun: false,
     rendered,
     scaffold_repairs: scaffoldRepairs,
-  };
+  }
 }

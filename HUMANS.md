@@ -37,26 +37,26 @@ Choose a different profile by editing `specs/config.yaml`. See [docs/profile-sys
 
 Goal-oriented tool mapping. Per-tool schemas in [docs/mcp-tools.md](docs/mcp-tools.md).
 
-| Goal | Tool |
-| ------ | ------ |
-| List specs | `spec_list` |
-| Read spec + plan + tasks | `spec_read` |
-| Single-spec status summary | `spec_status` |
-| Lint spec tree | `spec_lint` |
-| Diagnose existing repo | `sdd_doctor` |
-| Approve a draft | `spec_transition` (`to: "approve"`) |
-| Ratify Q-table TBD rows | `spec_transition` (`to: "ratify"`) |
-| Flip a tasks.md checkbox | `spec_task_check` |
-| Add a tasks.md item | `spec_task_add` |
-| Reassign owner | `spec_handoff` |
-| Claim (DRAFT/APPROVED → IN_PROGRESS) | `spec_transition` (`to: "claim"`) |
-| Close (IN_PROGRESS → DONE; also PARKED → DONE to abandon) | `spec_transition` (`to: "close"`) |
-| Park (hold pending trigger — → PARKED) | `spec_transition` (`to: "park"`) |
-| Unpark (wake trigger fired — PARKED → IN_PROGRESS) | `spec_transition` (`to: "unpark"`) |
-| Reopen (DONE → IN_PROGRESS) | `spec_transition` (`to: "reopen"`) |
-| Block / unblock | `spec_transition` (`to: "block"` / `to: "unblock"`) |
-| Regenerate `specs/README.md` | `spec_index_rebuild` |
-| Bootstrap fresh repo | `spec_init` |
+| Goal                                                      | Tool                                                |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| List specs                                                | `spec_list`                                         |
+| Read spec + plan + tasks                                  | `spec_read`                                         |
+| Single-spec status summary                                | `spec_status`                                       |
+| Lint spec tree                                            | `spec_lint`                                         |
+| Diagnose existing repo                                    | `sdd_doctor`                                        |
+| Approve a draft                                           | `spec_transition` (`to: "approve"`)                 |
+| Ratify Q-table TBD rows                                   | `spec_transition` (`to: "ratify"`)                  |
+| Flip a tasks.md checkbox                                  | `spec_task_check`                                   |
+| Add a tasks.md item                                       | `spec_task_add`                                     |
+| Reassign owner                                            | `spec_handoff`                                      |
+| Claim (DRAFT/APPROVED → IN_PROGRESS)                      | `spec_transition` (`to: "claim"`)                   |
+| Close (IN_PROGRESS → DONE; also PARKED → DONE to abandon) | `spec_transition` (`to: "close"`)                   |
+| Park (hold pending trigger — → PARKED)                    | `spec_transition` (`to: "park"`)                    |
+| Unpark (wake trigger fired — PARKED → IN_PROGRESS)        | `spec_transition` (`to: "unpark"`)                  |
+| Reopen (DONE → IN_PROGRESS)                               | `spec_transition` (`to: "reopen"`)                  |
+| Block / unblock                                           | `spec_transition` (`to: "block"` / `to: "unblock"`) |
+| Regenerate `specs/README.md`                              | `spec_index_rebuild`                                |
+| Bootstrap fresh repo                                      | `spec_init`                                         |
 
 All write tools support `dryRun: true` for preview.
 

@@ -1,7 +1,7 @@
 # Blocked with reason — Tasks
 
-| | |
-|---|---|
+|        |                                                     |
+| ------ | --------------------------------------------------- |
 | Status | BLOCKED 011930ZMAY26 — awaiting external dependency |
 
 ## P0

@@ -1,10 +1,10 @@
 # Blocked with reason
 
-| | |
-|---|---|
-| Status | BLOCKED 011930ZMAY26 — awaiting external dependency |
-| Owner | TestAgent |
-| Approved | 011910ZMAY26 |
+|          |                                                     |
+| -------- | --------------------------------------------------- |
+| Status   | BLOCKED 011930ZMAY26 — awaiting external dependency |
+| Owner    | TestAgent                                           |
+| Approved | 011910ZMAY26                                        |
 
 ## Blocking
 
@@ -16,6 +16,6 @@ Fixture for a spec that progressed to IN_PROGRESS, then hit a hard external bloc
 
 ## Decisions
 
-| # | Question | Proposed default | NOMAD |
-|---|----------|------------------|-------|
-| Q1 | Wait for upstream? | Yes | Ratified 011915ZMAY26 |
+| #   | Question           | Proposed default | NOMAD                 |
+| --- | ------------------ | ---------------- | --------------------- |
+| Q1  | Wait for upstream? | Yes              | Ratified 011915ZMAY26 |

@@ -1,0 +1,394 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.6/schema.json",
+
+  // canon ts-biome-00001
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+
+  "files": {
+    // canon ts-biome-00002 — only what the ignore file cannot reach: committed,
+    // machine-written trees. Anything a repo builds is gitignored and arrives via vcs.
+    "includes": [
+      "**",
+      "!**/*.dc.html",
+      "!**/*.min.js",
+      "!**/database.types.ts",
+      "!**/design/doc-page.js",
+      "!**/design/support.js",
+      "!**/generated",
+      "!**/vendor",
+      "!.claude"
+    ]
+  },
+
+  // canon ts-biome-00003
+  "formatter": {
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 100
+  },
+
+  // canon ts-biome-00024
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded",
+      "trailingCommas": "all"
+    }
+  },
+
+  // canon ts-biome-00036
+  "markdown": {
+    "parser": { "frontmatter": true },
+    // canon ts-biome-00039
+    "formatter": { "enabled": true }
+  },
+
+  // canon ts-biome-00004
+  "assist": {
+    "actions": { "source": { "organizeImports": "on" } }
+  },
+
+  "linter": {
+    "rules": {
+      // canon ts-biome-00006
+      "preset": "all",
+
+      "style": {
+        // canon ts-biome-00041
+        "useConsistentTestIt": {
+          "level": "error",
+          "options": { "function": "test", "withinDescribe": "test" }
+        },
+        // canon ts-biome-00043
+        "useImportsFirst": "error",
+        // canon ts-biome-00045
+        "noNestedTernary": "error",
+        "useReduceTypeParameter": "error",
+        // canon ts-biome-00042 (regex style), ts-biome-00044 (taste and framework mismatch)
+        "noInlineStyles": "off",
+        "useDomQuerySelector": "off",
+        "useThisInClassMethods": "off",
+        "noReactNativeLiteralColors": "off",
+        "useDestructuring": "off",
+        "noHexColors": "off",
+        "useConsistentMethodSignatures": "off",
+        "useTestHooksInOrder": "off",
+        "useTestHooksOnTop": "off",
+        "useExplicitLengthCheck": "off",
+        "useVarsOnTop": "off",
+        "noExportedImports": "off",
+        "useUnicodeRegex": "off",
+        "useNamedCaptureGroup": "off",
+        // canon ts-biome-00023
+        "noNonNullAssertion": "error",
+        // canon ts-biome-00022
+        "useImportType": "error",
+        // canon ts-biome-00035
+        "noContinue": "off",
+        // canon ts-biome-00035
+        "noTernary": "off",
+        // canon ts-biome-00035
+        "useExportsLast": "off",
+
+        // canon ts-biome-00007
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 500
+          }
+        },
+        // canon ts-biome-00008
+        "noIncrementDecrement": {
+          "level": "on",
+          "options": {
+            "allowForLoopAfterthoughts": true
+          }
+        },
+        // canon ts-biome-00009
+        "useFilenamingConvention": {
+          "level": "on",
+          "options": {
+            "strictCase": false,
+            "filenameCases": ["camelCase", "PascalCase", "kebab-case", "export"]
+          }
+        },
+        // canon ts-biome-00010 — wire-shaped data keeps the casing the wire uses.
+        "useNamingConvention": {
+          "level": "on",
+          "options": {
+            // canon ts-biome-00025
+            "strictCase": false,
+            "conventions": [
+              {
+                "selector": { "kind": "objectLiteralProperty" },
+                "match": "_?\\$?(.+)",
+                "formats": ["camelCase", "snake_case", "CONSTANT_CASE", "PascalCase"]
+              },
+              {
+                "selector": { "kind": "typeProperty" },
+                "match": "_?\\$?(.+)",
+                "formats": ["camelCase", "snake_case", "CONSTANT_CASE"]
+              }
+            ]
+          }
+        }
+      },
+
+      "a11y": {
+        // canon ts-biome-00045
+        "noNoninteractiveElementInteractions": "error"
+      },
+
+      "complexity": {
+        // canon ts-biome-00045
+        "noUnnecessaryTemplateExpression": "error",
+        "noUselessStringConcat": "error",
+        "noUselessUndefined": "error",
+        "noPlaywrightUselessAwait": "error",
+        "noExcessiveNestedCallbacks": "error",
+        "useArraySome": "error",
+        // canon ts-biome-00011
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": {
+            "maxLines": 100,
+            "skipBlankLines": true,
+            "skipIifes": true
+          }
+        },
+        // canon ts-biome-00026
+        "noUselessReturn": "off",
+        // canon ts-biome-00012
+        "noExcessiveCognitiveComplexity": {
+          "level": "error",
+          "options": {
+            "maxAllowedComplexity": 25
+          }
+        }
+      },
+
+      "correctness": {
+        // canon ts-biome-00031
+        "useImportExtensions": "on",
+        // canon ts-biome-00020 — biomejs/biome#10283, open: the resolver cannot see
+        // members of an `export =` namespace, nor packages that ship only a `main` field.
+        "noUnresolvedImports": "off",
+        // canon ts-biome-00005 — rules for frameworks this repository does not use.
+        "noSolidDestructuredProps": "off",
+        "useQwikValidLexicalScope": "off",
+        "noReactNativeRawText": "off"
+      },
+
+      "suspicious": {
+        // canon ts-biome-00021
+        "noExplicitAny": "error",
+        // canon ts-biome-00005
+        "noReactSpecificProps": "off",
+        // canon ts-biome-00019
+        "noUnnecessaryConditions": "error",
+        // canon ts-biome-00037
+        "useBaseline": "off",
+        // canon ts-biome-00038
+        "noLoopFunc": "off"
+      },
+
+      // canon ts-biome-00013 — an unhandled promise is a silent failure, not a style issue.
+      // canon ts-biome-00030
+      "security": {
+        "noSecrets": { "level": "on", "options": { "entropyThreshold": 55 } }
+      },
+
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      },
+
+      // canon ts-biome-00014 — sequencing is the point when a loop awaits.
+      "performance": {
+        // canon ts-biome-00040
+        "useDomNodeTextContent": "off",
+        "noAwaitInLoops": "off",
+        // canon ts-biome-00029
+        "noImgElement": "off",
+        // canon ts-biome-00005
+        "noJsxPropsBind": "off",
+        "useSolidForComponent": "off"
+      }
+    }
+  },
+
+  "overrides": [
+    // canon ts-context-library-biome-00002
+    {
+      "includes": ["**/src/index.ts"],
+      "linter": { "rules": { "performance": { "noBarrelFile": "off" } } }
+    },
+    // canon ts-biome-00015 — test files
+    {
+      "includes": [
+        "**/*.spec.ts",
+        "**/*.spec.tsx",
+        "**/*.pw.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/__tests__/**",
+        "**/test/**",
+        "**/tests/**"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveCognitiveComplexity": {
+              "level": "error",
+              "options": {
+                "maxAllowedComplexity": 30
+              }
+            },
+            "noExcessiveLinesPerFunction": {
+              "level": "error",
+              "options": {
+                "maxLines": 150,
+                "skipBlankLines": true,
+                "skipIifes": true
+              }
+            }
+          },
+          "correctness": {
+            "noNodejsModules": "off",
+            "noProcessGlobal": "off",
+            "noUnresolvedImports": "off"
+          },
+          "performance": {
+            "noNamespaceImport": "off",
+            "useTopLevelRegex": "off"
+          },
+          "security": {
+            "noSecrets": "off"
+          },
+          "style": {
+            // canon ts-biome-00043
+            "useImportsFirst": "off",
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 1500
+              }
+            },
+            "noMagicNumbers": "off",
+            "noProcessEnv": "off",
+            "useComponentExportOnlyModules": "off"
+          },
+          "suspicious": {
+            "noBitwiseOperators": "off",
+            "noConsole": "off",
+            "noMisplacedAssertion": "off",
+            "noSkippedTests": "off",
+            "useAwait": "off"
+          }
+        }
+      }
+    },
+    // canon ts-biome-00016 — end-to-end specs and their config
+    {
+      "includes": ["**/e2e/**", "**/playwright.*.config.ts", "**/playwright.config.ts"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "off",
+            "noProcessGlobal": "off",
+            "noUnresolvedImports": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off"
+          },
+          "security": {
+            "noSecrets": "off"
+          },
+          "style": {
+            "noDefaultExport": "off",
+            "noMagicNumbers": "off",
+            "noProcessEnv": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    // canon ts-biome-00017 — build scripts, tooling and config files
+    {
+      "includes": [
+        "**/*.config.js",
+        "**/*.config.mjs",
+        "**/*.config.ts",
+        "**/scripts/**",
+        "tools/**"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "off",
+            "noProcessGlobal": "off",
+            "noUnresolvedImports": "off"
+          },
+          "performance": {
+            "useTopLevelRegex": "off"
+          },
+          "style": {
+            "noDefaultExport": "off",
+            "noProcessEnv": "off"
+          },
+          "suspicious": {
+            "noConsole": "off"
+          }
+        }
+      }
+    },
+    // canon ts-biome-00018 — server-only code
+    {
+      "includes": [
+        "**/app/**/route.ts",
+        "**/apps/server/**",
+        "**/apps/worker/**",
+        "**/lib/server/**",
+        "**/pages/api/**",
+        "**/src/app/api/**",
+        "**/src/server/**"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "off",
+            "noProcessGlobal": "off"
+          }
+        }
+      }
+    },
+    // canon ts-biome-00027 — ambient declarations
+    {
+      "includes": ["**/*.d.ts"],
+      "linter": { "rules": { "style": { "noDefaultExport": "off" } } }
+    },
+    // canon ts-biome-00028 — program entry points and loggers
+    {
+      "includes": ["**/cli.ts", "**/logger.ts", "**/log.ts", "**/main.ts"],
+      "linter": { "rules": { "suspicious": { "noConsole": "off" } } }
+    },
+    // canon ts-biome-00032 — the one component that puts a scroll container in the tab order
+    {
+      "includes": ["**/scroll-region.tsx"],
+      "linter": { "rules": { "a11y": { "noNoninteractiveTabindex": "off" } } }
+    },
+    // MCP stdio server: every src module talks to the filesystem and is never bundled for a browser.
+    {
+      "includes": ["src/**"],
+      "linter": { "rules": { "correctness": { "noNodejsModules": "off" } } }
+    },
+    // Single process.env boundary; every other module reads `env` instead.
+    {
+      "includes": ["src/env.ts"],
+      "linter": { "rules": { "style": { "noProcessEnv": "off" } } }
+    }
+  ]
+}

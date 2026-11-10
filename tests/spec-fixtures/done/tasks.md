@@ -1,7 +1,7 @@
 # Done fixture — Tasks
 
-| | |
-|---|---|
+|        |                                 |
+| ------ | ------------------------------- |
 | Status | DONE 011945ZMAY26 — all checked |
 
 ## P0

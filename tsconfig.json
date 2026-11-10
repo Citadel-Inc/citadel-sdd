@@ -1,24 +1,67 @@
 {
+  "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    // canon ts-typescript-00001
     "strict": true,
+
+    // canon ts-typescript-00002
     "noUncheckedIndexedAccess": true,
-    "verbatimModuleSyntax": true,
+
+    // canon ts-typescript-00003
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "allowUnusedLabels": false,
-    "noFallthroughCasesInSwitch": true,
     "allowUnreachableCode": false,
+
+    // canon ts-typescript-00004
     "noImplicitOverride": true,
-    "noEmit": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // canon ts-typescript-00005
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+
+    // canon ts-typescript-00006
+    "erasableSyntaxOnly": true,
+    "useDefineForClassFields": true,
+
+    // canon ts-typescript-00007
+    "noUncheckedSideEffectImports": true,
+
+    // canon ts-typescript-00008
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
+
+    // canon ts-typescript-00010
+    "moduleResolution": "bundler",
+
+    // canon ts-typescript-00011
     "resolveJsonModule": true,
+
+    // canon ts-typescript-00012
+    "esModuleInterop": true,
+
+    // canon ts-typescript-00013
+    "allowJs": false,
+
+    // canon ts-context-library-typescript-00002: a library emits its declarations, with maps,
+    // and supersedes the base's noEmit, allowImportingTsExtensions and incremental.
+    "declaration": true,
+    "declarationMap": true,
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "rewriteRelativeImportExtensions": true,
+    "incremental": false,
+
+    "outDir": "dist",
+    "rootDir": "src",
+
+    "target": "ES2022",
+    "module": "ESNext",
     "lib": ["ES2022"],
     "types": ["node"]
   },
-  "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts"]
 }

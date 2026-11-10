@@ -1,130 +1,130 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { resolveBuiltIn } from "../../src/profile/resolver.js";
-import { gitStatusPorcelain } from "../../src/spec/git.js";
-import { specApprove } from "../../src/tools/spec_approve.js";
-import type { ToolContext } from "../../src/tools/types.js";
-import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
+import { afterEach, describe, expect, test } from 'bun:test'
+import { execSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { resolveBuiltIn } from '../../src/profile/resolver.ts'
+import { gitStatusPorcelain } from '../../src/spec/git.ts'
+import { specApprove } from '../../src/tools/spec_approve.ts'
+import type { ToolContext } from '../../src/tools/types.ts'
+import { makeTempRepo, type TempRepo } from '../helpers/temp-repo.ts'
 
-let temp: TempRepo | undefined;
+let temp: TempRepo | undefined
 
 afterEach(() => {
-  temp?.cleanup();
-  temp = undefined;
-});
+  temp?.cleanup()
+  temp = undefined
+})
 
-const FIXED_DTG_CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0));
+const FIXED_DTG_CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0))
 
-function ctx(profileName: "default" | "bastion" | "citadel" = "bastion"): ToolContext {
+function ctx(profileName: 'default' | 'bastion' | 'citadel' = 'bastion'): ToolContext {
   if (!temp) {
-    throw new Error("temp repo not initialized");
+    throw new Error('temp repo not initialized')
   }
   return {
     rootDir: temp.rootDir,
     profile: resolveBuiltIn(profileName),
     clock: FIXED_DTG_CLOCK,
-  };
+  }
 }
 
-describe("specApprove", () => {
-  test("DRAFT -> APPROVED writes both files + commits", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specApprove({ slug: "draft-minimal" }, ctx());
-    expect(out.before.state).toBe("DRAFT");
-    expect(out.after.state).toBe("APPROVED");
-    expect(out.after.dtg).toBe("011945ZMAY26");
-    expect(out.commit_sha).not.toBeNull();
-    expect(out.dryRun).toBe(false);
+describe('specApprove', () => {
+  test('DRAFT -> APPROVED writes both files + commits', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specApprove({ slug: 'draft-minimal' }, ctx())
+    expect(out.before.state).toBe('DRAFT')
+    expect(out.after.state).toBe('APPROVED')
+    expect(out.after.dtg).toBe('011945ZMAY26')
+    expect(out.commit_sha).not.toBeNull()
+    expect(out.dryRun).toBe(false)
 
     const specMd = readFileSync(
-      join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md"),
-      "utf8",
-    );
-    expect(specMd).toContain("APPROVED 011945ZMAY26");
+      join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'spec.md'),
+      'utf8',
+    )
+    expect(specMd).toContain('APPROVED 011945ZMAY26')
 
-    const status = gitStatusPorcelain({ rootDir: temp.rootDir });
-    expect(status).toEqual([]);
-  });
+    const status = gitStatusPorcelain({ rootDir: temp.rootDir })
+    expect(status).toEqual([])
+  })
 
-  test("dryRun returns predicted state without writing", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specApprove({ slug: "draft-minimal", dryRun: true }, ctx());
-    expect(out.dryRun).toBe(true);
-    expect(out.commit_sha).toBeNull();
-    expect(out.after.state).toBe("APPROVED");
+  test('dryRun returns predicted state without writing', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specApprove({ slug: 'draft-minimal', dryRun: true }, ctx())
+    expect(out.dryRun).toBe(true)
+    expect(out.commit_sha).toBeNull()
+    expect(out.after.state).toBe('APPROVED')
 
     const specMd = readFileSync(
-      join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md"),
-      "utf8",
-    );
-    expect(specMd).toContain("DRAFT 011900ZMAY26");
-  });
+      join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'spec.md'),
+      'utf8',
+    )
+    expect(specMd).toContain('DRAFT 011900ZMAY26')
+  })
 
-  test("commit:false leaves edits unstaged", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specApprove({ slug: "draft-minimal", commit: false }, ctx());
-    expect(out.commit_sha).toBeNull();
-    const status = gitStatusPorcelain({ rootDir: temp.rootDir });
-    expect(status.length).toBeGreaterThan(0);
-  });
+  test('commit:false leaves edits unstaged', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specApprove({ slug: 'draft-minimal', commit: false }, ctx())
+    expect(out.commit_sha).toBeNull()
+    const status = gitStatusPorcelain({ rootDir: temp.rootDir })
+    expect(status.length).toBeGreaterThan(0)
+  })
 
-  test("rejects spec_approve from APPROVED", () => {
-    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
-    expect(() => specApprove({ slug: "approved-ratified" }, ctx())).toThrow("state_invalid");
-  });
+  test('rejects spec_approve from APPROVED', () => {
+    temp = makeTempRepo({ activeFixtures: ['approved-ratified'] })
+    expect(() => specApprove({ slug: 'approved-ratified' }, ctx())).toThrow('state_invalid')
+  })
 
-  test("rejects spec_approve from IN_PROGRESS", () => {
-    temp = makeTempRepo({ activeFixtures: ["in-progress-midway"] });
-    expect(() => specApprove({ slug: "in-progress-midway" }, ctx())).toThrow("state_invalid");
-  });
+  test('rejects spec_approve from IN_PROGRESS', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+    expect(() => specApprove({ slug: 'in-progress-midway' }, ctx())).toThrow('state_invalid')
+  })
 
-  test("note attaches to status tail + commit subject (conventional profile)", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    specApprove({ slug: "draft-minimal", note: "scope locked" }, ctx());
+  test('note attaches to status tail + commit subject (conventional profile)', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    specApprove({ slug: 'draft-minimal', note: 'scope locked' }, ctx())
     const specMd = readFileSync(
-      join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md"),
-      "utf8",
-    );
-    expect(specMd).toContain("APPROVED 011945ZMAY26 — scope locked");
-  });
+      join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'spec.md'),
+      'utf8',
+    )
+    expect(specMd).toContain('APPROVED 011945ZMAY26 — scope locked')
+  })
 
-  test("unknown slug throws", () => {
-    temp = makeTempRepo();
-    expect(() => specApprove({ slug: "missing" }, ctx())).toThrow("spec_not_found");
-  });
+  test('unknown slug throws', () => {
+    temp = makeTempRepo()
+    expect(() => specApprove({ slug: 'missing' }, ctx())).toThrow('spec_not_found')
+  })
 
-  test("unrelated dirty files do not block mutation (scope-only check)", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    writeFileSync(join(temp.rootDir, "extra.txt"), "dirty");
+  test('unrelated dirty files do not block mutation (scope-only check)', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    writeFileSync(join(temp.rootDir, 'extra.txt'), 'dirty')
     // runSpecTxn only checks scoped paths — unrelated files are ignored.
-    const out = specApprove({ slug: "draft-minimal" }, ctx());
-    expect(out.commit_sha).not.toBeNull();
-  });
+    const out = specApprove({ slug: 'draft-minimal' }, ctx())
+    expect(out.commit_sha).not.toBeNull()
+  })
 
-  test("freeform commit style yields `Approve <slug>[: note]` subject", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const t = temp;
-    specApprove({ slug: "draft-minimal", note: "shipping" }, ctx("default"));
-    const withNote = execSync(`git -C ${t.rootDir} log -1 --pretty=%s`).toString().trim();
-    expect(withNote).toBe("Approve draft-minimal: shipping");
+  test('freeform commit style yields `Approve <slug>[: note]` subject', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const t = temp
+    specApprove({ slug: 'draft-minimal', note: 'shipping' }, ctx('default'))
+    const withNote = execSync(`git -C ${t.rootDir} log -1 --pretty=%s`).toString().trim()
+    expect(withNote).toBe('Approve draft-minimal: shipping')
 
-    temp.cleanup();
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const t2 = temp;
-    specApprove({ slug: "draft-minimal" }, ctx("default"));
-    const noNote = execSync(`git -C ${t2.rootDir} log -1 --pretty=%s`).toString().trim();
-    expect(noNote).toBe("Approve draft-minimal");
-  });
+    temp.cleanup()
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const t2 = temp
+    specApprove({ slug: 'draft-minimal' }, ctx('default'))
+    const noNote = execSync(`git -C ${t2.rootDir} log -1 --pretty=%s`).toString().trim()
+    expect(noNote).toBe('Approve draft-minimal')
+  })
 
-  test("dryRun does not write or commit", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const path = join(temp.rootDir, "specs", "active", "draft-minimal", "spec.md");
-    const before = readFileSync(path, "utf8");
-    const out = specApprove({ slug: "draft-minimal", dryRun: true }, ctx());
-    expect(out.dryRun).toBe(true);
-    expect(out.commit_sha).toBeNull();
-    expect(readFileSync(path, "utf8")).toBe(before);
-  });
-});
+  test('dryRun does not write or commit', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const path = join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'spec.md')
+    const before = readFileSync(path, 'utf8')
+    const out = specApprove({ slug: 'draft-minimal', dryRun: true }, ctx())
+    expect(out.dryRun).toBe(true)
+    expect(out.commit_sha).toBeNull()
+    expect(readFileSync(path, 'utf8')).toBe(before)
+  })
+})

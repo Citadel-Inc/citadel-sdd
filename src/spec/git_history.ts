@@ -1,112 +1,112 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync } from 'node:child_process'
 
-const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 
-const LINE_SPLIT_RE = /\r?\n/;
+const LINE_SPLIT_RE = /\r?\n/
 
 export interface GitHistoryOptions {
-  metaRoot: string;
-  specsRoot: string;
-  section: "active" | "done" | "parked";
-  since?: string;
+  metaRoot: string
+  specsRoot: string
+  section: 'active' | 'done' | 'parked'
+  since?: string
 }
 
 function runGit(metaRoot: string, args: readonly string[]): string | null {
   try {
-    return execFileSync("git", ["-C", metaRoot, ...args], {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
+    return execFileSync('git', ['-C', metaRoot, ...args], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
       timeout: 30_000,
-    });
+    })
   } catch {
-    return null;
+    return null
   }
 }
 
 function relPath(metaRoot: string, specsRoot: string): string {
   if (specsRoot.startsWith(`${metaRoot}/`)) {
-    return specsRoot.slice(metaRoot.length + 1);
+    return specsRoot.slice(metaRoot.length + 1)
   }
   if (specsRoot === metaRoot) {
-    return "";
+    return ''
   }
-  return specsRoot;
+  return specsRoot
 }
 
 export function lastTouchedBulk(opts: GitHistoryOptions): Map<string, string> {
-  const result = new Map<string, string>();
-  const rel = relPath(opts.metaRoot, opts.specsRoot);
-  const prefix = rel ? `${rel}/${opts.section}/` : `${opts.section}/`;
-  const args = ["log", "--format=\x01%cs", "--name-only"];
+  const result = new Map<string, string>()
+  const rel = relPath(opts.metaRoot, opts.specsRoot)
+  const prefix = rel ? `${rel}/${opts.section}/` : `${opts.section}/`
+  const args = ['log', '--format=\x01%cs', '--name-only']
   if (opts.since) {
-    args.push(`--since=${opts.since}`);
+    args.push(`--since=${opts.since}`)
   }
-  args.push("--", prefix);
-  const out = runGit(opts.metaRoot, args);
+  args.push('--', prefix)
+  const out = runGit(opts.metaRoot, args)
   if (out === null) {
-    return result;
+    return result
   }
 
-  let curDate: string | null = null;
+  let curDate: string | null = null
   for (const raw of out.split(LINE_SPLIT_RE)) {
     if (!raw) {
-      continue;
+      continue
     }
-    if (raw.startsWith("\x01")) {
-      const d = raw.slice(1).trim();
-      curDate = d || null;
-      continue;
+    if (raw.startsWith('\x01')) {
+      const d = raw.slice(1).trim()
+      curDate = d || null
+      continue
     }
     if (curDate === null || !raw.startsWith(prefix)) {
-      continue;
+      continue
     }
-    const rest = raw.slice(prefix.length);
-    const [name] = rest.split("/", 1);
+    const rest = raw.slice(prefix.length)
+    const [name] = rest.split('/', 1)
     if (name && !result.has(name)) {
-      result.set(name, curDate);
+      result.set(name, curDate)
     }
   }
-  return result;
+  return result
 }
 
 export interface RecentCommitsOptions extends GitHistoryOptions {
-  slug: string;
-  limit: number;
+  slug: string
+  limit: number
 }
 
 export function recentCommits(opts: RecentCommitsOptions): string[] {
   if (opts.limit <= 0) {
-    return [];
+    return []
   }
-  const rel = relPath(opts.metaRoot, opts.specsRoot);
-  const prefix = rel ? `${rel}/${opts.section}/${opts.slug}/` : `${opts.section}/${opts.slug}/`;
-  const args = ["log", `--max-count=${opts.limit}`, "--format=%cs %h %s"];
+  const rel = relPath(opts.metaRoot, opts.specsRoot)
+  const prefix = rel ? `${rel}/${opts.section}/${opts.slug}/` : `${opts.section}/${opts.slug}/`
+  const args = ['log', `--max-count=${opts.limit}`, '--format=%cs %h %s']
   if (opts.since) {
-    args.push(`--since=${opts.since}`);
+    args.push(`--since=${opts.since}`)
   }
-  args.push("--", prefix);
-  const out = runGit(opts.metaRoot, args);
+  args.push('--', prefix)
+  const out = runGit(opts.metaRoot, args)
   if (out === null) {
-    return [];
+    return []
   }
   return out
     .split(LINE_SPLIT_RE)
     .map((s) => s.trimEnd())
-    .filter((s) => s.length > 0);
+    .filter((s) => s.length > 0)
 }
 
 export function daysBetween(isoDate: string, today: Date): number | null {
-  const m: RegExpExecArray | null = ISO_DATE_RE.exec(isoDate);
+  const m: RegExpExecArray | null = ISO_DATE_RE.exec(isoDate)
   if (!m) {
-    return null;
+    return null
   }
-  const y = Number.parseInt(m[1] ?? "", 10);
-  const mo = Number.parseInt(m[2] ?? "", 10);
-  const d = Number.parseInt(m[3] ?? "", 10);
+  const y = Number.parseInt(m[1] ?? '', 10)
+  const mo = Number.parseInt(m[2] ?? '', 10)
+  const d = Number.parseInt(m[3] ?? '', 10)
   if (Number.isNaN(y) || Number.isNaN(mo) || Number.isNaN(d)) {
-    return null;
+    return null
   }
-  const then = Date.UTC(y, mo - 1, d);
-  const now = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate());
-  return Math.floor((now - then) / 86_400_000);
+  const then = Date.UTC(y, mo - 1, d)
+  const now = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate())
+  return Math.floor((now - then) / 86_400_000)
 }

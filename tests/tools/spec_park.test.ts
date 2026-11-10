@@ -1,75 +1,75 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { resolveBuiltIn } from "../../src/profile/resolver.js";
-import { specPark } from "../../src/tools/spec_park.js";
-import type { ToolContext } from "../../src/tools/types.js";
-import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
+import { afterEach, describe, expect, test } from 'bun:test'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { resolveBuiltIn } from '../../src/profile/resolver.ts'
+import { specPark } from '../../src/tools/spec_park.ts'
+import type { ToolContext } from '../../src/tools/types.ts'
+import { makeTempRepo, type TempRepo } from '../helpers/temp-repo.ts'
 
-let temp: TempRepo | undefined;
+let temp: TempRepo | undefined
 
 afterEach(() => {
-  temp?.cleanup();
-  temp = undefined;
-});
+  temp?.cleanup()
+  temp = undefined
+})
 
-const CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0));
+const CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0))
 
-function ctx(profileName: "default" | "bastion" | "citadel" = "bastion"): ToolContext {
+function ctx(profileName: 'default' | 'bastion' | 'citadel' = 'bastion'): ToolContext {
   if (!temp) {
-    throw new Error("temp repo not initialized");
+    throw new Error('temp repo not initialized')
   }
   return {
     rootDir: temp.rootDir,
     profile: resolveBuiltIn(profileName),
     clock: CLOCK,
-  };
+  }
 }
 
-describe("specPark", () => {
-  test("requires non-empty resolution", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    expect(() => specPark({ slug: "draft-minimal", resolution: "" }, ctx())).toThrow(
-      "resolution_missing",
-    );
-  });
+describe('specPark', () => {
+  test('requires non-empty resolution', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    expect(() => specPark({ slug: 'draft-minimal', resolution: '' }, ctx())).toThrow(
+      'resolution_missing',
+    )
+  })
 
-  test("rejects spec not under active/", () => {
-    temp = makeTempRepo({ parkedFixtures: ["parked-minimal"] });
-    expect(() => specPark({ slug: "parked-minimal", resolution: "no-op" }, ctx())).toThrow(
-      "spec_not_active",
-    );
-  });
+  test('rejects spec not under active/', () => {
+    temp = makeTempRepo({ parkedFixtures: ['parked-minimal'] })
+    expect(() => specPark({ slug: 'parked-minimal', resolution: 'no-op' }, ctx())).toThrow(
+      'spec_not_active',
+    )
+  })
 
-  test("dryRun: no mutation, no commit", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specPark({ slug: "draft-minimal", resolution: "preview", dryRun: true }, ctx());
-    expect(out.dryRun).toBe(true);
-    expect(out.commit_sha).toBeNull();
-    expect(out.before.state).toBe("DRAFT");
-    expect(out.after.state).toBe("PARKED");
-    expect(existsSync(join(temp.rootDir, "specs", "active", "draft-minimal"))).toBe(true);
-    expect(existsSync(join(temp.rootDir, "specs", "parked", "draft-minimal"))).toBe(false);
-  });
+  test('dryRun: no mutation, no commit', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specPark({ slug: 'draft-minimal', resolution: 'preview', dryRun: true }, ctx())
+    expect(out.dryRun).toBe(true)
+    expect(out.commit_sha).toBeNull()
+    expect(out.before.state).toBe('DRAFT')
+    expect(out.after.state).toBe('PARKED')
+    expect(existsSync(join(temp.rootDir, 'specs', 'active', 'draft-minimal'))).toBe(true)
+    expect(existsSync(join(temp.rootDir, 'specs', 'parked', 'draft-minimal'))).toBe(false)
+  })
 
-  test("happy path parks DRAFT spec", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specPark({ slug: "draft-minimal", resolution: "superseded by HTTPS MCP" }, ctx());
-    expect(out.before.state).toBe("DRAFT");
-    expect(out.after.state).toBe("PARKED");
-    expect(out.after.path).toContain("parked");
-    expect(out.commit_sha).not.toBeNull();
+  test('happy path parks DRAFT spec', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specPark({ slug: 'draft-minimal', resolution: 'superseded by HTTPS MCP' }, ctx())
+    expect(out.before.state).toBe('DRAFT')
+    expect(out.after.state).toBe('PARKED')
+    expect(out.after.path).toContain('parked')
+    expect(out.commit_sha).not.toBeNull()
 
-    const movedDir = join(temp.rootDir, "specs", "parked", "draft-minimal");
-    expect(existsSync(movedDir)).toBe(true);
-    expect(existsSync(join(temp.rootDir, "specs", "active", "draft-minimal"))).toBe(false);
+    const movedDir = join(temp.rootDir, 'specs', 'parked', 'draft-minimal')
+    expect(existsSync(movedDir)).toBe(true)
+    expect(existsSync(join(temp.rootDir, 'specs', 'active', 'draft-minimal'))).toBe(false)
 
-    const md = readFileSync(join(movedDir, "spec.md"), "utf8");
-    expect(md).toContain("PARKED");
-    expect(md).toContain("superseded by HTTPS MCP");
+    const md = readFileSync(join(movedDir, 'spec.md'), 'utf8')
+    expect(md).toContain('PARKED')
+    expect(md).toContain('superseded by HTTPS MCP')
 
-    const indexMd = readFileSync(join(temp.rootDir, "specs", "README.md"), "utf8");
-    expect(indexMd).toContain("## Parked");
-    expect(indexMd).toContain("draft-minimal");
-  });
-});
+    const indexMd = readFileSync(join(temp.rootDir, 'specs', 'README.md'), 'utf8')
+    expect(indexMd).toContain('## Parked')
+    expect(indexMd).toContain('draft-minimal')
+  })
+})

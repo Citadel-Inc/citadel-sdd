@@ -29,16 +29,16 @@ The server ships two profiles out of the box (`default` and `bastion`) with prof
 
 ## Documentation
 
-| You are… | Start here |
-| ---------- | ------------ |
-| An agent / LLM working in this repo | [AGENTS.md](AGENTS.md) |
-| Installing as a user | [HUMANS.md](HUMANS.md) → [docs/install.md](docs/install.md) |
-| Looking up a tool's schema | [docs/mcp-tools.md](docs/mcp-tools.md) |
-| Looking up file layout, state machine, FS contract | [docs/architecture.md](docs/architecture.md) |
-| Looking up profile config | [docs/profile-system.md](docs/profile-system.md) |
-| Reading architectural decisions | [docs/decisions.md](docs/decisions.md) |
-| Contributing | [CONTRIBUTING.md](CONTRIBUTING.md) |
-| Reporting a vulnerability | [SECURITY.md](SECURITY.md) |
+| You are…                                           | Start here                                                  |
+| -------------------------------------------------- | ----------------------------------------------------------- |
+| An agent / LLM working in this repo                | [AGENTS.md](AGENTS.md)                                      |
+| Installing as a user                               | [HUMANS.md](HUMANS.md) → [docs/install.md](docs/install.md) |
+| Looking up a tool's schema                         | [docs/mcp-tools.md](docs/mcp-tools.md)                      |
+| Looking up file layout, state machine, FS contract | [docs/architecture.md](docs/architecture.md)                |
+| Looking up profile config                          | [docs/profile-system.md](docs/profile-system.md)            |
+| Reading architectural decisions                    | [docs/decisions.md](docs/decisions.md)                      |
+| Contributing                                       | [CONTRIBUTING.md](CONTRIBUTING.md)                          |
+| Reporting a vulnerability                          | [SECURITY.md](SECURITY.md)                                  |
 
 ## License
 

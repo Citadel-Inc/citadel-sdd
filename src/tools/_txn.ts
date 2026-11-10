@@ -8,27 +8,27 @@
  * A dirty scoped path is rejected with a `working_tree_dirty` error because
  * a partial rollback cannot be safely applied.
  */
-import { execFileSync } from "node:child_process";
-import { lstatSync } from "node:fs";
+import { execFileSync } from 'node:child_process'
+import { lstatSync } from 'node:fs'
 
 export interface TxnOptions {
   /**
    * Repo-relative paths that define the rollback scope.
    * Must all be clean at HEAD before the transaction starts.
    */
-  scopePaths: string[];
+  scopePaths: string[]
   /**
    * Absolute paths of .md files that will be written inside fn().
    * Checked for symlinks before fn() runs.
    */
-  writeTargets: string[];
+  writeTargets: string[]
 }
 
 function git(rootDir: string, args: readonly string[]): string {
-  return execFileSync("git", ["-C", rootDir, ...args], {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  return execFileSync('git', ['-C', rootDir, ...args], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
 }
 
 /**
@@ -37,15 +37,15 @@ function git(rootDir: string, args: readonly string[]): string {
  */
 function assertScopeClean(rootDir: string, scopePaths: string[]): void {
   if (scopePaths.length === 0) {
-    return;
+    return
   }
-  const out = git(rootDir, ["status", "--porcelain", "--", ...scopePaths]);
+  const out = git(rootDir, ['status', '--porcelain', '--', ...scopePaths])
   const dirty = out
-    .split("\n")
+    .split('\n')
     .map((l) => l.trim())
-    .filter((l) => l.length > 0);
+    .filter((l) => l.length > 0)
   if (dirty.length > 0) {
-    throw new Error(`working_tree_dirty: ${dirty.join(", ")}`);
+    throw new Error(`working_tree_dirty: ${dirty.join(', ')}`)
   }
 }
 
@@ -56,16 +56,16 @@ function assertScopeClean(rootDir: string, scopePaths: string[]): void {
 function assertNoSymlinks(writeTargets: string[]): void {
   for (const p of writeTargets) {
     try {
-      const stat = lstatSync(p);
+      const stat = lstatSync(p)
       if (stat.isSymbolicLink()) {
-        throw new Error(`target_is_symlink: ${p}`);
+        throw new Error(`target_is_symlink: ${p}`)
       }
     } catch (e: unknown) {
       // ENOENT: file doesn't exist yet — fine, it's new
-      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
-        continue;
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        continue
       }
-      throw e;
+      throw e
     }
   }
 }
@@ -78,12 +78,12 @@ function assertNoSymlinks(writeTargets: string[]): void {
  */
 function rollback(rootDir: string, scopePaths: string[]): void {
   if (scopePaths.length === 0) {
-    return;
+    return
   }
 
   // 1. Unstage everything under the scope in one call (reset tolerates unknown paths).
   try {
-    git(rootDir, ["reset", "HEAD", "--", ...scopePaths]);
+    git(rootDir, ['reset', 'HEAD', '--', ...scopePaths])
   } catch {
     /* ignore rollback failures */
   }
@@ -92,7 +92,7 @@ function rollback(rootDir: string, scopePaths: string[]): void {
   //    A path that was never in HEAD (e.g. the afterRelDir) will fail — swallow and continue.
   for (const p of scopePaths) {
     try {
-      git(rootDir, ["checkout", "-f", "HEAD", "--", p]);
+      git(rootDir, ['checkout', '-f', 'HEAD', '--', p])
     } catch {
       /* path may not exist in HEAD — e.g. afterRelDir after a gitMv */
     }
@@ -101,7 +101,7 @@ function rollback(rootDir: string, scopePaths: string[]): void {
   // 3. Remove any untracked files/dirs under the scope (e.g. new dir from gitMv).
   for (const p of scopePaths) {
     try {
-      git(rootDir, ["clean", "-fd", "--", p]);
+      git(rootDir, ['clean', '-fd', '--', p])
     } catch {
       /* ignore rollback failures */
     }
@@ -118,12 +118,12 @@ function rollback(rootDir: string, scopePaths: string[]): void {
  * @throws          Original error from `fn` (after rolling back), or pre-condition errors.
  */
 export function runSpecTxn<T>(rootDir: string, opts: TxnOptions, fn: () => T): T {
-  assertScopeClean(rootDir, opts.scopePaths);
-  assertNoSymlinks(opts.writeTargets);
+  assertScopeClean(rootDir, opts.scopePaths)
+  assertNoSymlinks(opts.writeTargets)
   try {
-    return fn();
+    return fn()
   } catch (err) {
-    rollback(rootDir, opts.scopePaths);
-    throw err;
+    rollback(rootDir, opts.scopePaths)
+    throw err
   }
 }

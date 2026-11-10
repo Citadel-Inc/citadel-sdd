@@ -1,115 +1,115 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { nowDTG } from "../spec/dtg.js";
-import { gitAdd, gitCommit, gitConfigUserName } from "../spec/git.js";
-import { ratifySpec, setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
-import { parseSpec, parseTasks } from "../spec/parse.js";
-import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
-import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
-import type { SpecState } from "../spec/types.js";
-import { spliceFrontmatter, spliceQTable, spliceSpecFile } from "../spec/writer.js";
-import { runSpecTxn } from "./_txn.js";
-import type { ToolContext } from "./types.js";
+import { readFileSync, writeFileSync } from 'node:fs'
+import { nowDTG } from '../spec/dtg.ts'
+import { gitAdd, gitCommit, gitConfigUserName } from '../spec/git.ts'
+import { ratifySpec, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { parseSpec, parseTasks } from '../spec/parse.ts'
+import { locateSpec, type RepoContext } from '../spec/repo.ts'
+import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
+import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
+import type { SpecState } from '../spec/types.ts'
+import { spliceFrontmatter, spliceQTable, spliceSpecFile } from '../spec/writer.ts'
+import { runSpecTxn } from './_txn.ts'
+import type { ToolContext } from './types.ts'
 
 export interface SpecClaimInput {
-  slug: string;
-  claimer?: string;
-  ratify?: boolean;
-  commit?: boolean;
-  dryRun?: boolean;
+  slug: string
+  claimer?: string
+  ratify?: boolean
+  commit?: boolean
+  dryRun?: boolean
 }
 
 export interface SpecClaimOutput {
-  slug: string;
-  before: { state: SpecState; dtg: string };
-  after: { state: SpecState; dtg: string };
-  ratified_q_count: number;
-  commit_sha: string | null;
-  dryRun: boolean;
+  slug: string
+  before: { state: SpecState; dtg: string }
+  after: { state: SpecState; dtg: string }
+  ratified_q_count: number
+  commit_sha: string | null
+  dryRun: boolean
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
-  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir }
 }
 
 function defaultClaimer(ctx: ToolContext): string {
   if (ctx.profile.default_claimer.length > 0) {
-    return ctx.profile.default_claimer;
+    return ctx.profile.default_claimer
   }
-  const fromGit = gitConfigUserName({ rootDir: ctx.rootDir });
+  const fromGit = gitConfigUserName({ rootDir: ctx.rootDir })
   if (fromGit.length > 0) {
-    return fromGit;
+    return fromGit
   }
-  return "Bastion";
+  return 'Bastion'
 }
 
 export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOutput {
-  const repo = repoCtx(ctx);
-  const loc = locateSpec(repo, input.slug);
+  const repo = repoCtx(ctx)
+  const loc = locateSpec(repo, input.slug)
   if (!loc) {
-    throw new Error(`spec_not_found: ${input.slug}`);
+    throw new Error(`spec_not_found: ${input.slug}`)
   }
 
-  const specRaw = readFileSync(loc.specMd, "utf8");
-  const tasksRaw = readFileSync(loc.tasksMd, "utf8");
-  const spec = parseSpec(specRaw);
-  const tasks = parseTasks(tasksRaw);
+  const specRaw = readFileSync(loc.specMd, 'utf8')
+  const tasksRaw = readFileSync(loc.tasksMd, 'utf8')
+  const spec = parseSpec(specRaw)
+  const tasks = parseTasks(tasksRaw)
 
-  const claimer = input.claimer ?? defaultClaimer(ctx);
+  const claimer = input.claimer ?? defaultClaimer(ctx)
 
-  const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === "owner");
-  const author = ownerField?.[1] ?? "";
+  const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'owner')
+  const author = ownerField?.[1] ?? ''
 
-  if (spec.frontmatter.status.state === "IN_PROGRESS" && author.length > 0 && author !== claimer) {
-    throw new Error(`owner_mismatch: held by ${author}; claimer ${claimer}`);
+  if (spec.frontmatter.status.state === 'IN_PROGRESS' && author.length > 0 && author !== claimer) {
+    throw new Error(`owner_mismatch: held by ${author}; claimer ${claimer}`)
   }
 
-  assertTransitionEnabled("spec_claim", ctx.profile.disabled_transitions);
-  const transition = canTransition(spec.frontmatter.status.state, "spec_claim", {
+  assertTransitionEnabled('spec_claim', ctx.profile.disabled_transitions)
+  const transition = canTransition(spec.frontmatter.status.state, 'spec_claim', {
     claimerIsAuthor: author === claimer,
-  });
+  })
   if (!transition.ok) {
-    throw new Error(transition.error);
+    throw new Error(transition.error)
   }
 
-  const ratifyEnabled = input.ratify ?? true;
-  const hasTbd = spec.qTable.some((r) => r.ratified.toLowerCase() === "tbd");
+  const ratifyEnabled = input.ratify ?? true
+  const hasTbd = spec.qTable.some((r) => r.ratified.toLowerCase() === 'tbd')
   if (!ratifyEnabled && hasTbd) {
-    throw new Error("ratify_required: Q-table has TBD rows; pass ratify:true to bulk-ratify");
+    throw new Error('ratify_required: Q-table has TBD rows; pass ratify:true to bulk-ratify')
   }
 
-  const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
+  const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock)
   const newStatus = {
     state: transition.to,
     dtg,
     tail: `${claimer} claims execution`,
-  };
+  }
 
   const ratifyOpts = {
     decisions: undefined,
     default_disposition: `Ratified ${dtg}`,
     dtg,
-  };
+  }
   const updatedSpec = ratifyEnabled
     ? setStatusOnSpec(ratifySpec(spec, ratifyOpts), newStatus)
-    : setStatusOnSpec(spec, newStatus);
-  const updatedTasks = setStatusOnTasks(tasks, newStatus);
+    : setStatusOnSpec(spec, newStatus)
+  const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
   const ratifiedCount = ratifyEnabled
-    ? spec.qTable.filter((r) => r.ratified.toLowerCase() === "tbd").length
-    : 0;
+    ? spec.qTable.filter((r) => r.ratified.toLowerCase() === 'tbd').length
+    : 0
 
-  const fmt = ctx.profile.frontmatter_format;
-  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
+  const fmt = ctx.profile.frontmatter_format
+  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
   if (ratifyEnabled && spec.qTable.length > 0) {
-    newSpecRaw = spliceQTable(newSpecRaw, updatedSpec.qTable);
+    newSpecRaw = spliceQTable(newSpecRaw, updatedSpec.qTable)
   } else {
-    newSpecRaw = spliceSpecFile(specRaw, updatedSpec, fmt);
+    newSpecRaw = spliceSpecFile(specRaw, updatedSpec, fmt)
   }
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt)
 
-  const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg };
-  const after = { state: newStatus.state, dtg: newStatus.dtg };
+  const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg }
+  const after = { state: newStatus.state, dtg: newStatus.dtg }
 
   if (input.dryRun === true) {
     return {
@@ -119,37 +119,37 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
       ratified_q_count: ratifiedCount,
       commit_sha: null,
       dryRun: true,
-    };
+    }
   }
 
   const scopePaths = [
     `${loc.relDir}/spec.md`,
     `${loc.relDir}/tasks.md`,
     `${repo.specDir}/README.md`,
-  ];
-  let commitSha: string | null = null;
+  ]
+  let commitSha: string | null = null
 
   if (input.commit === false) {
-    writeFileSync(loc.specMd, newSpecRaw);
-    writeFileSync(loc.tasksMd, newTasksRaw);
-    upsertSpecReadmeRow(repo, loc.slug);
+    writeFileSync(loc.specMd, newSpecRaw)
+    writeFileSync(loc.tasksMd, newTasksRaw)
+    upsertSpecReadmeRow(repo, loc.slug)
   } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeFileSync(loc.specMd, newSpecRaw);
-      writeFileSync(loc.tasksMd, newTasksRaw);
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
-      const ratifyTail = ratifiedCount > 0 ? `; ratified ${ratifiedCount} Q-row(s)` : "";
+      writeFileSync(loc.specMd, newSpecRaw)
+      writeFileSync(loc.tasksMd, newTasksRaw)
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+      const ratifyTail = ratifiedCount > 0 ? `; ratified ${ratifiedCount} Q-row(s)` : ''
       const subject =
-        ctx.profile.commit_style === "conventional"
+        ctx.profile.commit_style === 'conventional'
           ? `spec(${loc.slug}): IN_PROGRESS — ${claimer} claims${ratifyTail}`
-          : `${claimer} claims ${loc.slug}${ratifyTail}`;
+          : `${claimer} claims ${loc.slug}${ratifyTail}`
       gitAdd({ rootDir: ctx.rootDir }, [
         `${loc.relDir}/spec.md`,
         `${loc.relDir}/tasks.md`,
         readmeRel,
-      ]);
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
-    });
+      ])
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+    })
   }
 
   return {
@@ -159,5 +159,5 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     ratified_q_count: ratifiedCount,
     commit_sha: commitSha,
     dryRun: false,
-  };
+  }
 }

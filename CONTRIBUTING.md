@@ -31,17 +31,17 @@ Body explains WHY this change exists — motivation, context, constraints.
 Not a file list. Not a summary of what the diff already shows.
 ```
 
-| Type | When |
-| ------ | ------ |
-| `feat` | New capability |
-| `fix` | Bug corrected |
-| `docs` | Documentation only |
-| `refactor` | No behaviour change |
-| `test` | Test additions or fixes |
-| `chore` | Maintenance, deps, tooling |
-| `ci` | CI/CD config |
-| `build` | Build system changes |
-| `spec` | Reserved — citadel-sdd's own dogfood specs (when introduced) |
+| Type       | When                                                         |
+| ---------- | ------------------------------------------------------------ |
+| `feat`     | New capability                                               |
+| `fix`      | Bug corrected                                                |
+| `docs`     | Documentation only                                           |
+| `refactor` | No behaviour change                                          |
+| `test`     | Test additions or fixes                                      |
+| `chore`    | Maintenance, deps, tooling                                   |
+| `ci`       | CI/CD config                                                 |
+| `build`    | Build system changes                                         |
+| `spec`     | Reserved — citadel-sdd's own dogfood specs (when introduced) |
 
 One logical unit per commit. Max ~7 files. Split by theme, not by file count.
 
@@ -118,9 +118,9 @@ Append to [docs/decisions.md](docs/decisions.md). Do not edit prior entries.
 
 ## Code style
 
-Enforced by **Biome** (`biome.json`): recommended rules, 100-char lines, double quotes, semicolons, trailing commas.
+Enforced by **Biome** (`biome.jsonc`): canon `preset: all`, 100-char lines, single quotes, semicolons as needed, trailing commas.
 
-TypeScript: `strict: true`, `noUncheckedIndexedAccess: true`, `verbatimModuleSyntax: true`. Avoid `any`; if genuinely necessary, add an inline comment explaining why.
+TypeScript: `strict: true`, `noUncheckedIndexedAccess: true`, `verbatimModuleSyntax: true`. Avoid `any`.
 
 ## Reporting bugs / requesting features
 

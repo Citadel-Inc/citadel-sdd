@@ -1,7 +1,7 @@
 # Draft minimal — Tasks
 
-| | |
-|---|---|
+|        |                    |
+| ------ | ------------------ |
 | Status | DRAFT 011900ZMAY26 |
 
 ## P0

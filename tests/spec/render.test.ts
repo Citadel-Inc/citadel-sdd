@@ -1,195 +1,193 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, test } from 'bun:test'
 import {
   parseFrontmatter,
   parseQTable,
   parseStatusValue,
   parseTasks,
-} from "../../src/spec/parse.js";
+} from '../../src/spec/parse.ts'
 import {
   renderFrontmatter,
   renderQTable,
   renderStatusValue,
   renderTaskItem,
   renderTasks,
-} from "../../src/spec/render.js";
-import { loadAllFixtures, loadFixture } from "../fixtures.js";
+} from '../../src/spec/render.ts'
+import { loadAllFixtures, loadFixture } from '../fixtures.ts'
 
-const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/;
+const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/
 
-describe("renderStatusValue", () => {
-  test("DRAFT no tail", () => {
-    expect(renderStatusValue({ state: "DRAFT", dtg: "011900ZMAY26", tail: "" })).toBe(
-      "DRAFT 011900ZMAY26",
-    );
-  });
+describe('renderStatusValue', () => {
+  test('DRAFT no tail', () => {
+    expect(renderStatusValue({ state: 'DRAFT', dtg: '011900ZMAY26', tail: '' })).toBe(
+      'DRAFT 011900ZMAY26',
+    )
+  })
 
-  test("IN_PROGRESS with tail uses em-dash", () => {
+  test('IN_PROGRESS with tail uses em-dash', () => {
     const out = renderStatusValue({
-      state: "IN_PROGRESS",
-      dtg: "011920ZMAY26",
-      tail: "Bastion claims execution",
-    });
-    expect(out).toBe("IN_PROGRESS 011920ZMAY26 — Bastion claims execution");
-  });
+      state: 'IN_PROGRESS',
+      dtg: '011920ZMAY26',
+      tail: 'Bastion claims execution',
+    })
+    expect(out).toBe('IN_PROGRESS 011920ZMAY26 — Bastion claims execution')
+  })
 
-  test("round-trip with parseStatusValue", () => {
-    const original = "DONE 011945ZMAY26 — all green";
-    const v = parseStatusValue(original);
-    expect(renderStatusValue(v)).toBe(original);
-  });
+  test('round-trip with parseStatusValue', () => {
+    const original = 'DONE 011945ZMAY26 — all green'
+    const v = parseStatusValue(original)
+    expect(renderStatusValue(v)).toBe(original)
+  })
 
-  test("empty DTG — no trailing space (plain)", () => {
-    expect(renderStatusValue({ state: "DRAFT", dtg: "", tail: "" })).toBe("DRAFT");
-  });
+  test('empty DTG — no trailing space (plain)', () => {
+    expect(renderStatusValue({ state: 'DRAFT', dtg: '', tail: '' })).toBe('DRAFT')
+  })
 
-  test("empty DTG — no trailing space (bold)", () => {
-    expect(renderStatusValue({ state: "DRAFT", dtg: "", tail: "", bold: true })).toBe("**DRAFT**");
-  });
+  test('empty DTG — no trailing space (bold)', () => {
+    expect(renderStatusValue({ state: 'DRAFT', dtg: '', tail: '', bold: true })).toBe('**DRAFT**')
+  })
 
-  test("bold state-only round-trips through parseStatusValue", () => {
-    const v = parseStatusValue("**DRAFT**");
-    expect(renderStatusValue(v)).toBe("**DRAFT**");
-  });
-});
+  test('bold state-only round-trips through parseStatusValue', () => {
+    const v = parseStatusValue('**DRAFT**')
+    expect(renderStatusValue(v)).toBe('**DRAFT**')
+  })
+})
 
-describe("renderFrontmatter", () => {
-  test("produces a parseable pipe-table", () => {
-    const fix = loadFixture("approved-ratified");
-    const fm = parseFrontmatter(fix.spec);
-    const rendered = renderFrontmatter(fm);
-    const reparsed = parseFrontmatter(rendered);
-    expect(reparsed.status).toEqual(fm.status);
-    expect(reparsed.fields).toEqual(fm.fields);
-  });
+describe('renderFrontmatter', () => {
+  test('produces a parseable pipe-table', () => {
+    const fix = loadFixture('approved-ratified')
+    const fm = parseFrontmatter(fix.spec)
+    const rendered = renderFrontmatter(fm)
+    const reparsed = parseFrontmatter(rendered)
+    expect(reparsed.status).toEqual(fm.status)
+    expect(reparsed.fields).toEqual(fm.fields)
+  })
 
-  test("preserves field order", () => {
-    const fix = loadFixture("approved-ratified");
-    const fm = parseFrontmatter(fix.spec);
-    const rendered = renderFrontmatter(fm);
+  test('preserves field order', () => {
+    const fix = loadFixture('approved-ratified')
+    const fm = parseFrontmatter(fix.spec)
+    const rendered = renderFrontmatter(fm)
     const dataLines = rendered
-      .split("\n")
+      .split('\n')
       .slice(2)
-      .filter((l) => l.startsWith("|") && !SEPARATOR_ROW_RE.test(l));
-    expect(dataLines[0]).toContain("Status");
-    expect(dataLines[1]).toContain("Owner");
-    expect(dataLines[2]).toContain("Approved");
-  });
+      .filter((l) => l.startsWith('|') && !SEPARATOR_ROW_RE.test(l))
+    expect(dataLines[0]).toContain('Status')
+    expect(dataLines[1]).toContain('Owner')
+    expect(dataLines[2]).toContain('Approved')
+  })
 
-  test("pipe in Status tail is escaped as \\| and round-trips cleanly", () => {
+  test('pipe in Status tail is escaped as \\| and round-trips cleanly', () => {
     // Build frontmatter with pipes in the status tail directly (simulates a spec_close summary
     // that contains regex alternation or TS union types).
-    const status = parseStatusValue("DONE 011945ZMAY26 — all tasks green");
+    const status = parseStatusValue('DONE 011945ZMAY26 — all tasks green')
     // Mutate the tail to contain pipes (bypassing parseStatusValue which would reject them)
-    const statusWithPipes = { ...status, tail: "hedge-grep (might|maybe|probably)" };
+    const statusWithPipes = { ...status, tail: 'hedge-grep (might|maybe|probably)' }
     const fm = parseFrontmatter(
-      "| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n",
-    );
-    const fmWithPipes = { ...fm, status: statusWithPipes };
-    const rendered = renderFrontmatter(fmWithPipes);
+      '| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n',
+    )
+    const fmWithPipes = { ...fm, status: statusWithPipes }
+    const rendered = renderFrontmatter(fmWithPipes)
     // Pipes within cell content must be escaped as \|
-    expect(rendered).toContain("might\\|maybe\\|probably");
+    expect(rendered).toContain('might\\|maybe\\|probably')
     // Round-trip: parse back and recover original pipes
-    const reparsed = parseFrontmatter(rendered);
-    expect(reparsed.status.state).toBe("DONE");
-    expect(reparsed.status.tail).toBe("hedge-grep (might|maybe|probably)");
-  });
+    const reparsed = parseFrontmatter(rendered)
+    expect(reparsed.status.state).toBe('DONE')
+    expect(reparsed.status.tail).toBe('hedge-grep (might|maybe|probably)')
+  })
 
-  test("backslashes and pipes in cells round-trip cleanly", () => {
-    const status = parseStatusValue("DONE 011945ZMAY26 — all tasks green");
-    const tail = String.raw`path C:\specs\active\foo | bar`;
+  test('backslashes and pipes in cells round-trip cleanly', () => {
+    const status = parseStatusValue('DONE 011945ZMAY26 — all tasks green')
+    const tail = String.raw`path C:\specs\active\foo | bar`
     const fm = parseFrontmatter(
-      "| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n",
-    );
-    const rendered = renderFrontmatter({ ...fm, status: { ...status, tail } });
+      '| | |\n|---|---|\n| Status | DONE 011945ZMAY26 — all tasks green |\n| Owner | Bastion |\n',
+    )
+    const rendered = renderFrontmatter({ ...fm, status: { ...status, tail } })
 
-    expect(rendered).toContain(String.raw`C:\\specs\\active\\foo \| bar`);
-    expect(parseFrontmatter(rendered).status.tail).toBe(tail);
-  });
-});
+    expect(rendered).toContain(String.raw`C:\\specs\\active\\foo \| bar`)
+    expect(parseFrontmatter(rendered).status.tail).toBe(tail)
+  })
+})
 
-describe("renderQTable", () => {
-  test("returns empty string when given empty array", () => {
-    expect(renderQTable([])).toBe("");
-  });
+describe('renderQTable', () => {
+  test('returns empty string when given empty array', () => {
+    expect(renderQTable([])).toBe('')
+  })
 
-  test("round-trip with parseQTable on approved-ratified", () => {
-    const fix = loadFixture("approved-ratified");
-    const rows = parseQTable(fix.spec);
-    const rendered = renderQTable(rows);
-    const reparsed = parseQTable(rendered);
-    expect(reparsed).toEqual(rows);
-  });
-});
+  test('round-trip with parseQTable on approved-ratified', () => {
+    const fix = loadFixture('approved-ratified')
+    const rows = parseQTable(fix.spec)
+    const rendered = renderQTable(rows)
+    const reparsed = parseQTable(rendered)
+    expect(reparsed).toEqual(rows)
+  })
+})
 
-describe("renderTaskItem", () => {
-  test("checked", () => {
-    expect(renderTaskItem({ checked: true, text: "do it", isHumanGate: false })).toBe(
-      "- [x] do it",
-    );
-  });
+describe('renderTaskItem', () => {
+  test('checked', () => {
+    expect(renderTaskItem({ checked: true, text: 'do it', isHumanGate: false })).toBe('- [x] do it')
+  })
 
-  test("unchecked", () => {
-    expect(renderTaskItem({ checked: false, text: "todo", isHumanGate: false })).toBe("- [ ] todo");
-  });
+  test('unchecked', () => {
+    expect(renderTaskItem({ checked: false, text: 'todo', isHumanGate: false })).toBe('- [ ] todo')
+  })
 
-  test("[HUMAN] gate text round-trips through parseTasks", () => {
+  test('[HUMAN] gate text round-trips through parseTasks', () => {
     const item = {
       checked: false,
-      text: "[HUMAN] NOMAD ratifies Q-table",
+      text: '[HUMAN] NOMAD ratifies Q-table',
       isHumanGate: true,
-    };
-    expect(renderTaskItem(item)).toBe("- [ ] [HUMAN] NOMAD ratifies Q-table");
-  });
-});
-
-describe("renderTasks idempotency", () => {
-  test("every fixture round-trips at AST level", () => {
-    for (const fix of loadAllFixtures()) {
-      const parsed = parseTasks(fix.tasks);
-      const rendered = renderTasks(parsed);
-      const reparsed = parseTasks(rendered);
-      expect(reparsed.frontmatter.status).toEqual(parsed.frontmatter.status);
-      expect(reparsed.frontmatter.fields).toEqual(parsed.frontmatter.fields);
-      expect(reparsed.phases).toEqual(parsed.phases);
     }
-  });
+    expect(renderTaskItem(item)).toBe('- [ ] [HUMAN] NOMAD ratifies Q-table')
+  })
+})
 
-  test("double round-trip is stable (parse→render→parse→render byte-identical)", () => {
+describe('renderTasks idempotency', () => {
+  test('every fixture round-trips at AST level', () => {
     for (const fix of loadAllFixtures()) {
-      const r1 = renderTasks(parseTasks(fix.tasks));
-      const r2 = renderTasks(parseTasks(r1));
-      expect(r2).toBe(r1);
+      const parsed = parseTasks(fix.tasks)
+      const rendered = renderTasks(parsed)
+      const reparsed = parseTasks(rendered)
+      expect(reparsed.frontmatter.status).toEqual(parsed.frontmatter.status)
+      expect(reparsed.frontmatter.fields).toEqual(parsed.frontmatter.fields)
+      expect(reparsed.phases).toEqual(parsed.phases)
     }
-  });
-});
+  })
 
-describe("renderFrontmatter idempotency", () => {
-  test("every fixture spec.md frontmatter round-trips at AST level", () => {
+  test('double round-trip is stable (parse→render→parse→render byte-identical)', () => {
     for (const fix of loadAllFixtures()) {
-      const fm = parseFrontmatter(fix.spec);
-      const rendered = renderFrontmatter(fm);
-      const reparsed = parseFrontmatter(rendered);
-      expect(reparsed.status).toEqual(fm.status);
-      expect(reparsed.fields).toEqual(fm.fields);
+      const r1 = renderTasks(parseTasks(fix.tasks))
+      const r2 = renderTasks(parseTasks(r1))
+      expect(r2).toBe(r1)
     }
-  });
+  })
+})
 
-  test("double round-trip is byte-identical", () => {
+describe('renderFrontmatter idempotency', () => {
+  test('every fixture spec.md frontmatter round-trips at AST level', () => {
     for (const fix of loadAllFixtures()) {
-      const r1 = renderFrontmatter(parseFrontmatter(fix.spec));
-      const r2 = renderFrontmatter(parseFrontmatter(r1));
-      expect(r2).toBe(r1);
+      const fm = parseFrontmatter(fix.spec)
+      const rendered = renderFrontmatter(fm)
+      const reparsed = parseFrontmatter(rendered)
+      expect(reparsed.status).toEqual(fm.status)
+      expect(reparsed.fields).toEqual(fm.fields)
     }
-  });
-});
+  })
 
-describe("renderQTable idempotency", () => {
+  test('double round-trip is byte-identical', () => {
+    for (const fix of loadAllFixtures()) {
+      const r1 = renderFrontmatter(parseFrontmatter(fix.spec))
+      const r2 = renderFrontmatter(parseFrontmatter(r1))
+      expect(r2).toBe(r1)
+    }
+  })
+})
+
+describe('renderQTable idempotency', () => {
   test("every fixture's Q-table round-trips at AST level", () => {
     for (const fix of loadAllFixtures()) {
-      const rows = parseQTable(fix.spec);
-      const rendered = renderQTable(rows);
-      const reparsed = parseQTable(rendered);
-      expect(reparsed).toEqual(rows);
+      const rows = parseQTable(fix.spec)
+      const rendered = renderQTable(rows)
+      const reparsed = parseQTable(rendered)
+      expect(reparsed).toEqual(rows)
     }
-  });
-});
+  })
+})

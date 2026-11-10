@@ -1,133 +1,133 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { nowDTG } from "../spec/dtg.js";
-import { gitAdd, gitCommit } from "../spec/git.js";
-import { setStatusOnSpec, setStatusOnTasks } from "../spec/mutate.js";
-import { parseSpec, parseTasks } from "../spec/parse.js";
-import { locateSpec, type RepoContext } from "../spec/repo.js";
-import { upsertSpecReadmeRow } from "../spec/spec_readme.js";
-import { assertTransitionEnabled, canTransition } from "../spec/transitions.js";
-import type { SpecState } from "../spec/types.js";
-import { spliceFrontmatter } from "../spec/writer.js";
-import { runSpecTxn } from "./_txn.js";
-import type { ToolContext } from "./types.js";
+import { readFileSync, writeFileSync } from 'node:fs'
+import { nowDTG } from '../spec/dtg.ts'
+import { gitAdd, gitCommit } from '../spec/git.ts'
+import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { parseSpec, parseTasks } from '../spec/parse.ts'
+import { locateSpec, type RepoContext } from '../spec/repo.ts'
+import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
+import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
+import type { SpecState } from '../spec/types.ts'
+import { spliceFrontmatter } from '../spec/writer.ts'
+import { runSpecTxn } from './_txn.ts'
+import type { ToolContext } from './types.ts'
 
-const LINE_SPLIT_RE = /\r?\n/;
+const LINE_SPLIT_RE = /\r?\n/
 
 export interface SpecBlockInput {
-  slug: string;
-  reason: string;
-  blocker_path?: string;
-  commit?: boolean;
-  dryRun?: boolean;
+  slug: string
+  reason: string
+  blocker_path?: string
+  commit?: boolean
+  dryRun?: boolean
 }
 
 export interface SpecBlockOutput {
-  slug: string;
-  before: { state: SpecState; dtg: string };
-  after: { state: SpecState; dtg: string };
-  commit_sha: string | null;
-  dryRun: boolean;
+  slug: string
+  before: { state: SpecState; dtg: string }
+  after: { state: SpecState; dtg: string }
+  commit_sha: string | null
+  dryRun: boolean
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
-  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir }
 }
 
 /** Shared regex used by both spec_block and spec_unblock to find the Blocking section. */
-const BLOCKING_RE = /## Blocking\s*\n[\s\S]*?(?=\n## |$)\n*/g;
+const BLOCKING_RE = /## Blocking\s*\n[\s\S]*?(?=\n## |$)\n*/g
 
 function removeBlockingSection(rawMd: string): string {
-  return rawMd.replace(BLOCKING_RE, "");
+  return rawMd.replace(BLOCKING_RE, '')
 }
 
 function injectBlockingSection(rawMd: string, reason: string): string {
-  const blockingHeading = "## Blocking";
+  const blockingHeading = '## Blocking'
   // Strip any existing Blocking section(s) first to ensure idempotency.
-  const stripped = removeBlockingSection(rawMd);
-  const lines = stripped.split(LINE_SPLIT_RE);
-  let insertAt = lines.length;
+  const stripped = removeBlockingSection(rawMd)
+  const lines = stripped.split(LINE_SPLIT_RE)
+  let insertAt = lines.length
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
+    const line = lines[i]
     if (line === undefined) {
-      continue;
+      continue
     }
-    if (line.startsWith("## Summary") || line.startsWith("## Decisions")) {
-      insertAt = i;
-      break;
+    if (line.startsWith('## Summary') || line.startsWith('## Decisions')) {
+      insertAt = i
+      break
     }
   }
-  const before = lines.slice(0, insertAt);
-  const after = lines.slice(insertAt);
-  return [...before, blockingHeading, "", reason, "", ...after].join("\n");
+  const before = lines.slice(0, insertAt)
+  const after = lines.slice(insertAt)
+  return [...before, blockingHeading, '', reason, '', ...after].join('\n')
 }
 
 export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOutput {
   if (!input.reason || input.reason.trim().length === 0) {
-    throw new Error("reason_missing: spec_block requires a non-empty reason");
+    throw new Error('reason_missing: spec_block requires a non-empty reason')
   }
-  const repo = repoCtx(ctx);
-  const loc = locateSpec(repo, input.slug);
+  const repo = repoCtx(ctx)
+  const loc = locateSpec(repo, input.slug)
   if (!loc) {
-    throw new Error(`spec_not_found: ${input.slug}`);
+    throw new Error(`spec_not_found: ${input.slug}`)
   }
 
-  const specRaw = readFileSync(loc.specMd, "utf8");
-  const tasksRaw = readFileSync(loc.tasksMd, "utf8");
-  const spec = parseSpec(specRaw);
-  const tasks = parseTasks(tasksRaw);
+  const specRaw = readFileSync(loc.specMd, 'utf8')
+  const tasksRaw = readFileSync(loc.tasksMd, 'utf8')
+  const spec = parseSpec(specRaw)
+  const tasks = parseTasks(tasksRaw)
 
-  assertTransitionEnabled("spec_block", ctx.profile.disabled_transitions);
-  const transition = canTransition(spec.frontmatter.status.state, "spec_block");
+  assertTransitionEnabled('spec_block', ctx.profile.disabled_transitions)
+  const transition = canTransition(spec.frontmatter.status.state, 'spec_block')
   if (!transition.ok) {
-    throw new Error(transition.error);
+    throw new Error(transition.error)
   }
 
-  const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock);
-  const newStatus = { state: transition.to, dtg, tail: input.reason };
+  const dtg = nowDTG(ctx.profile.dtg_format, ctx.clock)
+  const newStatus = { state: transition.to, dtg, tail: input.reason }
 
-  const updatedSpec = setStatusOnSpec(spec, newStatus);
-  const updatedTasks = setStatusOnTasks(tasks, newStatus);
+  const updatedSpec = setStatusOnSpec(spec, newStatus)
+  const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
-  const fmt = ctx.profile.frontmatter_format;
-  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt);
-  newSpecRaw = injectBlockingSection(newSpecRaw, input.reason);
-  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt);
+  const fmt = ctx.profile.frontmatter_format
+  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
+  newSpecRaw = injectBlockingSection(newSpecRaw, input.reason)
+  const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt)
 
-  const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg };
-  const after = { state: newStatus.state, dtg: newStatus.dtg };
+  const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg }
+  const after = { state: newStatus.state, dtg: newStatus.dtg }
 
   if (input.dryRun === true) {
-    return { slug: loc.slug, before, after, commit_sha: null, dryRun: true };
+    return { slug: loc.slug, before, after, commit_sha: null, dryRun: true }
   }
 
   const scopePaths = [
     `${loc.relDir}/spec.md`,
     `${loc.relDir}/tasks.md`,
     `${repo.specDir}/README.md`,
-  ];
-  let commitSha: string | null = null;
+  ]
+  let commitSha: string | null = null
 
   if (input.commit === false) {
-    writeFileSync(loc.specMd, newSpecRaw);
-    writeFileSync(loc.tasksMd, newTasksRaw);
-    upsertSpecReadmeRow(repo, loc.slug);
+    writeFileSync(loc.specMd, newSpecRaw)
+    writeFileSync(loc.tasksMd, newTasksRaw)
+    upsertSpecReadmeRow(repo, loc.slug)
   } else {
     runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeFileSync(loc.specMd, newSpecRaw);
-      writeFileSync(loc.tasksMd, newTasksRaw);
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug);
+      writeFileSync(loc.specMd, newSpecRaw)
+      writeFileSync(loc.tasksMd, newTasksRaw)
+      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
       const subject =
-        ctx.profile.commit_style === "conventional"
+        ctx.profile.commit_style === 'conventional'
           ? `spec(${loc.slug}): BLOCKED — ${input.reason}`
-          : `Block ${loc.slug}: ${input.reason}`;
+          : `Block ${loc.slug}: ${input.reason}`
       gitAdd({ rootDir: ctx.rootDir }, [
         `${loc.relDir}/spec.md`,
         `${loc.relDir}/tasks.md`,
         readmeRel,
-      ]);
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject);
-    });
+      ])
+      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+    })
   }
 
-  return { slug: loc.slug, before, after, commit_sha: commitSha, dryRun: false };
+  return { slug: loc.slug, before, after, commit_sha: commitSha, dryRun: false }
 }

@@ -1,0 +1,4 @@
+reconciled = "canon v0.1.0-poc"
+
+[deviations]
+"ts-biome-00006 style/noProcessEnv" = "src/env.ts is the single sanctioned process.env surface"

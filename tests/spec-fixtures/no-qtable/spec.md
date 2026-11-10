@@ -1,9 +1,9 @@
 # No Q-table
 
-| | |
-|---|---|
+|        |                    |
+| ------ | ------------------ |
 | Status | DRAFT 011900ZMAY26 |
-| Owner | TestAgent |
+| Owner  | TestAgent          |
 
 ## Summary
 

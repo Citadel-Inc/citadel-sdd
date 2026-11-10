@@ -1,33 +1,33 @@
-import { resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { findSingleRoot } from "../discovery/roots.js";
-import { gitRevParseShowToplevel } from "../spec/git.js";
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { findSingleRoot } from '../discovery/roots.ts'
+import { gitRevParseShowToplevel } from '../spec/git.ts'
 
 export interface WorkspaceRootPick {
-  workspaceRoot?: string;
+  workspaceRoot?: string
 }
 
 export function rootUriToPath(uri: string): string | null {
-  if (!uri.startsWith("file://")) {
-    return null;
+  if (!uri.startsWith('file://')) {
+    return null
   }
   try {
-    return fileURLToPath(uri);
+    return fileURLToPath(uri)
   } catch {
-    return null;
+    return null
   }
 }
 
 export function normalizeProjectRoot(start: string): string {
-  const absolute = resolve(start);
-  const discovered = findSingleRoot(absolute);
+  const absolute = resolve(start)
+  const discovered = findSingleRoot(absolute)
   if (discovered) {
-    return discovered.metaRoot;
+    return discovered.metaRoot
   }
   try {
-    return gitRevParseShowToplevel(absolute);
+    return gitRevParseShowToplevel(absolute)
   } catch {
-    return absolute;
+    return absolute
   }
 }
 
@@ -36,14 +36,14 @@ export function resolveWorkspaceRoot(
   fileRoots: readonly string[],
   fallbackRoot: string,
 ): string {
-  const explicit = input?.workspaceRoot?.trim();
+  const explicit = input?.workspaceRoot?.trim()
   if (explicit) {
-    return normalizeProjectRoot(explicit);
+    return normalizeProjectRoot(explicit)
   }
 
-  const [primary] = fileRoots;
+  const [primary] = fileRoots
   if (primary) {
-    return normalizeProjectRoot(primary);
+    return normalizeProjectRoot(primary)
   }
-  return normalizeProjectRoot(fallbackRoot);
+  return normalizeProjectRoot(fallbackRoot)
 }

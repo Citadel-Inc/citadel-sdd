@@ -1,187 +1,187 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
-import { buildServer } from "../../src/mcp/server.js";
-import { resolveBuiltIn } from "../../src/profile/resolver.js";
-import type { ToolContext } from "../../src/tools/types.js";
-import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
+import { afterEach, describe, expect, test } from 'bun:test'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
+import { buildServer } from '../../src/mcp/server.ts'
+import { resolveBuiltIn } from '../../src/profile/resolver.ts'
+import type { ToolContext } from '../../src/tools/types.ts'
+import { makeTempRepo, type TempRepo } from '../helpers/temp-repo.ts'
 
-let temp: TempRepo | undefined;
+let temp: TempRepo | undefined
 
 afterEach(() => {
-  temp?.cleanup();
-  temp = undefined;
-});
+  temp?.cleanup()
+  temp = undefined
+})
 
-const CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0));
+const CLOCK = (): Date => new Date(Date.UTC(2026, 4, 1, 19, 45, 0))
 
 function ctxFactory(): () => ToolContext {
   return () => {
     if (!temp) {
-      throw new Error("temp repo not initialized");
+      throw new Error('temp repo not initialized')
     }
-    return { rootDir: temp.rootDir, profile: resolveBuiltIn("bastion"), clock: CLOCK };
-  };
+    return { rootDir: temp.rootDir, profile: resolveBuiltIn('bastion'), clock: CLOCK }
+  }
 }
 
 async function dial(): Promise<{ client: Client; close: () => Promise<void> }> {
-  const server = buildServer({ contextFactory: ctxFactory() });
-  const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
-  await server.connect(serverTransport);
+  const server = buildServer({ contextFactory: ctxFactory() })
+  const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair()
+  await server.connect(serverTransport)
 
-  const client = new Client({ name: "test-client", version: "0.0.0" }, { capabilities: {} });
-  await client.connect(clientTransport);
+  const client = new Client({ name: 'test-client', version: '0.0.0' }, { capabilities: {} })
+  await client.connect(clientTransport)
 
   return {
     client,
     close: async () => {
-      await client.close();
-      await server.close();
+      await client.close()
+      await server.close()
     },
-  };
+  }
 }
 
-describe("MCP server wiring", () => {
-  test("listTools returns the full 12-tool roster", async () => {
-    temp = makeTempRepo();
-    const { client, close } = await dial();
-    const list = await client.listTools();
-    const names = list.tools.map((t) => t.name).sort();
+describe('MCP server wiring', () => {
+  test('listTools returns the full 12-tool roster', async () => {
+    temp = makeTempRepo()
+    const { client, close } = await dial()
+    const list = await client.listTools()
+    const names = list.tools.map((t) => t.name).sort()
     expect(names).toEqual(
       [
-        "sdd_doctor",
-        "spec_handoff",
-        "spec_index_rebuild",
-        "spec_init",
-        "spec_lint",
-        "spec_list",
-        "spec_read",
-        "spec_status",
-        "spec_task_add",
-        "spec_task_check",
-        "spec_task_list",
-        "spec_transition",
+        'sdd_doctor',
+        'spec_handoff',
+        'spec_index_rebuild',
+        'spec_init',
+        'spec_lint',
+        'spec_list',
+        'spec_read',
+        'spec_status',
+        'spec_task_add',
+        'spec_task_check',
+        'spec_task_list',
+        'spec_transition',
       ].sort(),
-    );
-    await close();
-  });
+    )
+    await close()
+  })
 
-  test("callTool spec_list returns active fixtures", async () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal", "approved-ratified"] });
-    const { client, close } = await dial();
-    const res = await client.callTool({ name: "spec_list", arguments: {} });
-    expect(res.isError).not.toBe(true);
-    const content = res.content as Array<{ type: string; text: string }>;
-    const data = JSON.parse(content[0]?.text ?? "[]") as Array<{ slug: string }>;
+  test('callTool spec_list returns active fixtures', async () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal', 'approved-ratified'] })
+    const { client, close } = await dial()
+    const res = await client.callTool({ name: 'spec_list', arguments: {} })
+    expect(res.isError).not.toBe(true)
+    const content = res.content as Array<{ type: string; text: string }>
+    const data = JSON.parse(content[0]?.text ?? '[]') as Array<{ slug: string }>
     expect(data.map((d) => d.slug).sort((a, b) => a.localeCompare(b))).toEqual([
-      "approved-ratified",
-      "draft-minimal",
-    ]);
-    await close();
-  });
+      'approved-ratified',
+      'draft-minimal',
+    ])
+    await close()
+  })
 
-  test("callTool workspaceRoot is passed to an async context factory", async () => {
-    const first = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const second = makeTempRepo({ activeFixtures: ["approved-ratified"] });
+  test('callTool workspaceRoot is passed to an async context factory', async () => {
+    const first = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const second = makeTempRepo({ activeFixtures: ['approved-ratified'] })
     const server = buildServer({
       contextFactory: async (input) => ({
         rootDir: input?.workspaceRoot === second.rootDir ? second.rootDir : first.rootDir,
-        profile: resolveBuiltIn("bastion"),
+        profile: resolveBuiltIn('bastion'),
         clock: CLOCK,
       }),
-    });
-    const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair();
-    const client = new Client({ name: "test-client", version: "0.0.0" }, { capabilities: {} });
+    })
+    const [serverTransport, clientTransport] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: 'test-client', version: '0.0.0' }, { capabilities: {} })
     try {
-      await server.connect(serverTransport);
-      await client.connect(clientTransport);
+      await server.connect(serverTransport)
+      await client.connect(clientTransport)
 
       const res = await client.callTool({
-        name: "spec_list",
+        name: 'spec_list',
         arguments: { workspaceRoot: second.rootDir },
-      });
-      expect(res.isError).not.toBe(true);
-      const content = res.content as Array<{ type: string; text: string }>;
-      const data = JSON.parse(content[0]?.text ?? "[]") as Array<{ slug: string }>;
-      expect(data.map((d) => d.slug)).toEqual(["approved-ratified"]);
+      })
+      expect(res.isError).not.toBe(true)
+      const content = res.content as Array<{ type: string; text: string }>
+      const data = JSON.parse(content[0]?.text ?? '[]') as Array<{ slug: string }>
+      expect(data.map((d) => d.slug)).toEqual(['approved-ratified'])
     } finally {
-      await client.close();
-      await server.close();
-      first.cleanup();
-      second.cleanup();
+      await client.close()
+      await server.close()
+      first.cleanup()
+      second.cleanup()
     }
-  });
+  })
 
-  test("callTool spec_status returns expected snapshot", async () => {
-    temp = makeTempRepo({ activeFixtures: ["approved-ratified"] });
-    const { client, close } = await dial();
+  test('callTool spec_status returns expected snapshot', async () => {
+    temp = makeTempRepo({ activeFixtures: ['approved-ratified'] })
+    const { client, close } = await dial()
     const res = await client.callTool({
-      name: "spec_status",
-      arguments: { slug: "approved-ratified" },
-    });
-    const content = res.content as Array<{ type: string; text: string }>;
-    const data = JSON.parse(content[0]?.text ?? "{}") as { state: string; ratified: boolean };
-    expect(data.state).toBe("APPROVED");
-    expect(data.ratified).toBe(true);
-    await close();
-  });
+      name: 'spec_status',
+      arguments: { slug: 'approved-ratified' },
+    })
+    const content = res.content as Array<{ type: string; text: string }>
+    const data = JSON.parse(content[0]?.text ?? '{}') as { state: string; ratified: boolean }
+    expect(data.state).toBe('APPROVED')
+    expect(data.ratified).toBe(true)
+    await close()
+  })
 
-  test("callTool spec_transition(to:approve) mutates AND surfaces error on bad transition", async () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const { client, close } = await dial();
+  test('callTool spec_transition(to:approve) mutates AND surfaces error on bad transition', async () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const { client, close } = await dial()
 
     const ok = await client.callTool({
-      name: "spec_transition",
-      arguments: { slug: "draft-minimal", to: "approve" },
-    });
-    const okContent = ok.content as Array<{ type: string; text: string }>;
-    expect(okContent[0]?.text ?? "").toContain("APPROVED");
+      name: 'spec_transition',
+      arguments: { slug: 'draft-minimal', to: 'approve' },
+    })
+    const okContent = ok.content as Array<{ type: string; text: string }>
+    expect(okContent[0]?.text ?? '').toContain('APPROVED')
 
     const err = await client.callTool({
-      name: "spec_transition",
-      arguments: { slug: "draft-minimal", to: "approve" },
-    });
-    expect(err.isError).toBe(true);
-    const errContent = err.content as Array<{ type: string; text: string }>;
-    expect(errContent[0]?.text ?? "").toContain("state_invalid");
+      name: 'spec_transition',
+      arguments: { slug: 'draft-minimal', to: 'approve' },
+    })
+    expect(err.isError).toBe(true)
+    const errContent = err.content as Array<{ type: string; text: string }>
+    expect(errContent[0]?.text ?? '').toContain('state_invalid')
 
-    await close();
-  });
+    await close()
+  })
 
-  test("callTool spec_transition(to:reopen) without reason surfaces reason_missing", async () => {
-    temp = makeTempRepo({ doneFixtures: ["done"] });
-    const { client, close } = await dial();
+  test('callTool spec_transition(to:reopen) without reason surfaces reason_missing', async () => {
+    temp = makeTempRepo({ doneFixtures: ['done'] })
+    const { client, close } = await dial()
     const res = await client.callTool({
-      name: "spec_transition",
-      arguments: { slug: "done", to: "reopen" },
-    });
-    expect(res.isError).toBe(true);
-    const content = res.content as Array<{ type: string; text: string }>;
-    expect(content[0]?.text ?? "").toContain("reason_missing");
-    await close();
-  });
+      name: 'spec_transition',
+      arguments: { slug: 'done', to: 'reopen' },
+    })
+    expect(res.isError).toBe(true)
+    const content = res.content as Array<{ type: string; text: string }>
+    expect(content[0]?.text ?? '').toContain('reason_missing')
+    await close()
+  })
 
-  test("callTool with invalid input surfaces validation error", async () => {
-    temp = makeTempRepo();
-    const { client, close } = await dial();
+  test('callTool with invalid input surfaces validation error', async () => {
+    temp = makeTempRepo()
+    const { client, close } = await dial()
     const res = await client.callTool({
-      name: "spec_status",
+      name: 'spec_status',
       arguments: { slug: 123 } as Record<string, unknown>,
-    });
-    expect(res.isError).toBe(true);
-    await close();
-  });
+    })
+    expect(res.isError).toBe(true)
+    await close()
+  })
 
-  test("callTool rejects invalid slug strings", async () => {
-    temp = makeTempRepo();
-    const { client, close } = await dial();
+  test('callTool rejects invalid slug strings', async () => {
+    temp = makeTempRepo()
+    const { client, close } = await dial()
     const res = await client.callTool({
-      name: "spec_status",
-      arguments: { slug: "../escape" },
-    });
-    expect(res.isError).toBe(true);
-    const content = res.content as Array<{ type: string; text: string }>;
-    expect(content[0]?.text ?? "").toContain("Invalid arguments for tool spec_status");
-    await close();
-  });
-});
+      name: 'spec_status',
+      arguments: { slug: '../escape' },
+    })
+    expect(res.isError).toBe(true)
+    const content = res.content as Array<{ type: string; text: string }>
+    expect(content[0]?.text ?? '').toContain('Invalid arguments for tool spec_status')
+    await close()
+  })
+})

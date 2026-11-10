@@ -1,7 +1,7 @@
 # Parked minimal — Tasks
 
-| | |
-|---|---|
+|        |                                            |
+| ------ | ------------------------------------------ |
 | Status | PARKED 050505ZMAY26 — superseded by policy |
 
 ## P0

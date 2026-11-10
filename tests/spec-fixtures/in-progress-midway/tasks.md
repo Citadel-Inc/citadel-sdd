@@ -1,7 +1,7 @@
 # In-progress midway — Tasks
 
-| | |
-|---|---|
+|        |                                                       |
+| ------ | ----------------------------------------------------- |
 | Status | IN_PROGRESS 011920ZMAY26 — TestAgent claims execution |
 
 ## P0

@@ -7,127 +7,127 @@ import type {
   QTableRow,
   StatusValue,
   TaskItem,
-} from "./types.js";
+} from './types.ts'
 
 export function mutateStatus(fm: Frontmatter, next: StatusValue): Frontmatter {
   const fields = fm.fields.map(([k, v]) =>
-    k.toLowerCase() === "status"
+    k.toLowerCase() === 'status'
       ? ([k, formatStatusForFrontmatter(next)] as readonly [string, string])
       : ([k, v] as readonly [string, string]),
-  );
-  return { status: next, fields };
+  )
+  return { status: next, fields }
 }
 
 function formatStatusForFrontmatter(s: StatusValue): string {
-  const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state;
-  const head = s.bold ? `**${stateStr}**` : stateStr;
+  const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state
+  const head = s.bold ? `**${stateStr}**` : stateStr
   if (!s.tail) {
-    return head;
+    return head
   }
-  return `${head} — ${s.tail}`;
+  return `${head} — ${s.tail}`
 }
 
 export function mutateField(fm: Frontmatter, key: string, value: string): Frontmatter {
-  const lowerKey = key.toLowerCase();
-  let found = false;
+  const lowerKey = key.toLowerCase()
+  let found = false
   const fields = fm.fields.map(([k, v]) => {
     if (k.toLowerCase() === lowerKey) {
-      found = true;
-      return [k, value] as readonly [string, string];
+      found = true
+      return [k, value] as readonly [string, string]
     }
-    return [k, v] as readonly [string, string];
-  });
+    return [k, v] as readonly [string, string]
+  })
   if (!found) {
-    fields.push([key, value] as readonly [string, string]);
+    fields.push([key, value] as readonly [string, string])
   }
-  return { ...fm, fields };
+  return { ...fm, fields }
 }
 
 export interface RatifyDecision {
-  text: string;
-  as_of_dtg?: string;
+  text: string
+  as_of_dtg?: string
 }
 
 export interface RatifyOptions {
-  decisions?: Record<string, RatifyDecision>;
-  default_disposition: string;
-  dtg: string;
+  decisions?: Record<string, RatifyDecision>
+  default_disposition: string
+  dtg: string
 }
 
 export function ratifyQTable(rows: readonly QTableRow[], opts: RatifyOptions): QTableRow[] {
   return rows.map((row) => {
-    if (row.ratified.toLowerCase() !== "tbd") {
-      return row;
+    if (row.ratified.toLowerCase() !== 'tbd') {
+      return row
     }
-    const decision = opts.decisions?.[row.id];
+    const decision = opts.decisions?.[row.id]
     if (decision !== undefined) {
-      return { ...row, ratified: decision.text };
+      return { ...row, ratified: decision.text }
     }
-    return { ...row, ratified: opts.default_disposition };
-  });
+    return { ...row, ratified: opts.default_disposition }
+  })
 }
 
 export interface TaskMatch {
-  phase: Priority;
-  match: string | number;
+  phase: Priority
+  match: string | number
 }
 
 export function findTaskIndex(tasks: ParsedTasks, m: TaskMatch): number {
-  const items = tasks.phases[m.phase];
-  if (typeof m.match === "number") {
-    const idx = m.match - 1;
+  const items = tasks.phases[m.phase]
+  if (typeof m.match === 'number') {
+    const idx = m.match - 1
     if (idx < 0 || idx >= items.length) {
-      return -1;
+      return -1
     }
-    return idx;
+    return idx
   }
-  const needle = m.match;
-  const matches: number[] = [];
+  const needle = m.match
+  const matches: number[] = []
   for (let i = 0; i < items.length; i += 1) {
-    const item = items[i];
+    const item = items[i]
     if (item?.text.startsWith(needle)) {
-      matches.push(i);
+      matches.push(i)
     }
   }
   if (matches.length > 1) {
     throw new Error(
       `task_ambiguous: prefix "${needle}" matches ${matches.length} tasks in phase ${m.phase}`,
-    );
+    )
   }
-  return matches[0] ?? -1;
+  return matches[0] ?? -1
 }
 
 export function resolveTaskMatch(
   tasks: ParsedTasks,
   m: TaskMatch,
 ): { idx: number; text: string } | null {
-  const idx = findTaskIndex(tasks, m);
+  const idx = findTaskIndex(tasks, m)
   if (idx === -1) {
-    return null;
+    return null
   }
-  const item = tasks.phases[m.phase][idx];
-  return item ? { idx, text: item.text } : null;
+  const item = tasks.phases[m.phase][idx]
+  return item ? { idx, text: item.text } : null
 }
 
 export function setTaskChecked(tasks: ParsedTasks, m: TaskMatch, checked: boolean): ParsedTasks {
-  const resolved = resolveTaskMatch(tasks, m);
+  const resolved = resolveTaskMatch(tasks, m)
   if (!resolved) {
-    const items = tasks.phases[m.phase];
-    const preview = items.map((i) => `"${i.text.slice(0, 50)}"`).join(", ");
+    const items = tasks.phases[m.phase]
+    const preview = items.map((i) => `"${i.text.slice(0, 50)}"`).join(', ')
     throw new Error(
       `task_not_found: phase=${m.phase} match=${JSON.stringify(String(m.match))}` +
-        (preview ? `; available: [${preview}]` : ""),
-    );
+        (preview ? `; available: [${preview}]` : ''),
+    )
   }
-  const { phase } = m;
-  const items = tasks.phases[phase].slice();
-  const target = items[resolved.idx];
+  const { phase } = m
+  const items = tasks.phases[phase].slice()
+  const target = items[resolved.idx]
   if (!target) {
-    throw new Error("task_not_found: index resolved to undefined");
+    throw new Error('task_not_found: index resolved to undefined')
   }
-  items[resolved.idx] = { ...target, checked };
-  const phases: PhaseMap = { ...tasks.phases, [phase]: items };
-  return { ...tasks, phases };
+  items[resolved.idx] = { ...target, checked }
+  const phases: PhaseMap = { ...tasks.phases, [phase]: items }
+  return { ...tasks, phases }
 }
 
 export function addTaskItem(
@@ -138,29 +138,29 @@ export function addTaskItem(
 ): ParsedTasks {
   const newItem: TaskItem = {
     checked: false,
-    text: blocker && !text.startsWith("[BLOCKED]") ? `[BLOCKED] ${text}` : text,
-    isHumanGate: text.trimStart().startsWith("[HUMAN]"),
-  };
-  const items = [...tasks.phases[phase], newItem];
-  const phases: PhaseMap = { ...tasks.phases, [phase]: items };
-  return { ...tasks, phases };
+    text: blocker && !text.startsWith('[BLOCKED]') ? `[BLOCKED] ${text}` : text,
+    isHumanGate: text.trimStart().startsWith('[HUMAN]'),
+  }
+  const items = [...tasks.phases[phase], newItem]
+  const phases: PhaseMap = { ...tasks.phases, [phase]: items }
+  return { ...tasks, phases }
 }
 
 export function setOwner(spec: ParsedSpec, owner: string): ParsedSpec {
-  const fm = mutateField(spec.frontmatter, "Owner", owner);
-  return { ...spec, frontmatter: fm };
+  const fm = mutateField(spec.frontmatter, 'Owner', owner)
+  return { ...spec, frontmatter: fm }
 }
 
 export function ratifySpec(spec: ParsedSpec, opts: RatifyOptions): ParsedSpec {
-  return { ...spec, qTable: ratifyQTable(spec.qTable, opts) };
+  return { ...spec, qTable: ratifyQTable(spec.qTable, opts) }
 }
 
 export function setStatusOnSpec(spec: ParsedSpec, next: StatusValue): ParsedSpec {
-  return { ...spec, frontmatter: mutateStatus(spec.frontmatter, next) };
+  return { ...spec, frontmatter: mutateStatus(spec.frontmatter, next) }
 }
 
 export function setStatusOnTasks(tasks: ParsedTasks, next: StatusValue): ParsedTasks {
-  return { ...tasks, frontmatter: mutateStatus(tasks.frontmatter, next) };
+  return { ...tasks, frontmatter: mutateStatus(tasks.frontmatter, next) }
 }
 
-export type { Priority, SpecState, StatusValue } from "./types.js";
+export type { Priority, SpecState, StatusValue } from './types.ts'

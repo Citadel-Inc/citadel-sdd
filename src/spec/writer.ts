@@ -1,251 +1,257 @@
-import type { FrontmatterFormat } from "../profile/types.js";
+import type { FrontmatterFormat } from '../profile/types.ts'
 import {
   renderFrontmatter,
   renderFrontmatterInline,
   renderQTable,
   renderTaskItem,
-} from "./render.js";
-import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from "./types.js";
-import { PRIORITIES } from "./types.js";
+} from './render.ts'
+import type { Frontmatter, ParsedSpec, ParsedTasks, Priority, QTableRow } from './types.ts'
+import { PRIORITIES } from './types.ts'
 
-const Q_HEADER_QUESTION_RE = /question/i;
-const Q_HEADER_DEFAULT_RE = /proposed\s*default/i;
-const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/;
-const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/;
+const Q_HEADER_QUESTION_RE = /question/i
+const Q_HEADER_DEFAULT_RE = /proposed\s*default/i
+const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/
+const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/
 
-const LINE_SPLIT_RE = /\r?\n/;
+const LINE_SPLIT_RE = /\r?\n/
 
 interface BlockRange {
-  start: number;
-  end: number;
+  start: number
+  end: number
 }
 
 function insertAfterTitle(lines: readonly string[], block: string): string {
   // Locate insertion point: after any leading blanks + the title line + its trailing blanks.
-  let i = 0;
-  while (i < lines.length && (lines[i] ?? "").trim() === "") {
-    i += 1;
+  let i = 0
+  while (i < lines.length && (lines[i] ?? '').trim() === '') {
+    i += 1
   }
   if (i < lines.length) {
-    i += 1; // advance past title line
+    i += 1 // advance past title line
   }
-  while (i < lines.length && (lines[i] ?? "").trim() === "") {
-    i += 1;
+  while (i < lines.length && (lines[i] ?? '').trim() === '') {
+    i += 1
   }
-  return [...lines.slice(0, i), ...block.split("\n"), "", ...lines.slice(i)]
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n");
+  return [...lines.slice(0, i), ...block.split('\n'), '', ...lines.slice(i)]
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
 }
 
 function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | null {
-  let start = -1;
+  let start = -1
   for (let i = from; i < lines.length; i += 1) {
-    const line = lines[i];
+    const line = lines[i]
     if (line === undefined) {
-      continue;
+      continue
     }
-    if (line.trim().startsWith("|")) {
-      start = i;
-      break;
+    if (line.trim().startsWith('|')) {
+      start = i
+      break
     }
   }
   if (start === -1) {
-    return null;
+    return null
   }
-  let end = start;
+  let end = start
   while (end < lines.length) {
-    const line = lines[end];
+    const line = lines[end]
     if (line === undefined) {
-      break;
+      break
     }
-    if (!line.trim().startsWith("|")) {
-      break;
+    if (!line.trim().startsWith('|')) {
+      break
     }
-    end += 1;
+    end += 1
   }
-  return { start, end };
+  return { start, end }
 }
 
 function findQTableBlock(lines: readonly string[]): BlockRange | null {
   for (let i = 0; i < lines.length; i += 1) {
-    const raw = lines[i];
+    const raw = lines[i]
     if (raw === undefined) {
-      continue;
+      continue
     }
-    const line = raw.trim();
-    if (line.startsWith("|") && Q_HEADER_QUESTION_RE.test(line) && Q_HEADER_DEFAULT_RE.test(line)) {
+    const line = raw.trim()
+    if (line.startsWith('|') && Q_HEADER_QUESTION_RE.test(line) && Q_HEADER_DEFAULT_RE.test(line)) {
       // Require the very next line to be a markdown table separator row,
       // so we don't mistake prose tables for Q-tables.
-      const nextRaw = lines[i + 1];
+      const nextRaw = lines[i + 1]
       if (nextRaw === undefined || !isSeparatorRow(nextRaw.trim())) {
-        continue;
+        continue
       }
-      let end = i;
+      let end = i
       while (end < lines.length) {
-        const cur = lines[end];
+        const cur = lines[end]
         if (cur === undefined) {
-          break;
+          break
         }
-        if (!cur.trim().startsWith("|")) {
-          break;
+        if (!cur.trim().startsWith('|')) {
+          break
         }
-        end += 1;
+        end += 1
       }
-      return { start: i, end };
+      return { start: i, end }
     }
   }
-  return null;
+  return null
 }
 
 function isSeparatorRow(line: string): boolean {
-  return SEPARATOR_ROW_RE.test(line);
+  return SEPARATOR_ROW_RE.test(line)
+}
+
+function isAtxHeading(line: string): boolean {
+  return line.startsWith('# ') || line.startsWith('## ')
+}
+
+function frontmatterRegion(lines: readonly string[]): { titleIdx: number; fmEnd: number } {
+  let titleIdx = -1
+  for (let i = 0; i < lines.length; i += 1) {
+    if (isAtxHeading(lines[i] ?? '')) {
+      titleIdx = i
+      break
+    }
+  }
+  let fmEnd = lines.length
+  if (titleIdx !== -1) {
+    for (let i = titleIdx + 1; i < lines.length; i += 1) {
+      if (isAtxHeading(lines[i] ?? '')) {
+        fmEnd = i
+        break
+      }
+    }
+  }
+  return { titleIdx, fmEnd }
+}
+
+function replacePipeBlock(lines: readonly string[], block: BlockRange, rendered: string): string {
+  return [...lines.slice(0, block.start), ...rendered.split('\n'), ...lines.slice(block.end)].join(
+    '\n',
+  )
+}
+
+function convertInlineToPipe(lines: readonly string[], newFm: Frontmatter): string {
+  const fieldKeys = new Set(['status', ...newFm.fields.map(([k]) => k.toLowerCase())])
+  const { titleIdx, fmEnd } = frontmatterRegion(lines)
+  const stripped = lines.filter((line, idx) => {
+    if (idx <= titleIdx || idx >= fmEnd) {
+      return true
+    }
+    const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line)
+    return !(m && fieldKeys.has((m[1] ?? '').trim().toLowerCase()))
+  })
+  return insertAfterTitle(stripped, renderFrontmatter(newFm))
+}
+
+function replaceInlineFields(
+  lines: readonly string[],
+  newFm: Frontmatter,
+  format: FrontmatterFormat,
+): string {
+  const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]))
+  let found = false
+  const newLines = lines.map((line) => {
+    const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line)
+    if (!m) {
+      return line
+    }
+    const entry = fieldMap.get((m[1] ?? '').trim().toLowerCase())
+    if (!entry) {
+      return line
+    }
+    found = true
+    return `${entry.key}: ${entry.value}`
+  })
+  if (!found) {
+    const rendered = format === 'inline' ? renderFrontmatterInline(newFm) : renderFrontmatter(newFm)
+    return insertAfterTitle(lines, rendered)
+  }
+  return newLines.join('\n')
 }
 
 export function spliceFrontmatter(
   rawMd: string,
   newFm: Frontmatter,
-  format: FrontmatterFormat = "any",
+  format: FrontmatterFormat = 'any',
 ): string {
-  const lines = rawMd.split(LINE_SPLIT_RE);
-  const block = findFirstPipeBlock(lines);
-  const hasPipe = block !== null;
-
-  const targetPipe = format === "pipe-table" || (format === "any" && hasPipe);
+  const lines = rawMd.split(LINE_SPLIT_RE)
+  const block = findFirstPipeBlock(lines)
+  const hasPipe = block !== null
+  const targetPipe = format === 'pipe-table' || (format === 'any' && hasPipe)
 
   if (targetPipe) {
     if (hasPipe && block) {
-      // Replace existing pipe block.
-      const before = lines.slice(0, block.start);
-      const after = lines.slice(block.end);
-      return [...before, ...renderFrontmatter(newFm).split("\n"), ...after].join("\n");
+      return replacePipeBlock(lines, block, renderFrontmatter(newFm))
     }
-    // Convert inline → pipe-table (or insert into file with no frontmatter): strip inline keys
-    // from the frontmatter region only (between the title line and the next heading), then
-    // insert the pipe block after the title.
-    const fieldKeys = new Set(["status", ...newFm.fields.map(([k]) => k.toLowerCase())]);
-    // Locate the frontmatter region: after the title line up to (not including) the next heading.
-    let titleIdx = -1;
-    for (let i = 0; i < lines.length; i += 1) {
-      const l = lines[i] ?? "";
-      if (l.startsWith("# ") || l.startsWith("## ")) {
-        titleIdx = i;
-        break;
-      }
-    }
-    // The frontmatter region is strictly AFTER the title line.
-    let fmEnd = lines.length;
-    if (titleIdx !== -1) {
-      for (let i = titleIdx + 1; i < lines.length; i += 1) {
-        const l = lines[i] ?? "";
-        if (l.startsWith("# ") || l.startsWith("## ")) {
-          fmEnd = i;
-          break;
-        }
-      }
-    }
-    const stripped = lines.filter((line, idx) => {
-      // Only strip inline-key lines that fall within the frontmatter region.
-      if (idx <= titleIdx || idx >= fmEnd) {
-        return true;
-      }
-      const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line);
-      return !(m && fieldKeys.has((m[1] ?? "").trim().toLowerCase()));
-    });
-    return insertAfterTitle(stripped, renderFrontmatter(newFm));
+    return convertInlineToPipe(lines, newFm)
   }
-
-  // Target is inline (format === "inline" or format === "any" without pipe block).
   if (hasPipe && block) {
-    // Convert pipe-table → inline: replace pipe block with key-value lines.
-    const before = lines.slice(0, block.start);
-    const after = lines.slice(block.end);
-    return [...before, ...renderFrontmatterInline(newFm).split("\n"), ...after].join("\n");
+    return replacePipeBlock(lines, block, renderFrontmatterInline(newFm))
   }
-  // Inline frontmatter: replace each matching "Key: value" line in-place.
-  const fieldMap = new Map(newFm.fields.map(([k, v]) => [k.toLowerCase(), { key: k, value: v }]));
-  let found = false;
-  const newLines = lines.map((line) => {
-    const m: RegExpExecArray | null = FIELD_PREFIX_RE.exec(line);
-    if (!m) {
-      return line;
-    }
-    const keyLower = (m[1] ?? "").trim().toLowerCase();
-    const entry = fieldMap.get(keyLower);
-    if (!entry) {
-      return line;
-    }
-    found = true;
-    return `${entry.key}: ${entry.value}`;
-  });
-  if (!found) {
-    // No existing frontmatter — insert after title using the canonical format for this mode.
-    const rendered =
-      format === "inline" ? renderFrontmatterInline(newFm) : renderFrontmatter(newFm);
-    return insertAfterTitle(lines, rendered);
-  }
-  return newLines.join("\n");
+  return replaceInlineFields(lines, newFm, format)
 }
 
 export function spliceQTable(rawMd: string, newRows: readonly QTableRow[]): string {
-  const lines = rawMd.split(LINE_SPLIT_RE);
-  const block = findQTableBlock(lines);
-  const rendered = renderQTable(newRows);
+  const lines = rawMd.split(LINE_SPLIT_RE)
+  const block = findQTableBlock(lines)
+  const rendered = renderQTable(newRows)
 
   if (!block) {
     if (rendered.length === 0) {
-      return rawMd;
+      return rawMd
     }
-    throw new Error("qtable_anchor_missing: cannot splice into spec without existing Q-table");
+    throw new Error('qtable_anchor_missing: cannot splice into spec without existing Q-table')
   }
-  const before = lines.slice(0, block.start);
-  const after = lines.slice(block.end);
-  const renderedLines = rendered.length === 0 ? [] : rendered.split("\n");
-  return [...before, ...renderedLines, ...after].join("\n");
+  const before = lines.slice(0, block.start)
+  const after = lines.slice(block.end)
+  const renderedLines = rendered.length === 0 ? [] : rendered.split('\n')
+  return [...before, ...renderedLines, ...after].join('\n')
 }
 
 function findPhaseBlock(lines: readonly string[], priority: Priority): BlockRange | null {
-  const heading = `## ${priority}`;
-  let start = -1;
+  const heading = `## ${priority}`
+  let start = -1
   for (let i = 0; i < lines.length; i += 1) {
-    const line = lines[i];
+    const line = lines[i]
     if (line === undefined) {
-      continue;
+      continue
     }
     if (
       line.startsWith(heading) &&
-      (line.length === heading.length || line[heading.length] === " ")
+      (line.length === heading.length || line[heading.length] === ' ')
     ) {
-      start = i;
-      break;
+      start = i
+      break
     }
   }
   if (start === -1) {
-    return null;
+    return null
   }
-  let end = start + 1;
+  let end = start + 1
   while (end < lines.length) {
-    const line = lines[end];
+    const line = lines[end]
     if (line === undefined) {
-      break;
+      break
     }
-    if (line.startsWith("## ")) {
-      break;
+    if (line.startsWith('## ')) {
+      break
     }
-    end += 1;
+    end += 1
   }
-  return { start, end };
+  return { start, end }
 }
 
 export function spliceTasksFile(
   rawMd: string,
   parsed: ParsedTasks,
-  format: FrontmatterFormat = "any",
+  format: FrontmatterFormat = 'any',
 ): string {
-  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format);
+  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format)
   for (const priority of PRIORITIES) {
-    out = splicePhase(out, priority, parsed.phases[priority]);
+    out = splicePhase(out, priority, parsed.phases[priority])
   }
-  return out;
+  return out
 }
 
 function splicePhase(
@@ -253,30 +259,30 @@ function splicePhase(
   priority: Priority,
   items: readonly { checked: boolean; text: string; isHumanGate: boolean }[],
 ): string {
-  const lines = rawMd.split(LINE_SPLIT_RE);
-  const block = findPhaseBlock(lines, priority);
+  const lines = rawMd.split(LINE_SPLIT_RE)
+  const block = findPhaseBlock(lines, priority)
   if (!block) {
-    return rawMd;
+    return rawMd
   }
-  const before = lines.slice(0, block.start);
-  const after = lines.slice(block.end);
-  const heading = lines[block.start] ?? `## ${priority}`;
-  const rendered: string[] = [heading, ""];
+  const before = lines.slice(0, block.start)
+  const after = lines.slice(block.end)
+  const heading = lines[block.start] ?? `## ${priority}`
+  const rendered: string[] = [heading, '']
   for (const item of items) {
-    rendered.push(renderTaskItem(item));
+    rendered.push(renderTaskItem(item))
   }
-  rendered.push("");
-  return [...before, ...rendered, ...after].join("\n").replace(/\n{3,}/g, "\n\n");
+  rendered.push('')
+  return [...before, ...rendered, ...after].join('\n').replace(/\n{3,}/g, '\n\n')
 }
 
 export function spliceSpecFile(
   rawMd: string,
   parsed: ParsedSpec,
-  format: FrontmatterFormat = "any",
+  format: FrontmatterFormat = 'any',
 ): string {
-  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format);
+  let out = spliceFrontmatter(rawMd, parsed.frontmatter, format)
   if (parsed.qTable.length > 0 || findQTableBlock(out.split(LINE_SPLIT_RE)) !== null) {
-    out = spliceQTable(out, parsed.qTable);
+    out = spliceQTable(out, parsed.qTable)
   }
-  return out;
+  return out
 }

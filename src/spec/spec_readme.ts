@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import {
   buildRow,
   formatActiveIndexRow,
@@ -10,132 +10,132 @@ import {
   SPEC_README_ACTIVE_PLACEHOLDER,
   SPEC_README_DONE_OR_PARKED_HEADER,
   SPEC_README_DONE_OR_PARKED_PLACEHOLDER,
-} from "./index_render.js";
-import { locateSpec, type RepoContext, type SpecLifecycleState } from "./repo.js";
+} from './index_render.ts'
+import { locateSpec, type RepoContext, type SpecLifecycleState } from './repo.ts'
 
-const SEPARATOR_ROW_RE = /^\|\s*-+/;
-const H2_RE = /^##\s/;
+const SEPARATOR_ROW_RE = /^\|\s*-+/
+const H2_RE = /^##\s/
 
-const LINE_SPLIT_RE = /\r?\n/;
+const LINE_SPLIT_RE = /\r?\n/
 
-export const README_UNPARSEABLE = "readme_unparseable";
+export const README_UNPARSEABLE = 'readme_unparseable'
 
 function readmeAbsPath(repo: RepoContext): string {
-  return join(repo.rootDir, repo.specDir, "README.md");
+  return join(repo.rootDir, repo.specDir, 'README.md')
 }
 
 /** Repo-relative path for `git add`. */
 export function specReadmeRelPath(repo: RepoContext): string {
-  return `${repo.specDir}/README.md`;
+  return `${repo.specDir}/README.md`
 }
 
 /** Full regeneration — only `spec_init` and `spec_index_rebuild` may call this. */
 export function writeSpecReadmeFull(repo: RepoContext): string {
-  const p = readmeAbsPath(repo);
-  writeFileSync(p, renderIndex(repo), "utf8");
-  return specReadmeRelPath(repo);
+  const p = readmeAbsPath(repo)
+  writeFileSync(p, renderIndex(repo), 'utf8')
+  return specReadmeRelPath(repo)
 }
 
 function firstTableCell(line: string): string {
-  const parts = line.split("|");
-  return (parts[1] ?? "").trim();
+  const parts = line.split('|')
+  return (parts[1] ?? '').trim()
 }
 
 function isSeparatorLine(line: string): boolean {
-  return SEPARATOR_ROW_RE.test(line.trim());
+  return SEPARATOR_ROW_RE.test(line.trim())
 }
 
 interface ParsedSection {
   /** Index of `## Active` / `## Done` / `## Parked`. */
-  start: number;
+  start: number
   /** First line of data rows (after separator). */
-  dataStart: number;
+  dataStart: number
   /** First line after the last data row in this section. */
-  dataEndExclusive: number;
+  dataEndExclusive: number
   /** Index of the next section heading, or `lines.length`. */
-  nextSectionStart: number;
+  nextSectionStart: number
 }
 
 function parseSectionTable(
   lines: string[],
-  sectionHeading: "## Active" | "## Done" | "## Parked",
-  nextHeading: "## Done" | "## Parked" | null,
+  sectionHeading: '## Active' | '## Done' | '## Parked',
+  nextHeading: '## Done' | '## Parked' | null,
   machineHeader: string,
 ): ParsedSection {
-  const start = lines.findIndex((l) => l.trim() === sectionHeading);
+  const start = lines.findIndex((l) => l.trim() === sectionHeading)
   if (start < 0) {
-    throw new Error(`${README_UNPARSEABLE}: missing ${sectionHeading}; run spec_index_rebuild`);
+    throw new Error(`${README_UNPARSEABLE}: missing ${sectionHeading}; run spec_index_rebuild`)
   }
 
   const nextSectionStart = nextHeading
     ? lines.findIndex((l, i) => i > start && l.trim() === nextHeading)
-    : lines.length;
+    : lines.length
   if (nextHeading && nextSectionStart < 0) {
-    throw new Error(`${README_UNPARSEABLE}: missing ${nextHeading}; run spec_index_rebuild`);
+    throw new Error(`${README_UNPARSEABLE}: missing ${nextHeading}; run spec_index_rebuild`)
   }
 
-  let headerIdx = -1;
+  let headerIdx = -1
   for (let i = start + 1; i < nextSectionStart; i += 1) {
-    const line = lines[i];
+    const line = lines[i]
     if (line === undefined) {
-      continue;
+      continue
     }
-    const t = line.trim();
+    const t = line.trim()
     if (H2_RE.test(t)) {
       throw new Error(
         `${README_UNPARSEABLE}: unexpected heading before ${sectionHeading} table header; run spec_index_rebuild`,
-      );
+      )
     }
     if (t === machineHeader) {
-      headerIdx = i;
-      break;
+      headerIdx = i
+      break
     }
   }
   if (headerIdx < 0) {
     throw new Error(
       `${README_UNPARSEABLE}: missing ${sectionHeading} table header; run spec_index_rebuild`,
-    );
+    )
   }
 
-  const sepLine = lines[headerIdx + 1];
+  const sepLine = lines[headerIdx + 1]
   if (sepLine === undefined || !isSeparatorLine(sepLine)) {
     throw new Error(
       `${README_UNPARSEABLE}: missing or invalid separator after ${sectionHeading} header; run spec_index_rebuild`,
-    );
+    )
   }
 
-  const dataStart = headerIdx + 2;
-  let j = dataStart;
+  const dataStart = headerIdx + 2
+  let j = dataStart
   while (j < nextSectionStart) {
-    const line = lines[j];
+    const line = lines[j]
     if (line === undefined) {
-      break;
+      break
     }
     if (H2_RE.test(line.trim())) {
-      break;
+      break
     }
-    const t = line.trimStart();
-    if (!t.startsWith("|")) {
-      break;
+    const t = line.trimStart()
+    if (!t.startsWith('|')) {
+      break
     }
-    j += 1;
+    j += 1
   }
 
-  return { start, dataStart, dataEndExclusive: j, nextSectionStart };
+  return { start, dataStart, dataEndExclusive: j, nextSectionStart }
 }
 
 function placeholderFor(bucket: SpecLifecycleState): string {
-  return bucket === "active"
+  return bucket === 'active'
     ? SPEC_README_ACTIVE_PLACEHOLDER
-    : SPEC_README_DONE_OR_PARKED_PLACEHOLDER;
+    : SPEC_README_DONE_OR_PARKED_PLACEHOLDER
 }
 
 function formatRowForBucket(bucket: SpecLifecycleState, row: IndexRow): string {
-  return bucket === "active" ? formatActiveIndexRow(row) : formatDoneOrParkedIndexRow(row);
+  return bucket === 'active' ? formatActiveIndexRow(row) : formatDoneOrParkedIndexRow(row)
 }
 
 function extractDataLines(lines: string[], p: ParsedSection): string[] {
-  return lines.slice(p.dataStart, p.dataEndExclusive);
+  return lines.slice(p.dataStart, p.dataEndExclusive)
 }
 
 /**
@@ -143,54 +143,54 @@ function extractDataLines(lines: string[], p: ParsedSection): string[] {
  * empty tables, then insert the fresh row at the top of the destination table only.
  */
 export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
-  const loc = locateSpec(repo, slug);
+  const loc = locateSpec(repo, slug)
   if (!loc) {
-    throw new Error(`spec_not_found: ${slug}`);
+    throw new Error(`spec_not_found: ${slug}`)
   }
-  const row = buildRow(loc);
+  const row = buildRow(loc)
   if (!row) {
     throw new Error(
       `${README_UNPARSEABLE}: cannot read spec.md for ${slug}; run spec_index_rebuild`,
-    );
+    )
   }
 
-  const path = readmeAbsPath(repo);
-  let raw: string;
+  const path = readmeAbsPath(repo)
+  let raw: string
   try {
-    raw = readFileSync(path, "utf8");
+    raw = readFileSync(path, 'utf8')
   } catch (err) {
-    if (err instanceof Error && "code" in err && err.code === "ENOENT") {
+    if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
       throw new Error(
         `${README_UNPARSEABLE}: ${repo.specDir}/README.md missing; run spec_init or spec_index_rebuild`,
         { cause: err },
-      );
+      )
     }
-    throw err;
+    throw err
   }
-  const lines = raw.split(LINE_SPLIT_RE);
+  const lines = raw.split(LINE_SPLIT_RE)
 
-  const pa = parseSectionTable(lines, "## Active", "## Done", SPEC_README_ACTIVE_HEADER);
-  const pd = parseSectionTable(lines, "## Done", "## Parked", SPEC_README_DONE_OR_PARKED_HEADER);
-  const pp = parseSectionTable(lines, "## Parked", null, SPEC_README_DONE_OR_PARKED_HEADER);
+  const pa = parseSectionTable(lines, '## Active', '## Done', SPEC_README_ACTIVE_HEADER)
+  const pd = parseSectionTable(lines, '## Done', '## Parked', SPEC_README_DONE_OR_PARKED_HEADER)
+  const pp = parseSectionTable(lines, '## Parked', null, SPEC_README_DONE_OR_PARKED_HEADER)
 
-  const dest = loc.state;
+  const dest = loc.state
 
   const nextData: Record<SpecLifecycleState, string[]> = {
     active: extractDataLines(lines, pa).filter((ln) => firstTableCell(ln) !== slug),
     done: extractDataLines(lines, pd).filter((ln) => firstTableCell(ln) !== slug),
     parked: extractDataLines(lines, pp).filter((ln) => firstTableCell(ln) !== slug),
-  };
+  }
 
-  for (const b of ["active", "done", "parked"] as const) {
+  for (const b of ['active', 'done', 'parked'] as const) {
     if (nextData[b].length === 0) {
-      nextData[b] = [placeholderFor(b)];
+      nextData[b] = [placeholderFor(b)]
     }
   }
 
-  const destLines = nextData[dest].filter((ln) => firstTableCell(ln) !== "_(none)_");
-  nextData[dest] = [formatRowForBucket(dest, row), ...destLines];
+  const destLines = nextData[dest].filter((ln) => firstTableCell(ln) !== '_(none)_')
+  nextData[dest] = [formatRowForBucket(dest, row), ...destLines]
 
-  const tailNewline = raw.endsWith("\n") ? "\n" : "";
+  const tailNewline = raw.endsWith('\n') ? '\n' : ''
   const out =
     [
       ...lines.slice(0, pa.start),
@@ -203,8 +203,8 @@ export function upsertSpecReadmeRow(repo: RepoContext, slug: string): string {
       ...lines.slice(pp.start, pp.dataStart),
       ...nextData.parked,
       ...lines.slice(pp.dataEndExclusive, lines.length),
-    ].join("\n") + tailNewline;
+    ].join('\n') + tailNewline
 
-  writeFileSync(path, out, "utf8");
-  return specReadmeRelPath(repo);
+  writeFileSync(path, out, 'utf8')
+  return specReadmeRelPath(repo)
 }

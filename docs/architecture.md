@@ -72,16 +72,16 @@ Transition rules:
 
 ## File-system contract
 
-| Path | Read | Write | Notes |
-|------|:---:|:---:|-------|
-| `specs/config.yaml` | ✓ | spec_init only | Profile config. |
-| `specs/active/<slug>/spec.md` | ✓ | ✓ | Top-of-file `\| Status \|…\|` table = canonical state. |
-| `specs/active/<slug>/plan.md` | ✓ | — | Edited by humans/agents; MCP does not write. |
-| `specs/active/<slug>/tasks.md` | ✓ | ✓ | Status line + checkbox state. |
-| `specs/done/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | Same shape; `done/` location. |
-| `specs/parked/<slug>/{spec,plan,tasks}.md` | ✓ | ✓ | PARKED state; intentionally not pursued. |
-| `specs/README.md` | ✓ | ✓ | Three-table index: active + done + parked. Rows are derived from each spec’s `spec.md` frontmatter. **`spec_init` and `spec_index_rebuild` alone** replace the entire file from `renderIndex`. **All other writers** apply targeted markdown table edits (see [docs/mcp-tools.md](mcp-tools.md)) so prose after the Parked table is preserved. Per bucket, the **mutated** slug is written as the first data row after the table separator; strict global DTG ordering of every row is restored only by `spec_index_rebuild`. |
-| `HUMAN_BLOCKERS.md` | ✓ | — | Lint reads only; MCP tools do not write. |
+| Path                                       | Read |     Write      | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------ | :--: | :------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `specs/config.yaml`                        |  ✓   | spec_init only | Profile config.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `specs/active/<slug>/spec.md`              |  ✓   |       ✓        | Top-of-file `\| Status \|…\|` table = canonical state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `specs/active/<slug>/plan.md`              |  ✓   |       —        | Edited by humans/agents; MCP does not write.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `specs/active/<slug>/tasks.md`             |  ✓   |       ✓        | Status line + checkbox state.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `specs/done/<slug>/{spec,plan,tasks}.md`   |  ✓   |       ✓        | Same shape; `done/` location.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `specs/parked/<slug>/{spec,plan,tasks}.md` |  ✓   |       ✓        | PARKED state; intentionally not pursued.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `specs/README.md`                          |  ✓   |       ✓        | Three-table index: active + done + parked. Rows are derived from each spec’s `spec.md` frontmatter. **`spec_init` and `spec_index_rebuild` alone** replace the entire file from `renderIndex`. **All other writers** apply targeted markdown table edits (see [docs/mcp-tools.md](mcp-tools.md)) so prose after the Parked table is preserved. Per bucket, the **mutated** slug is written as the first data row after the table separator; strict global DTG ordering of every row is restored only by `spec_index_rebuild`. |
+| `HUMAN_BLOCKERS.md`                        |  ✓   |       —        | Lint reads only; MCP tools do not write.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Write invariants
 
@@ -97,12 +97,12 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 
 ## Tool taxonomy
 
-| Class | Count | Tools |
-|-------|:---:|-------|
-| Read | 6 | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `spec_task_list`, `sdd_doctor` |
-| Write atomic | 3 | `spec_task_check`, `spec_task_add`, `spec_handoff` |
-| Write lifecycle transition | 1 | `spec_transition` (dispatches nine actions: `approve`, `ratify`, `claim`, `close`, `reopen`, `park`, `block`, `unblock`, `unpark`) |
-| Write infrastructure | 2 | `spec_index_rebuild`, `spec_init` |
+| Class                      | Count | Tools                                                                                                                              |
+| -------------------------- | :---: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Read                       |   6   | `spec_list`, `spec_read`, `spec_status`, `spec_lint`, `spec_task_list`, `sdd_doctor`                                               |
+| Write atomic               |   3   | `spec_task_check`, `spec_task_add`, `spec_handoff`                                                                                 |
+| Write lifecycle transition |   1   | `spec_transition` (dispatches nine actions: `approve`, `ratify`, `claim`, `close`, `reopen`, `park`, `block`, `unblock`, `unpark`) |
+| Write infrastructure       |   2   | `spec_index_rebuild`, `spec_init`                                                                                                  |
 
 Total: **12** (matches `server.registerTool` calls; asserted by `tests/mcp/server.test.ts`).
 

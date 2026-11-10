@@ -1,46 +1,46 @@
-import { readFileSync } from "node:fs";
-import { parseTasks } from "../spec/parse.js";
-import { locateSpec, type RepoContext } from "../spec/repo.js";
-import type { Priority } from "../spec/types.js";
-import { PRIORITIES } from "../spec/types.js";
-import type { ToolContext } from "./types.js";
+import { readFileSync } from 'node:fs'
+import { parseTasks } from '../spec/parse.ts'
+import { locateSpec, type RepoContext } from '../spec/repo.ts'
+import type { Priority } from '../spec/types.ts'
+import { PRIORITIES } from '../spec/types.ts'
+import type { ToolContext } from './types.ts'
 
 export interface SpecTaskListInput {
-  slug: string;
-  phases?: Priority[];
+  slug: string
+  phases?: Priority[]
 }
 
 export interface TaskListItem {
-  phase: Priority;
-  index: number;
-  text: string;
-  checked: boolean;
-  isHumanGate: boolean;
+  phase: Priority
+  index: number
+  text: string
+  checked: boolean
+  isHumanGate: boolean
 }
 
 export interface SpecTaskListOutput {
-  slug: string;
-  items: TaskListItem[];
-  total: number;
-  unchecked: number;
+  slug: string
+  items: TaskListItem[]
+  total: number
+  unchecked: number
 }
 
 function repoCtx(ctx: ToolContext): RepoContext {
-  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir };
+  return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir }
 }
 
 export function specTaskList(input: SpecTaskListInput, ctx: ToolContext): SpecTaskListOutput {
-  const repo = repoCtx(ctx);
-  const loc = locateSpec(repo, input.slug);
+  const repo = repoCtx(ctx)
+  const loc = locateSpec(repo, input.slug)
   if (!loc) {
-    throw new Error(`spec_not_found: ${input.slug}`);
+    throw new Error(`spec_not_found: ${input.slug}`)
   }
 
-  const raw = readFileSync(loc.tasksMd, "utf8");
-  const tasks = parseTasks(raw);
+  const raw = readFileSync(loc.tasksMd, 'utf8')
+  const tasks = parseTasks(raw)
 
-  const phases = input.phases ?? PRIORITIES;
-  const items: TaskListItem[] = [];
+  const phases = input.phases ?? PRIORITIES
+  const items: TaskListItem[] = []
 
   for (const phase of phases) {
     tasks.phases[phase].forEach((item, i) => {
@@ -50,8 +50,8 @@ export function specTaskList(input: SpecTaskListInput, ctx: ToolContext): SpecTa
         text: item.text,
         checked: item.checked,
         isHumanGate: item.isHumanGate,
-      });
-    });
+      })
+    })
   }
 
   return {
@@ -59,5 +59,5 @@ export function specTaskList(input: SpecTaskListInput, ctx: ToolContext): SpecTa
     items,
     total: items.length,
     unchecked: items.filter((i) => !i.checked).length,
-  };
+  }
 }

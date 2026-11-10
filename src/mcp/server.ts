@@ -1,27 +1,27 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { RatifyDecision } from "../spec/mutate.js";
-import type { Priority } from "../spec/types.js";
-import { sddDoctor } from "../tools/sdd_doctor.js";
-import { type SpecApproveOutput, specApprove } from "../tools/spec_approve.js";
-import { type SpecBlockOutput, specBlock } from "../tools/spec_block.js";
-import { type SpecClaimOutput, specClaim } from "../tools/spec_claim.js";
-import { type SpecCloseOutput, specClose } from "../tools/spec_close.js";
-import { specHandoff } from "../tools/spec_handoff.js";
-import { specIndexRebuild } from "../tools/spec_index_rebuild.js";
-import { specInit } from "../tools/spec_init.js";
-import { specLint } from "../tools/spec_lint.js";
-import { specList } from "../tools/spec_list.js";
-import { type SpecParkOutput, specPark } from "../tools/spec_park.js";
-import { type SpecRatifyOutput, specRatify } from "../tools/spec_ratify.js";
-import { specRead } from "../tools/spec_read.js";
-import { type SpecReopenOutput, specReopen } from "../tools/spec_reopen.js";
-import { specStatus } from "../tools/spec_status.js";
-import { specTaskAdd } from "../tools/spec_task_add.js";
-import { specTaskCheck } from "../tools/spec_task_check.js";
-import { specTaskList } from "../tools/spec_task_list.js";
-import { type SpecUnblockOutput, specUnblock } from "../tools/spec_unblock.js";
-import { type SpecUnparkOutput, specUnpark } from "../tools/spec_unpark.js";
-import type { ToolContext } from "../tools/types.js";
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
+import type { RatifyDecision } from '../spec/mutate.ts'
+import type { Priority } from '../spec/types.ts'
+import { sddDoctor } from '../tools/sdd_doctor.ts'
+import { type SpecApproveOutput, specApprove } from '../tools/spec_approve.ts'
+import { type SpecBlockOutput, specBlock } from '../tools/spec_block.ts'
+import { type SpecClaimOutput, specClaim } from '../tools/spec_claim.ts'
+import { type SpecCloseOutput, specClose } from '../tools/spec_close.ts'
+import { specHandoff } from '../tools/spec_handoff.ts'
+import { specIndexRebuild } from '../tools/spec_index_rebuild.ts'
+import { specInit } from '../tools/spec_init.ts'
+import { specLint } from '../tools/spec_lint.ts'
+import { specList } from '../tools/spec_list.ts'
+import { type SpecParkOutput, specPark } from '../tools/spec_park.ts'
+import { type SpecRatifyOutput, specRatify } from '../tools/spec_ratify.ts'
+import { specRead } from '../tools/spec_read.ts'
+import { type SpecReopenOutput, specReopen } from '../tools/spec_reopen.ts'
+import { specStatus } from '../tools/spec_status.ts'
+import { specTaskAdd } from '../tools/spec_task_add.ts'
+import { specTaskCheck } from '../tools/spec_task_check.ts'
+import { specTaskList } from '../tools/spec_task_list.ts'
+import { type SpecUnblockOutput, specUnblock } from '../tools/spec_unblock.ts'
+import { type SpecUnparkOutput, specUnpark } from '../tools/spec_unpark.ts'
+import type { ToolContext } from '../tools/types.ts'
 import {
   SddDoctorShape,
   SpecHandoffShape,
@@ -35,29 +35,29 @@ import {
   SpecTaskCheckShape,
   SpecTaskListShape,
   SpecTransitionShape,
-} from "./schemas.js";
-import type { WorkspaceRootPick } from "./workspace.js";
+} from './schemas.ts'
+import type { WorkspaceRootPick } from './workspace.ts'
 
-export type ToolContextFactory = (input?: WorkspaceRootPick) => ToolContext | Promise<ToolContext>;
+export type ToolContextFactory = (input?: WorkspaceRootPick) => ToolContext | Promise<ToolContext>
 
 interface CallResult {
-  [x: string]: unknown;
-  content: Array<{ type: "text"; text: string }>;
-  isError?: boolean;
+  [x: string]: unknown
+  content: Array<{ type: 'text'; text: string }>
+  isError?: boolean
 }
 
 function ok(value: unknown): CallResult {
   return {
-    content: [{ type: "text", text: JSON.stringify(value) }],
-  };
+    content: [{ type: 'text', text: JSON.stringify(value) }],
+  }
 }
 
 function err(e: unknown): CallResult {
-  const message = e instanceof Error ? e.message : String(e);
+  const message = e instanceof Error ? e.message : String(e)
   return {
-    content: [{ type: "text", text: JSON.stringify({ error: message }) }],
+    content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
     isError: true,
-  };
+  }
 }
 
 function wrap<I extends object, O>(
@@ -66,40 +66,40 @@ function wrap<I extends object, O>(
 ) {
   return async (input: I & WorkspaceRootPick): Promise<CallResult> => {
     try {
-      return ok(fn(input, await factory(input)));
+      return ok(fn(input, await factory(input)))
     } catch (e) {
-      return err(e);
+      return err(e)
     }
-  };
+  }
 }
 
 export type SpecTransitionAction =
-  | "approve"
-  | "ratify"
-  | "claim"
-  | "close"
-  | "reopen"
-  | "park"
-  | "block"
-  | "unblock"
-  | "unpark";
+  | 'approve'
+  | 'ratify'
+  | 'claim'
+  | 'close'
+  | 'reopen'
+  | 'park'
+  | 'block'
+  | 'unblock'
+  | 'unpark'
 
 export interface SpecTransitionInput {
-  slug: string;
-  to: SpecTransitionAction;
-  note?: string;
-  decisions?: Record<string, RatifyDecision>;
-  default_disposition?: string;
-  claimer?: string;
-  ratify?: boolean;
-  summary?: string;
-  allow_open?: Priority[];
-  push?: boolean;
-  reason?: string;
-  resolution?: string;
-  blocker_path?: string;
-  commit?: boolean;
-  dryRun?: boolean;
+  slug: string
+  to: SpecTransitionAction
+  note?: string
+  decisions?: Record<string, RatifyDecision>
+  default_disposition?: string
+  claimer?: string
+  ratify?: boolean
+  summary?: string
+  allow_open?: Priority[]
+  push?: boolean
+  reason?: string
+  resolution?: string
+  blocker_path?: string
+  commit?: boolean
+  dryRun?: boolean
 }
 
 export type SpecTransitionOutput =
@@ -111,7 +111,7 @@ export type SpecTransitionOutput =
   | SpecParkOutput
   | SpecBlockOutput
   | SpecUnblockOutput
-  | SpecUnparkOutput;
+  | SpecUnparkOutput
 
 /**
  * Single MCP surface for the nine lifecycle-transition tools. Routes to the
@@ -122,11 +122,11 @@ export type SpecTransitionOutput =
  * through as `""` and surfaces that same handler-owned error.
  */
 export function specTransition(input: SpecTransitionInput, ctx: ToolContext): SpecTransitionOutput {
-  const { slug, commit, dryRun } = input;
+  const { slug, commit, dryRun } = input
   switch (input.to) {
-    case "approve":
-      return specApprove({ slug, note: input.note, commit, dryRun }, ctx);
-    case "ratify":
+    case 'approve':
+      return specApprove({ slug, note: input.note, commit, dryRun }, ctx)
+    case 'ratify':
       return specRatify(
         {
           slug,
@@ -136,10 +136,10 @@ export function specTransition(input: SpecTransitionInput, ctx: ToolContext): Sp
           dryRun,
         },
         ctx,
-      );
-    case "claim":
-      return specClaim({ slug, claimer: input.claimer, ratify: input.ratify, commit, dryRun }, ctx);
-    case "close":
+      )
+    case 'claim':
+      return specClaim({ slug, claimer: input.claimer, ratify: input.ratify, commit, dryRun }, ctx)
+    case 'close':
       return specClose(
         {
           slug,
@@ -150,155 +150,155 @@ export function specTransition(input: SpecTransitionInput, ctx: ToolContext): Sp
           dryRun,
         },
         ctx,
-      );
-    case "reopen":
-      return specReopen({ slug, reason: input.reason ?? "", commit, dryRun }, ctx);
-    case "park":
-      return specPark({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
-    case "block":
+      )
+    case 'reopen':
+      return specReopen({ slug, reason: input.reason ?? '', commit, dryRun }, ctx)
+    case 'park':
+      return specPark({ slug, resolution: input.resolution ?? '', commit, dryRun }, ctx)
+    case 'block':
       return specBlock(
-        { slug, reason: input.reason ?? "", blocker_path: input.blocker_path, commit, dryRun },
+        { slug, reason: input.reason ?? '', blocker_path: input.blocker_path, commit, dryRun },
         ctx,
-      );
-    case "unblock":
-      return specUnblock({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
-    case "unpark":
-      return specUnpark({ slug, resolution: input.resolution ?? "", commit, dryRun }, ctx);
+      )
+    case 'unblock':
+      return specUnblock({ slug, resolution: input.resolution ?? '', commit, dryRun }, ctx)
+    case 'unpark':
+      return specUnpark({ slug, resolution: input.resolution ?? '', commit, dryRun }, ctx)
     default:
-      throw new Error(`transition_unknown: ${String(input.to)}`);
+      throw new Error(`transition_unknown: ${String(input.to)}`)
   }
 }
 
 export interface BuildServerOptions {
-  contextFactory: ToolContextFactory;
-  name?: string;
-  version?: string;
+  contextFactory: ToolContextFactory
+  name?: string
+  version?: string
 }
 
 export function buildServer(opts: BuildServerOptions): McpServer {
   const server = new McpServer(
     {
-      name: opts.name ?? "@rethunk/citadel-sdd",
-      version: opts.version ?? "0.0.1",
+      name: opts.name ?? '@rethunk/citadel-sdd',
+      version: opts.version ?? '0.0.1',
     },
     { capabilities: { tools: {} } },
-  );
+  )
 
-  const ctxFactory = opts.contextFactory;
+  const ctxFactory = opts.contextFactory
 
   server.registerTool(
-    "spec_list",
+    'spec_list',
     {
       description:
         "List specs by lifecycle state, optionally filtered to caller. Large backlogs (~200+ specs) overflow MCP token caps when state='all' is used with the default row shape; pass slim:true (~80 bytes/row) or paginate with {limit, offset}.",
       inputSchema: SpecListShape,
     },
     wrap(specList, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_read",
+    'spec_read',
     {
-      description: "Return combined spec.md + plan.md + tasks.md for a slug.",
+      description: 'Return combined spec.md + plan.md + tasks.md for a slug.',
       inputSchema: SpecReadShape,
     },
     wrap(specRead, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_status",
+    'spec_status',
     {
-      description: "Single-spec status snapshot (state, DTG, owner, Q-table, task counts).",
+      description: 'Single-spec status snapshot (state, DTG, owner, Q-table, task counts).',
       inputSchema: SpecStatusShape,
     },
     wrap(specStatus, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_lint",
+    'spec_lint',
     {
-      description: "Lint specs against canonical rules; matches archived spec-status.py.",
+      description: 'Lint specs against canonical rules; matches archived spec-status.py.',
       inputSchema: SpecLintShape,
     },
     wrap(specLint, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "sdd_doctor",
+    'sdd_doctor',
     {
-      description: "Diagnose existing repo, infer profile, flag drift.",
+      description: 'Diagnose existing repo, infer profile, flag drift.',
       inputSchema: SddDoctorShape,
     },
     wrap(sddDoctor, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_transition",
+    'spec_transition',
     {
       description:
-        "Drive a spec lifecycle transition. `to`: approve (DRAFT→APPROVED) | ratify (fill Q-table TBDs) | " +
-        "claim (DRAFT/APPROVED→IN_PROGRESS) | close (IN_PROGRESS|PARKED→DONE) | reopen (DONE→IN_PROGRESS) | " +
-        "park (→PARKED) | block (IN_PROGRESS→BLOCKED) | unblock (BLOCKED→IN_PROGRESS) | unpark (PARKED→IN_PROGRESS). " +
-        "reason is required for reopen/block; resolution is required for park/unblock/unpark.",
+        'Drive a spec lifecycle transition. `to`: approve (DRAFT→APPROVED) | ratify (fill Q-table TBDs) | ' +
+        'claim (DRAFT/APPROVED→IN_PROGRESS) | close (IN_PROGRESS|PARKED→DONE) | reopen (DONE→IN_PROGRESS) | ' +
+        'park (→PARKED) | block (IN_PROGRESS→BLOCKED) | unblock (BLOCKED→IN_PROGRESS) | unpark (PARKED→IN_PROGRESS). ' +
+        'reason is required for reopen/block; resolution is required for park/unblock/unpark.',
       inputSchema: SpecTransitionShape,
     },
     wrap(specTransition, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_task_check",
+    'spec_task_check',
     {
-      description: "Flip a tasks.md checkbox by 1-based index or text-prefix match.",
+      description: 'Flip a tasks.md checkbox by 1-based index or text-prefix match.',
       inputSchema: SpecTaskCheckShape,
     },
     wrap(specTaskCheck, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_task_list",
+    'spec_task_list',
     {
       description:
-        "Return lightweight [{phase, index, text, checked, isHumanGate}] for tasks.md. Cheaper than spec_read when you only need task item text or match strings.",
+        'Return lightweight [{phase, index, text, checked, isHumanGate}] for tasks.md. Cheaper than spec_read when you only need task item text or match strings.',
       inputSchema: SpecTaskListShape,
     },
     wrap(specTaskList, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_task_add",
+    'spec_task_add',
     {
-      description: "Append a checklist item to a phase.",
+      description: 'Append a checklist item to a phase.',
       inputSchema: SpecTaskAddShape,
     },
     wrap(specTaskAdd, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_handoff",
+    'spec_handoff',
     {
-      description: "Reassign Owner without state flip.",
+      description: 'Reassign Owner without state flip.',
       inputSchema: SpecHandoffShape,
     },
     wrap(specHandoff, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_index_rebuild",
+    'spec_index_rebuild',
     {
-      description: "Regenerate specs/README.md from disk-walk.",
+      description: 'Regenerate specs/README.md from disk-walk.',
       inputSchema: SpecIndexRebuildShape,
     },
     wrap(specIndexRebuild, ctxFactory),
-  );
+  )
 
   server.registerTool(
-    "spec_init",
+    'spec_init',
     {
-      description: "Bootstrap fresh repo: writes specs/config.yaml + README.md + .gitkeep stubs.",
+      description: 'Bootstrap fresh repo: writes specs/config.yaml + README.md + .gitkeep stubs.',
       inputSchema: SpecInitShape,
     },
     wrap(specInit, ctxFactory),
-  );
+  )
 
-  return server;
+  return server
 }

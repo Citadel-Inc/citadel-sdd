@@ -1,75 +1,75 @@
-import { afterEach, describe, expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { resolveBuiltIn } from "../../src/profile/resolver.js";
-import { specTaskAdd } from "../../src/tools/spec_task_add.js";
-import type { ToolContext } from "../../src/tools/types.js";
-import { makeTempRepo, type TempRepo } from "../helpers/temp-repo.js";
+import { afterEach, describe, expect, test } from 'bun:test'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { resolveBuiltIn } from '../../src/profile/resolver.ts'
+import { specTaskAdd } from '../../src/tools/spec_task_add.ts'
+import type { ToolContext } from '../../src/tools/types.ts'
+import { makeTempRepo, type TempRepo } from '../helpers/temp-repo.ts'
 
-const STATUS_LINE_RE = /^Status:/m;
+const STATUS_LINE_RE = /^Status:/m
 
-let temp: TempRepo | undefined;
+let temp: TempRepo | undefined
 
 afterEach(() => {
-  temp?.cleanup();
-  temp = undefined;
-});
+  temp?.cleanup()
+  temp = undefined
+})
 
 function ctx(): ToolContext {
   if (!temp) {
-    throw new Error("temp repo not initialized");
+    throw new Error('temp repo not initialized')
   }
-  return { rootDir: temp.rootDir, profile: resolveBuiltIn("bastion") };
+  return { rootDir: temp.rootDir, profile: resolveBuiltIn('bastion') }
 }
 
-describe("specTaskAdd", () => {
-  test("appends to P1", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const out = specTaskAdd({ slug: "draft-minimal", phase: "P1", text: "New polish item" }, ctx());
-    expect(out.added_index).toBe(2);
+describe('specTaskAdd', () => {
+  test('appends to P1', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const out = specTaskAdd({ slug: 'draft-minimal', phase: 'P1', text: 'New polish item' }, ctx())
+    expect(out.added_index).toBe(2)
     const tasks = readFileSync(
-      join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md"),
-      "utf8",
-    );
-    expect(tasks).toContain("- [ ] New polish item");
-  });
+      join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'tasks.md'),
+      'utf8',
+    )
+    expect(tasks).toContain('- [ ] New polish item')
+  })
 
-  test("blocker:true adds [BLOCKED] prefix", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
+  test('blocker:true adds [BLOCKED] prefix', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
     specTaskAdd(
-      { slug: "draft-minimal", phase: "P0", text: "Wait for upstream", blocker: true },
+      { slug: 'draft-minimal', phase: 'P0', text: 'Wait for upstream', blocker: true },
       ctx(),
-    );
+    )
     const tasks = readFileSync(
-      join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md"),
-      "utf8",
-    );
-    expect(tasks).toContain("- [ ] [BLOCKED] Wait for upstream");
-  });
+      join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'tasks.md'),
+      'utf8',
+    )
+    expect(tasks).toContain('- [ ] [BLOCKED] Wait for upstream')
+  })
 
-  test("dryRun no write", () => {
-    temp = makeTempRepo({ activeFixtures: ["draft-minimal"] });
-    const path = join(temp.rootDir, "specs", "active", "draft-minimal", "tasks.md");
-    const before = readFileSync(path, "utf8");
-    specTaskAdd({ slug: "draft-minimal", phase: "P0", text: "ghost", dryRun: true }, ctx());
-    expect(readFileSync(path, "utf8")).toBe(before);
-  });
+  test('dryRun no write', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const path = join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'tasks.md')
+    const before = readFileSync(path, 'utf8')
+    specTaskAdd({ slug: 'draft-minimal', phase: 'P0', text: 'ghost', dryRun: true }, ctx())
+    expect(readFileSync(path, 'utf8')).toBe(before)
+  })
 
-  test("unknown slug throws", () => {
-    temp = makeTempRepo();
-    expect(() => specTaskAdd({ slug: "missing", phase: "P0", text: "x" }, ctx())).toThrow(
-      "spec_not_found",
-    );
-  });
+  test('unknown slug throws', () => {
+    temp = makeTempRepo()
+    expect(() => specTaskAdd({ slug: 'missing', phase: 'P0', text: 'x' }, ctx())).toThrow(
+      'spec_not_found',
+    )
+  })
 
-  test("inline-format tasks.md: add succeeds and preserves Status line", () => {
-    temp = makeTempRepo({ activeFixtures: ["in-progress-inline"] });
-    specTaskAdd({ slug: "in-progress-inline", phase: "P2", text: "Extra cleanup" }, ctx());
+  test('inline-format tasks.md: add succeeds and preserves Status line', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-inline'] })
+    specTaskAdd({ slug: 'in-progress-inline', phase: 'P2', text: 'Extra cleanup' }, ctx())
     const tasks = readFileSync(
-      join(temp.rootDir, "specs", "active", "in-progress-inline", "tasks.md"),
-      "utf8",
-    );
-    expect(tasks).toContain("- [ ] Extra cleanup");
-    expect(tasks).toMatch(STATUS_LINE_RE);
-  });
-});
+      join(temp.rootDir, 'specs', 'active', 'in-progress-inline', 'tasks.md'),
+      'utf8',
+    )
+    expect(tasks).toContain('- [ ] Extra cleanup')
+    expect(tasks).toMatch(STATUS_LINE_RE)
+  })
+})

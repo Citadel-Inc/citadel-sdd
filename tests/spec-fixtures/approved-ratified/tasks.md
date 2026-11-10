@@ -1,7 +1,7 @@
 # Approved ratified — Tasks
 
-| | |
-|---|---|
+|        |                       |
+| ------ | --------------------- |
 | Status | APPROVED 011910ZMAY26 |
 
 ## P0
