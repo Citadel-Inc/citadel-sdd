@@ -4,7 +4,7 @@
   "description": "MCP stdio server wrapping the Spec-Driven Development lifecycle for agent workflows.",
   "type": "module",
   "private": false,
-  "packageManager": "bun@1.4.0",
+  "packageManager": "bun@1.4.4",
   "files": [
     "dist",
     "docs",
@@ -63,9 +63,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.6",
+    "@biomejs/biome": "^2.6.7",
     "@types/node": "^26.6.6",
-    "turbo": "^2.11.10",
+    "turbo": "^2.11.11",
     "typescript": "^7.0.2"
   },
   "overrides": {
