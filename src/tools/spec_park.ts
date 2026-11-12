@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv } from '../spec/git.ts'
 import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
@@ -88,30 +89,27 @@ export function specPark(input: SpecParkInput, ctx: ToolContext): SpecParkOutput
 
   const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`]
   let commitSha: string | null = null
+  const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
-  if (input.commit === false) {
+  runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)
-    upsertSpecReadmeRow(repo, loc.slug)
-  } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeFileSync(loc.specMd, newSpecRaw)
-      writeFileSync(loc.tasksMd, newTasksRaw)
-      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
-      const subject =
-        ctx.profile.commit_style === 'conventional'
-          ? `spec(${loc.slug}): PARKED — ${resolution}`
-          : `Park ${loc.slug}: ${resolution}`
-      gitAdd({ rootDir: ctx.rootDir }, [
-        `${afterRelDir}/spec.md`,
-        `${afterRelDir}/tasks.md`,
-        readmeRel,
-      ])
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
-    })
-  }
+    const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+    if (input.commit === false) {
+      return
+    }
+    const subject =
+      ctx.profile.commit_style === 'conventional'
+        ? `spec(${loc.slug}): PARKED — ${resolution}`
+        : `Park ${loc.slug}: ${resolution}`
+    gitAdd({ rootDir: ctx.rootDir }, [
+      `${afterRelDir}/spec.md`,
+      `${afterRelDir}/tasks.md`,
+      readmeRel,
+    ])
+    commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+  })
 
   return {
     slug: loc.slug,

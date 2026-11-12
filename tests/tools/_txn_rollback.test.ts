@@ -65,4 +65,28 @@ describe('runSpecTxn rollback on commit failure', () => {
     expect(readFileSync(specMdPath, 'utf8')).toBe(preSpec)
     expect(readFileSync(tasksMdPath, 'utf8')).toBe(preTasks)
   })
+
+  test('park commit:false with a broken README restores pre-call state', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+
+    const specMdPath = join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'spec.md')
+    const tasksMdPath = join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'tasks.md')
+    const preSpec = readFileSync(specMdPath, 'utf8')
+    const preTasks = readFileSync(tasksMdPath, 'utf8')
+
+    const readmePath = join(temp.rootDir, 'specs', 'README.md')
+    writeFileSync(readmePath, 'not a valid index\n')
+    execFileSync('git', ['-C', temp.rootDir, 'add', 'specs/README.md'], { stdio: 'ignore' })
+    execFileSync('git', ['-C', temp.rootDir, 'commit', '-m', 'break readme'], { stdio: 'ignore' })
+
+    expect(() =>
+      specPark({ slug: 'draft-minimal', resolution: 'paused', commit: false }, ctx()),
+    ).toThrow()
+
+    const parkedDir = join(temp.rootDir, 'specs', 'parked', 'draft-minimal')
+    expect(existsSync(parkedDir)).toBe(false)
+    expect(existsSync(join(temp.rootDir, 'specs', 'active', 'draft-minimal'))).toBe(true)
+    expect(readFileSync(specMdPath, 'utf8')).toBe(preSpec)
+    expect(readFileSync(tasksMdPath, 'utf8')).toBe(preTasks)
+  })
 })

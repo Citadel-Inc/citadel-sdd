@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv, gitPush } from '../spec/git.ts'
 import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from '../spec/mutate.ts'
@@ -147,8 +148,9 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
 
   const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`]
   let commitSha: string | null = null
+  const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
-  if (input.commit === false) {
+  runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
     writeClosedFiles({
       loc,
       rootDir: ctx.rootDir,
@@ -157,30 +159,21 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
       newSpecRaw,
       newTasksRaw,
     })
-    upsertSpecReadmeRow(repo, loc.slug)
-  } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeClosedFiles({
-        loc,
-        rootDir: ctx.rootDir,
-        beforePath,
-        afterRelDir,
-        newSpecRaw,
-        newTasksRaw,
-      })
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
-      const subject =
-        ctx.profile.commit_style === 'conventional'
-          ? `spec(${loc.slug}): DONE — ${summary}`
-          : `Close ${loc.slug}: ${summary}`
-      gitAdd({ rootDir: ctx.rootDir }, [
-        `${afterRelDir}/spec.md`,
-        `${afterRelDir}/tasks.md`,
-        readmeRel,
-      ])
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
-    })
-  }
+    const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+    if (input.commit === false) {
+      return
+    }
+    const subject =
+      ctx.profile.commit_style === 'conventional'
+        ? `spec(${loc.slug}): DONE — ${summary}`
+        : `Close ${loc.slug}: ${summary}`
+    gitAdd({ rootDir: ctx.rootDir }, [
+      `${afterRelDir}/spec.md`,
+      `${afterRelDir}/tasks.md`,
+      readmeRel,
+    ])
+    commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+  })
 
   let pushed = false
   let pushError: string | undefined
