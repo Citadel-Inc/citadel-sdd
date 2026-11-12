@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process'
+import { dtgToRecencySortKey } from './dtg.ts'
 
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/
 
@@ -9,6 +10,14 @@ export interface GitHistoryOptions {
   specsRoot: string
   section: 'active' | 'done' | 'parked'
   since?: string
+}
+
+function gitSince(since: string): string {
+  const ms = dtgToRecencySortKey(since)
+  if (!Number.isFinite(ms)) {
+    throw new Error(`since_unparseable: ${since}`)
+  }
+  return new Date(ms).toISOString()
 }
 
 function runGit(metaRoot: string, args: readonly string[]): string | null {
@@ -39,7 +48,7 @@ export function lastTouchedBulk(opts: GitHistoryOptions): Map<string, string> {
   const prefix = rel ? `${rel}/${opts.section}/` : `${opts.section}/`
   const args = ['log', '--format=\x01%cs', '--name-only']
   if (opts.since) {
-    args.push(`--since=${opts.since}`)
+    args.push(`--since=${gitSince(opts.since)}`)
   }
   args.push('--', prefix)
   const out = runGit(opts.metaRoot, args)
@@ -82,7 +91,7 @@ export function recentCommits(opts: RecentCommitsOptions): string[] {
   const prefix = rel ? `${rel}/${opts.section}/${opts.slug}/` : `${opts.section}/${opts.slug}/`
   const args = ['log', `--max-count=${opts.limit}`, '--format=%cs %h %s']
   if (opts.since) {
-    args.push(`--since=${opts.since}`)
+    args.push(`--since=${gitSince(opts.since)}`)
   }
   args.push('--', prefix)
   const out = runGit(opts.metaRoot, args)

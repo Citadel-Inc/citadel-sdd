@@ -62,4 +62,11 @@ describe('specStatus', () => {
     temp = makeTempRepo()
     expect(() => specStatus({ slug: 'missing' }, ctx())).toThrow('spec_not_found')
   })
+
+  test('DTG since filters history', () => {
+    temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
+    const s = specStatus({ slug: 'draft-minimal', recent_limit: 5, since: '011900ZMAY26' }, ctx())
+    expect(s.recent_commits).toBeDefined()
+    expect(s.recent_commits?.length).toBeGreaterThan(0)
+  })
 })
