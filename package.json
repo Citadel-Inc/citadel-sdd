@@ -25,8 +25,8 @@
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p tsconfig.build.json && mkdir -p dist/profile && cp src/profile/*.yaml dist/profile/",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "bun test src/ tests/",
-    "test:coverage": "bun test src/ tests/ --coverage",
+    "test": "bun test src/ tests/ --parallel",
+    "test:coverage": "bun test src/ tests/ --coverage --parallel",
     "prepublishOnly": "bun run ci",
     "lint:citadel-parity": "bun scripts/lint-citadel-parity.ts",
     "lint": "biome check .",

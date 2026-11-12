@@ -193,26 +193,31 @@ describe('specClose', () => {
     )
   })
 
-  test('push success path against local bare upstream', () => {
-    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+  test(
+    'push success path against local bare upstream',
+    () => {
+      temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
 
-    writeFileSync(
-      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
-      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
-    )
-    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+      writeFileSync(
+        join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
+        '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
+      )
+      execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
 
-    const bare = `${temp.rootDir}.upstream.git`
-    execSync(`git init --bare ${bare}`)
-    execSync(`git -C ${temp.rootDir} remote add origin ${bare}`)
-    execSync(`git -C ${temp.rootDir} push -u origin main`)
+      const bare = `${temp.rootDir}.upstream.git`
+      execSync(`git init --bare ${bare}`)
+      execSync(`git -C ${temp.rootDir} remote add origin ${bare}`)
+      execSync(`git -C ${temp.rootDir} push -u origin main`)
 
-    const out = specClose({ slug: 'in-progress-midway', summary: 'shipped', push: true }, ctx())
-    expect(out.pushed).toBe(true)
-    expect(out.push_error).toBeUndefined()
+      const out = specClose({ slug: 'in-progress-midway', summary: 'shipped', push: true }, ctx())
+      expect(out.pushed).toBe(true)
+      expect(out.push_error).toBeUndefined()
 
-    execSync(`rm -rf ${bare}`)
-  })
+      execSync(`rm -rf ${bare}`)
+    },
+    // Eight git process launches; the 5 s default is a coin flip on a loaded machine.
+    { timeout: 60_000 },
+  )
 
   test('push error path captured when no upstream configured', () => {
     temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })

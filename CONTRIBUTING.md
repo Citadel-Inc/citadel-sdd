@@ -17,8 +17,8 @@ bun install
 bun run build       # tsc → dist/
 bun run lint       # Biome lint + format check
 bun run format   # auto-fix with Biome
-bun run test        # bun test src/ tests/
-bun run test:coverage  # bun test src/ tests/ --coverage
+bun run test        # bun test src/ tests/ --parallel
+bun run test:coverage  # bun test src/ tests/ --coverage --parallel
 bun run ci         # lint + typecheck + test + build (same as GitHub Actions)
 ```
 

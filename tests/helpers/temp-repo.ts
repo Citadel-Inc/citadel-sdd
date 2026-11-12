@@ -16,33 +16,68 @@ function git(rootDir: string, args: readonly string[]): void {
   execFileSync('git', ['-C', rootDir, ...args], { stdio: 'ignore' })
 }
 
-export function makeTempRepo(
-  opts: { activeFixtures?: string[]; doneFixtures?: string[]; parkedFixtures?: string[] } = {},
-): TempRepo {
-  const rootDir = mkdtempSync(join(tmpdir(), 'citadel-sdd-test-'))
-  execFileSync('git', ['-C', rootDir, 'init', '--initial-branch=main'], { stdio: 'ignore' })
-  git(rootDir, ['config', 'user.name', 'Test Agent'])
-  git(rootDir, ['config', 'user.email', 'test@example.com'])
-  git(rootDir, ['config', 'commit.gpgsign', 'false'])
+export interface TempRepoOptions {
+  activeFixtures?: string[]
+  doneFixtures?: string[]
+  parkedFixtures?: string[]
+}
 
-  mkdirSync(join(rootDir, 'specs', 'active'), { recursive: true })
-  mkdirSync(join(rootDir, 'specs', 'done'), { recursive: true })
-  mkdirSync(join(rootDir, 'specs', 'parked'), { recursive: true })
+/**
+ * A committed repo for each distinct fixture set, built once per process. Copying a
+ * template is one directory walk; building a repo from scratch is `git init`, three
+ * `git config`, `git add` and `git commit` -- six process launches per test repo, and
+ * process launches dominate this suite's wall time.
+ */
+const templates = new Map<string, string>()
+
+function templateDir(opts: TempRepoOptions): string {
+  const key = JSON.stringify([
+    opts.activeFixtures ?? [],
+    opts.doneFixtures ?? [],
+    opts.parkedFixtures ?? [],
+  ])
+  const cached = templates.get(key)
+  if (cached !== undefined) {
+    return cached
+  }
+  const dir = mkdtempSync(join(tmpdir(), 'citadel-sdd-template-'))
+  git(dir, ['init', '--initial-branch=main'])
+  git(dir, ['config', 'user.name', 'Test Agent'])
+  git(dir, ['config', 'user.email', 'test@example.com'])
+  git(dir, ['config', 'commit.gpgsign', 'false'])
+
+  mkdirSync(join(dir, 'specs', 'active'), { recursive: true })
+  mkdirSync(join(dir, 'specs', 'done'), { recursive: true })
+  mkdirSync(join(dir, 'specs', 'parked'), { recursive: true })
 
   for (const slug of opts.activeFixtures ?? []) {
-    cpSync(join(FIXTURES_ROOT, slug), join(rootDir, 'specs', 'active', slug), { recursive: true })
+    cpSync(join(FIXTURES_ROOT, slug), join(dir, 'specs', 'active', slug), { recursive: true })
   }
   for (const slug of opts.doneFixtures ?? []) {
-    cpSync(join(FIXTURES_ROOT, slug), join(rootDir, 'specs', 'done', slug), { recursive: true })
+    cpSync(join(FIXTURES_ROOT, slug), join(dir, 'specs', 'done', slug), { recursive: true })
   }
   for (const slug of opts.parkedFixtures ?? []) {
-    cpSync(join(FIXTURES_ROOT, slug), join(rootDir, 'specs', 'parked', slug), { recursive: true })
+    cpSync(join(FIXTURES_ROOT, slug), join(dir, 'specs', 'parked', slug), { recursive: true })
   }
 
-  writeFileSync(join(rootDir, 'specs', 'config.yaml'), 'extends: default\n')
-  writeFileSync(join(rootDir, 'specs', 'README.md'), renderIndex({ rootDir, specDir: 'specs' }))
-  git(rootDir, ['add', '.'])
-  git(rootDir, ['commit', '-m', 'initial fixture state'])
+  writeFileSync(join(dir, 'specs', 'config.yaml'), 'extends: default\n')
+  writeFileSync(join(dir, 'specs', 'README.md'), renderIndex({ rootDir: dir, specDir: 'specs' }))
+  git(dir, ['add', '.'])
+  git(dir, ['commit', '-m', 'initial fixture state'])
+
+  templates.set(key, dir)
+  return dir
+}
+
+process.on('exit', () => {
+  for (const dir of templates.values()) {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+export function makeTempRepo(opts: TempRepoOptions = {}): TempRepo {
+  const rootDir = mkdtempSync(join(tmpdir(), 'citadel-sdd-test-'))
+  cpSync(templateDir(opts), rootDir, { recursive: true })
 
   return {
     rootDir,
