@@ -197,6 +197,24 @@ Status: this line is prose and should be ignored as frontmatter
 })
 
 describe('parseSpec', () => {
+  test('inline status plus Q-table parses', () => {
+    const md = `# Spec
+
+Status: DRAFT 011900ZMAY26
+Owner: TestAgent
+
+## Decisions
+
+| # | Question | Proposed default | NOMAD |
+|---|----------|------------------|-------|
+| Q1 | Use TS? | Yes | TBD |
+`
+    const parsed = parseSpec(md)
+    expect(parsed.frontmatter.status.state).toBe('DRAFT')
+    expect(parsed.qTable).toHaveLength(1)
+    expect(parsed.qTable[0]?.id).toBe('Q1')
+  })
+
   test('loads all fixtures without throwing', () => {
     const all = loadAllFixtures()
     expect(all.length).toBeGreaterThan(0)

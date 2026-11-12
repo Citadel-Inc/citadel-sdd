@@ -175,36 +175,35 @@ function parseInlineFrontmatter(md: string): Frontmatter | null {
 export function parseFrontmatter(md: string): Frontmatter {
   const lines = md.split(LINE_SPLIT_RE)
   const startIdx = findFirstPipeLine(lines)
-  if (startIdx === -1) {
-    const inline = parseInlineFrontmatter(md)
-    if (inline) {
-      return inline
+  if (startIdx !== -1) {
+    const { rows } = extractPipeTable(lines, startIdx)
+    const fields: Array<readonly [string, string]> = []
+    let status: StatusValue | null = null
+    for (const row of rows) {
+      if (row.length !== 2) {
+        continue
+      }
+      const [key, value] = row
+      if (key === undefined || value === undefined) {
+        continue
+      }
+      if (!key) {
+        continue
+      }
+      fields.push([key, value] as const)
+      if (key.toLowerCase() === 'status') {
+        status = parseStatusValue(value)
+      }
     }
-    throw new Error('frontmatter_missing')
-  }
-  const { rows } = extractPipeTable(lines, startIdx)
-  const fields: Array<readonly [string, string]> = []
-  let status: StatusValue | null = null
-  for (const row of rows) {
-    if (row.length !== 2) {
-      continue
-    }
-    const [key, value] = row
-    if (key === undefined || value === undefined) {
-      continue
-    }
-    if (!key) {
-      continue
-    }
-    fields.push([key, value] as const)
-    if (key.toLowerCase() === 'status') {
-      status = parseStatusValue(value)
+    if (status) {
+      return { status, fields }
     }
   }
-  if (!status) {
-    throw new Error('frontmatter_status_missing')
+  const inline = parseInlineFrontmatter(md)
+  if (inline) {
+    return inline
   }
-  return { status, fields }
+  throw new Error(startIdx === -1 ? 'frontmatter_missing' : 'frontmatter_status_missing')
 }
 
 export function parseQTable(md: string): QTableRow[] {
