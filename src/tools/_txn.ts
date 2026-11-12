@@ -53,7 +53,7 @@ function assertScopeClean(rootDir: string, scopePaths: string[]): void {
  * Assert that none of the write-target paths are symlinks.
  * Accepts paths that don't exist yet (new files created by fn) — skip lstat for those.
  */
-function assertNoSymlinks(writeTargets: string[]): void {
+export function assertNoSymlinks(writeTargets: string[]): void {
   for (const p of writeTargets) {
     try {
       const stat = lstatSync(p)

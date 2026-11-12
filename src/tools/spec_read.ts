@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from 'node:fs'
-import { locateSpec, type RepoContext } from '../spec/repo.ts'
+import { existsSync } from 'node:fs'
+import { locateSpec, readPlan, readSpec, readTasks, type RepoContext } from '../spec/repo.ts'
 import type { ToolContext } from './types.ts'
 
 export type SpecReadPart = 'spec' | 'plan' | 'tasks'
@@ -27,14 +27,13 @@ export function specRead(input: SpecReadInput, ctx: ToolContext): SpecReadOutput
     throw new Error(`spec_not_found: ${input.slug}`)
   }
   const parts = new Set<SpecReadPart>(input.parts ?? ['spec', 'plan', 'tasks'])
-  const specMd = readFileSync(loc.specMd, 'utf8')
 
   let planMd: string | null = null
   if (parts.has('plan')) {
     if (!existsSync(loc.planMd)) {
       throw new Error(`file_not_found: plan.md missing for spec ${loc.slug} at ${loc.planMd}`)
     }
-    planMd = readFileSync(loc.planMd, 'utf8')
+    planMd = readPlan(loc)
   }
 
   let tasksMd: string | null = null
@@ -42,13 +41,13 @@ export function specRead(input: SpecReadInput, ctx: ToolContext): SpecReadOutput
     if (!existsSync(loc.tasksMd)) {
       throw new Error(`file_not_found: tasks.md missing for spec ${loc.slug} at ${loc.tasksMd}`)
     }
-    tasksMd = readFileSync(loc.tasksMd, 'utf8')
+    tasksMd = readTasks(loc).raw
   }
 
   return {
     slug: loc.slug,
     state: loc.state,
-    spec_md: parts.has('spec') ? specMd : null,
+    spec_md: parts.has('spec') ? readSpec(loc).raw : null,
     plan_md: planMd,
     tasks_md: tasksMd,
   }

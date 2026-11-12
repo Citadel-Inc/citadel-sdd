@@ -1,14 +1,14 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit } from '../spec/git.ts'
 import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
-import { parseSpec, parseTasks } from '../spec/parse.ts'
-import { locateSpec, type RepoContext } from '../spec/repo.ts'
+import { locateSpec, readSpec, readTasks, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
 import type { SpecState } from '../spec/types.ts'
 import { spliceFrontmatter, spliceSpecFile } from '../spec/writer.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface SpecApproveInput {
@@ -37,10 +37,10 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
     throw new Error(`spec_not_found: ${input.slug}`)
   }
 
-  const specRaw = readFileSync(loc.specMd, 'utf8')
-  const tasksRaw = readFileSync(loc.tasksMd, 'utf8')
-  const spec = parseSpec(specRaw)
-  const tasks = parseTasks(tasksRaw)
+  const spec = readSpec(loc)
+  const tasks = readTasks(loc)
+  const specRaw = spec.raw
+  const tasksRaw = tasks.raw
 
   assertTransitionEnabled('spec_approve', ctx.profile.disabled_transitions)
   const transition = canTransition(spec.frontmatter.status.state, 'spec_approve')
@@ -72,13 +72,15 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
   ]
 
   let commitSha: string | null = null
+  const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
   if (input.commit === false) {
+    assertNoSymlinks(writeTargets)
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
       writeFileSync(loc.specMd, newSpecRaw)
       writeFileSync(loc.tasksMd, newTasksRaw)
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug)

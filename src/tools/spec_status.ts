@@ -3,8 +3,14 @@ import { join } from 'node:path'
 import { type ClosureReason, computeClosureReason, readClosureCounts } from '../lint/closure.ts'
 import { type ChecklistCounts, scanChecklist } from '../spec/checklist_scan.ts'
 import { daysBetween, lastTouchedBulk, recentCommits } from '../spec/git_history.ts'
-import { parseSpec, parseTasks } from '../spec/parse.ts'
-import { locateSpec, type RepoContext, type SpecLocation } from '../spec/repo.ts'
+import { parseTasks } from '../spec/parse.ts'
+import {
+  locateSpec,
+  readSpec,
+  readTasks,
+  type RepoContext,
+  type SpecLocation,
+} from '../spec/repo.ts'
 import type { QTableRow, SpecState } from '../spec/types.ts'
 import type { ToolContext } from './types.ts'
 
@@ -116,8 +122,8 @@ export function specStatus(input: SpecStatusInput, ctx: ToolContext): SpecStatus
     throw new Error(`spec_not_found: ${input.slug}`)
   }
 
-  const spec = parseSpec(readFileSync(loc.specMd, 'utf8'))
-  const tasks = parseTasks(readFileSync(loc.tasksMd, 'utf8'))
+  const spec = readSpec(loc)
+  const tasks = readTasks(loc)
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'owner')
   const approvedField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'approved')
   const blockers: string[] = []
