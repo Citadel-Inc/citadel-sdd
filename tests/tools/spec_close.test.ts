@@ -126,6 +126,35 @@ describe('specClose', () => {
     expect(out.after.state).toBe('DONE')
   })
 
+  test('task whose text contains spec-close still blocks with tasks_open', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+    writeFileSync(
+      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
+      `# T
+
+| | |
+|---|---|
+| Status | IN_PROGRESS 011920ZMAY26 |
+
+## P0
+
+- [ ] Cover spec-close rollback in tests
+
+## P1
+
+- [x] done
+
+## P2
+
+- [x] done
+`,
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+    expect(() => specClose({ slug: 'in-progress-midway', summary: 'done' }, ctx())).toThrow(
+      'tasks_open',
+    )
+  })
+
   test('rejects from non-IN_PROGRESS state', () => {
     temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
     expect(() => specClose({ slug: 'draft-minimal', summary: 'x' }, ctx())).toThrow('state_invalid')
