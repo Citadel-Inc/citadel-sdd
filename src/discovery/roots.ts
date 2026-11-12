@@ -52,17 +52,16 @@ function isSymlink(p: string): boolean {
 
 export function findSingleRoot(start: string, specDir = 'specs'): DiscoveredRoot | null {
   let cur = resolve(start)
-  for (;;) {
+  let prev = ''
+  while (cur !== prev) {
     const candidate = join(cur, specDir, 'active')
     if (isDir(candidate)) {
       return asDiscovered(cur, join(cur, specDir))
     }
-    const parent = resolve(cur, '..')
-    if (parent === cur) {
-      return null
-    }
-    cur = parent
+    prev = cur
+    cur = resolve(cur, '..')
   }
+  return null
 }
 
 export function resolveRoots(paths: readonly string[], specDir = 'specs'): DiscoveredRoot[] {
