@@ -13,7 +13,7 @@ import { spliceFrontmatter, spliceTasksFile } from '../spec/writer.ts'
 import { runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
-const SPEC_CLOSE_RE = /^(e\d+\.\s*)?spec[ .\-]?close\.?$/i
+const SPEC_CLOSE_RE = /^(e\d+\.\s*)?spec[ .-]?close\.?$/i
 
 export interface SpecCloseInput {
   slug: string

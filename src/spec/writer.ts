@@ -15,6 +15,8 @@ const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/
 const TASK_ITEM_RE = /^- \[([ xX])\] /
 
 const LINE_SPLIT_RE = /\r?\n/
+const TRAILING_NEWLINES_RE = /\n+$/
+const COLLAPSE_BLANK_RE = /\n{3,}/g
 
 interface BlockRange {
   start: number
@@ -35,7 +37,7 @@ function insertAfterTitle(lines: readonly string[], block: string): string {
   }
   return [...lines.slice(0, i), ...block.split('\n'), '', ...lines.slice(i)]
     .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(COLLAPSE_BLANK_RE, '\n\n')
 }
 
 function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | null {
@@ -286,8 +288,8 @@ function splicePhase(
       return rawMd
     }
     const rendered = renderPhaseBody(`## ${priority}`, items, [])
-    const trimmed = rawMd.replace(/\n+$/, '\n')
-    return `${trimmed}\n${rendered.join('\n')}`.replace(/\n{3,}/g, '\n\n')
+    const trimmed = rawMd.replace(TRAILING_NEWLINES_RE, '\n')
+    return `${trimmed}\n${rendered.join('\n')}`.replace(COLLAPSE_BLANK_RE, '\n\n')
   }
   const before = lines.slice(0, block.start)
   const after = lines.slice(block.end)
@@ -297,7 +299,7 @@ function splicePhase(
     return t.length > 0 && !TASK_ITEM_RE.test(line)
   })
   const rendered = renderPhaseBody(heading, items, preserved)
-  return [...before, ...rendered, ...after].join('\n').replace(/\n{3,}/g, '\n\n')
+  return [...before, ...rendered, ...after].join('\n').replace(COLLAPSE_BLANK_RE, '\n\n')
 }
 
 export function spliceSpecFile(

@@ -3,15 +3,14 @@ import { join } from 'node:path'
 import { type ClosureReason, computeClosureReason, readClosureCounts } from '../lint/closure.ts'
 import { type ChecklistCounts, scanChecklist } from '../spec/checklist_scan.ts'
 import { daysBetween, lastTouchedBulk, recentCommits } from '../spec/git_history.ts'
-import { parseTasks } from '../spec/parse.ts'
 import {
   locateSpec,
+  type RepoContext,
   readSpec,
   readTasks,
-  type RepoContext,
   type SpecLocation,
 } from '../spec/repo.ts'
-import type { QTableRow, SpecState } from '../spec/types.ts'
+import type { ParsedTasks, QTableRow, SpecState } from '../spec/types.ts'
 import type { ToolContext } from './types.ts'
 
 const ACTIVE_HEADING_RE = /^##\s+Active\b/i
@@ -52,7 +51,7 @@ function repoCtx(ctx: ToolContext): RepoContext {
   return { rootDir: ctx.rootDir, specDir: ctx.profile.spec_dir }
 }
 
-function phaseCount(tasks: ReturnType<typeof parseTasks>, p: 'P0' | 'P1' | 'P2'): PhaseTaskCount {
+function phaseCount(tasks: ParsedTasks, p: 'P0' | 'P1' | 'P2'): PhaseTaskCount {
   const items = tasks.phases[p]
   const done = items.filter((t) => t.checked).length
   return { done, open: items.length - done }

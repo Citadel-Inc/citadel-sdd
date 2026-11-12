@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs'
-import { locateSpec, readPlan, readSpec, readTasks, type RepoContext } from '../spec/repo.ts'
+import { locateSpec, type RepoContext, readPlan, readSpec, readTasks } from '../spec/repo.ts'
 import type { ToolContext } from './types.ts'
 
 export type SpecReadPart = 'spec' | 'plan' | 'tasks'
