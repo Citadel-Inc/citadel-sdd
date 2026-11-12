@@ -12,6 +12,7 @@ const Q_HEADER_QUESTION_RE = /question/i
 const Q_HEADER_DEFAULT_RE = /proposed\s*default/i
 const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/
 const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/
+const TASK_ITEM_RE = /^- \[([ xX])\] /
 
 const LINE_SPLIT_RE = /\r?\n/
 
@@ -254,6 +255,25 @@ export function spliceTasksFile(
   return out
 }
 
+function renderPhaseBody(
+  heading: string,
+  items: readonly { checked: boolean; text: string; isHumanGate: boolean }[],
+  preserved: readonly string[],
+): string[] {
+  const rendered: string[] = [heading, '']
+  for (const line of preserved) {
+    rendered.push(line)
+  }
+  if (preserved.length > 0) {
+    rendered.push('')
+  }
+  for (const item of items) {
+    rendered.push(renderTaskItem(item))
+  }
+  rendered.push('')
+  return rendered
+}
+
 function splicePhase(
   rawMd: string,
   priority: Priority,
@@ -262,16 +282,21 @@ function splicePhase(
   const lines = rawMd.split(LINE_SPLIT_RE)
   const block = findPhaseBlock(lines, priority)
   if (!block) {
-    return rawMd
+    if (items.length === 0) {
+      return rawMd
+    }
+    const rendered = renderPhaseBody(`## ${priority}`, items, [])
+    const trimmed = rawMd.replace(/\n+$/, '\n')
+    return `${trimmed}\n${rendered.join('\n')}`.replace(/\n{3,}/g, '\n\n')
   }
   const before = lines.slice(0, block.start)
   const after = lines.slice(block.end)
   const heading = lines[block.start] ?? `## ${priority}`
-  const rendered: string[] = [heading, '']
-  for (const item of items) {
-    rendered.push(renderTaskItem(item))
-  }
-  rendered.push('')
+  const preserved = lines.slice(block.start + 1, block.end).filter((line) => {
+    const t = line.trim()
+    return t.length > 0 && !TASK_ITEM_RE.test(line)
+  })
+  const rendered = renderPhaseBody(heading, items, preserved)
   return [...before, ...rendered, ...after].join('\n').replace(/\n{3,}/g, '\n\n')
 }
 

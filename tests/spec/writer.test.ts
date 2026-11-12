@@ -1,7 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import { readFileSync } from 'node:fs'
-import { parseFrontmatter, parseSpec } from '../../src/spec/parse.ts'
-import { spliceFrontmatter, spliceQTable, spliceSpecFile } from '../../src/spec/writer.ts'
+import { parseFrontmatter, parseSpec, parseTasks } from '../../src/spec/parse.ts'
+import {
+  spliceFrontmatter,
+  spliceQTable,
+  spliceSpecFile,
+  spliceTasksFile,
+} from '../../src/spec/writer.ts'
 
 const STATUS_LINE_RE = /^Status:/m
 
@@ -137,6 +142,48 @@ describe('spliceQTable', () => {
     const out = spliceSpecFile(md, parseSpec(md))
     expect(out).toContain('## Decisions')
     expect(out).toMatch(/\|\s*#\s*\|\s*Question\s*\|/i)
+  })
+
+  test('missing-phase add is reported/appended', () => {
+    const raw = `# Tasks
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## P0
+
+- [ ] only p0
+`
+    const parsed = parseTasks(raw)
+    parsed.phases.P2.push({ checked: false, text: 'new p2', isHumanGate: false })
+    const out = spliceTasksFile(raw, parsed)
+    expect(out).toContain('## P2')
+    expect(out).toContain('- [ ] new p2')
+  })
+
+  test('prose line under ## P0 survives a task check', () => {
+    const raw = `# Tasks
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## P0
+
+A note that is not a checkbox.
+
+- [ ] do the thing
+`
+    const parsed = parseTasks(raw)
+    const first = parsed.phases.P0[0]
+    if (!first) {
+      throw new Error('expected a P0 task')
+    }
+    parsed.phases.P0[0] = { ...first, checked: true }
+    const out = spliceTasksFile(raw, parsed)
+    expect(out).toContain('A note that is not a checkbox.')
+    expect(out).toContain('- [x] do the thing')
   })
 
   test("replaces Q-table rows when 4th column is renamed (not 'nomad')", () => {
