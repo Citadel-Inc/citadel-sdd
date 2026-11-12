@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'bun:test'
+import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import * as fc from 'fast-check'
 import { rootUriToPath } from './workspace.ts'
@@ -9,7 +10,7 @@ const absPosixPath = fc.oneof(
     .array(
       fc
         .string({ minLength: 1, maxLength: 24 })
-        .filter((s) => !(s.includes('\0') || s.includes('/'))),
+        .filter((s) => !(s.includes('\0') || s.includes('/') || s === '.' || s === '..')),
       { minLength: 1, maxLength: 8 },
     )
     .map((parts) => `/${parts.join('/')}`),
@@ -88,7 +89,9 @@ describe('rootUriToPath', () => {
           if (result === null) {
             return true
           }
-          return rootUriToPath(pathToFileURL(result).href) === result
+          // URL parsing folds a backslash into '/', so '//' and '/' name the same directory.
+          const again = rootUriToPath(pathToFileURL(result).href)
+          return again !== null && resolve(again) === resolve(result)
         }),
       ),
     ).not.toThrow()
