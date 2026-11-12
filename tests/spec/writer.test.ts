@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test'
-import { parseFrontmatter } from '../../src/spec/parse.ts'
-import { spliceFrontmatter, spliceQTable } from '../../src/spec/writer.ts'
+import { readFileSync } from 'node:fs'
+import { parseFrontmatter, parseSpec } from '../../src/spec/parse.ts'
+import { spliceFrontmatter, spliceQTable, spliceSpecFile } from '../../src/spec/writer.ts'
 
 const STATUS_LINE_RE = /^Status:/m
 
@@ -129,6 +130,13 @@ describe('spliceQTable', () => {
   test('no Q-table anchor + non-empty rows throws qtable_anchor_missing', () => {
     const raw = '# S\n\n## Body\nNo decisions section.\n'
     expect(() => spliceQTable(raw, [row])).toThrow('qtable_anchor_missing')
+  })
+
+  test('splice of draft-minimal with unchanged parse keeps the Decisions table', () => {
+    const md = readFileSync('tests/spec-fixtures/draft-minimal/spec.md', 'utf8')
+    const out = spliceSpecFile(md, parseSpec(md))
+    expect(out).toContain('## Decisions')
+    expect(out).toMatch(/\|\s*#\s*\|\s*Question\s*\|/i)
   })
 
   test("replaces Q-table rows when 4th column is renamed (not 'nomad')", () => {

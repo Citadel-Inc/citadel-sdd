@@ -281,7 +281,7 @@ export function spliceSpecFile(
   format: FrontmatterFormat = 'any',
 ): string {
   let out = spliceFrontmatter(rawMd, parsed.frontmatter, format)
-  if (parsed.qTable.length > 0 || findQTableBlock(out.split(LINE_SPLIT_RE)) !== null) {
+  if (parsed.qTable.length > 0) {
     out = spliceQTable(out, parsed.qTable)
   }
   return out
