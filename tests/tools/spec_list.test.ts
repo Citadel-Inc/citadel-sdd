@@ -57,6 +57,13 @@ describe('specList', () => {
     expect(out[0]?.state).toBe('BLOCKED')
   })
 
+  test('blocked-reason row has non-empty blockers', () => {
+    temp = makeTempRepo({ activeFixtures: ['blocked-reason'] })
+    const out = specList({ state: 'blocked' }, ctx())
+    expect(out).toHaveLength(1)
+    expect(out[0]?.blockers.length).toBeGreaterThan(0)
+  })
+
   test('entry has owner + ratified + remaining counts', () => {
     temp = makeTempRepo({ activeFixtures: ['approved-ratified'] })
     const out = specList({}, ctx())

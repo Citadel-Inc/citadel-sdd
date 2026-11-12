@@ -97,7 +97,10 @@ function specListEntry(opts: {
     p0_remaining: remainingOpen(tasks, 'P0'),
     p1_remaining: remainingOpen(tasks, 'P1'),
     p2_remaining: remainingOpen(tasks, 'P2'),
-    blockers: [],
+    blockers:
+      spec.frontmatter.status.state === 'BLOCKED' && spec.frontmatter.status.tail
+        ? [spec.frontmatter.status.tail]
+        : [],
     tasks: taskTotals(tasks),
   }
 }
