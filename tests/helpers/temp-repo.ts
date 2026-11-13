@@ -69,11 +69,13 @@ function templateDir(opts: TempRepoOptions): string {
   return dir
 }
 
-process.on('exit', () => {
+/** Registered by tests/preload.ts: `bun test` never fires process 'exit' handlers. */
+export function removeTemplates(): void {
   for (const dir of templates.values()) {
     rmSync(dir, { recursive: true, force: true })
   }
-})
+  templates.clear()
+}
 
 export function makeTempRepo(opts: TempRepoOptions = {}): TempRepo {
   const rootDir = mkdtempSync(join(tmpdir(), 'citadel-sdd-test-'))
