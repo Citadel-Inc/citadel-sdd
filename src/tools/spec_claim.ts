@@ -56,7 +56,7 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
   const spec = parseSpec(specRaw)
   const tasks = parseTasks(tasksRaw)
 
-  const claimer = input.claimer ?? defaultClaimer(ctx)
+  const claimer = input.claimer?.trim() || defaultClaimer(ctx)
 
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'owner')
   const author = ownerField?.[1] ?? ''
@@ -67,7 +67,7 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
 
   assertTransitionEnabled('spec_claim', ctx.profile.disabled_transitions)
   const transition = canTransition(spec.frontmatter.status.state, 'spec_claim', {
-    claimerIsAuthor: author === claimer,
+    claimerIsAuthor: author.length > 0 && author === claimer,
   })
   if (!transition.ok) {
     throw new Error(transition.error)

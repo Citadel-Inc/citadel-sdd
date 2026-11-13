@@ -24,6 +24,17 @@ function ctx(): ToolContext {
 }
 
 describe('specClaim', () => {
+  test('empty claimer cannot skip approval on an ownerless DRAFT', () => {
+    temp = makeTempRepo()
+    const dir = join(temp.rootDir, 'specs', 'active', 'draft-ownerless')
+    mkdirSync(dir, { recursive: true })
+    const fm = '| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n'
+    writeFileSync(join(dir, 'spec.md'), `# X\n\n${fm}`)
+    writeFileSync(join(dir, 'tasks.md'), `# T\n\n${fm}`)
+    execSync('git add -A && git commit -qm draft', { cwd: temp.rootDir })
+    expect(() => specClaim({ slug: 'draft-ownerless', claimer: '' }, ctx())).toThrow()
+  })
+
   test('APPROVED -> IN_PROGRESS, status updated, commit created', () => {
     temp = makeTempRepo({ activeFixtures: ['approved-ratified'] })
     const out = specClaim({ slug: 'approved-ratified', claimer: 'Bastion' }, ctx())
