@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Bun
         if: steps.phase.outputs.ready == 'true'
-        uses: Rethunk-Tech/gh-actions/setup-bun@48cc92115e037b2ee57da2264f318265c8a78ec7 # v1.26
+        uses: Rethunk-Tech/gh-actions/setup-bun@4c3240b9077c81a6f03f499dafaec6494220aad5 # v1.27
 
       - name: Build
         if: steps.phase.outputs.ready == 'true'
