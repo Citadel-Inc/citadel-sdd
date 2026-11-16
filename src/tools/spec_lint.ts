@@ -166,7 +166,9 @@ function computeExit(findings: readonly SpecLintFinding[], failOn: Set<string> |
         (failOn.has('error') && f.severity === 'error') ||
         (failOn.has('warning') && f.severity === 'warning'),
     )
-    exitCode = triggered ? 1 : 0
+    if (triggered) {
+      exitCode = 1
+    }
   }
   return exitCode
 }
