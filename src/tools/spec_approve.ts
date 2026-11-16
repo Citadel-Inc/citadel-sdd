@@ -2,7 +2,7 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit } from '../spec/git.ts'
-import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { appendHistoryRow, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
 import { locateSpec, type RepoContext, readSpec, readTasks } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
@@ -55,7 +55,7 @@ export function specApprove(input: SpecApproveInput, ctx: ToolContext): SpecAppr
   const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
   const fmt = ctx.profile.frontmatter_format
-  const newSpecRaw = spliceSpecFile(specRaw, updatedSpec, fmt)
+  const newSpecRaw = appendHistoryRow(spliceSpecFile(specRaw, updatedSpec, fmt), dtg, 'APPROVED')
   const newTasksRaw = spliceFrontmatter(tasksRaw, updatedTasks.frontmatter, fmt)
 
   const before = { state: spec.frontmatter.status.state, dtg: spec.frontmatter.status.dtg }
