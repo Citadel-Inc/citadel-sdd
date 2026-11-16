@@ -136,17 +136,21 @@ file-write behavior live in `src/tools/spec_*.ts` — this tool dispatches only.
 
 **Shared inputs:** `{ slug, to: "approve"|"ratify"|"claim"|"close"|"reopen"|"park"|"block"|"unblock"|"unpark", commit?: boolean, dryRun?: boolean }` plus the per-action fields below.
 
-| `to`      | Transition                                  | Extra inputs                                                      | Required                                  | Output (in addition to `slug`)                   |
-| --------- | ------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
-| `approve` | DRAFT → APPROVED                            | `note?`                                                           | —                                         | `before, after, commit_sha`                      |
-| `ratify`  | Fill Q-table TBD rows with `Ratified <DTG>` | `decisions?: {[Q_id]:{text,as_of_dtg}}`, `default_disposition?`   | —                                         | `ratified_q_count, commit_sha`                   |
-| `claim`   | DRAFT/APPROVED → IN_PROGRESS                | `claimer?`, `ratify?: boolean`                                    | —                                         | `before, after, commit_sha, ratified_q_count`    |
-| `close`   | IN_PROGRESS \| PARKED → DONE                | `summary?`, `allow_open?: ("P0"\|"P1"\|"P2")[]`, `push?: boolean` | `summary` (or profile `summary_template`) | `before, after, commit_sha, pushed, push_error?` |
-| `reopen`  | DONE → IN_PROGRESS                          | `reason`                                                          | `reason`                                  | `before, after, commit_sha`                      |
-| `park`    | DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
-| `block`   | IN_PROGRESS → BLOCKED                       | `reason`                                                          | `reason`                                  | `before, after, commit_sha`                      |
-| `unblock` | BLOCKED → IN_PROGRESS                       | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
-| `unpark`  | PARKED → IN_PROGRESS                        | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
+| `to`      | Transition                                     | Extra inputs                                                      | Required                                  | Output (in addition to `slug`)                   |
+| --------- | ---------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------ |
+| `approve` | DRAFT → APPROVED                               | `note?`                                                           | —                                         | `before, after, commit_sha`                      |
+| `ratify`  | Fill Q-table TBD rows with `Ratified <DTG>`    | `decisions?: {[Q_id]:{text,as_of_dtg}}`, `default_disposition?`   | —                                         | `ratified_q_count, commit_sha`                   |
+| `claim`   | DRAFT/APPROVED → IN_PROGRESS; Owner := claimer | `claimer?`, `ratify?: boolean`                                    | —                                         | `before, after, commit_sha, ratified_q_count`    |
+| `close`   | IN_PROGRESS \| PARKED → DONE                   | `summary?`, `allow_open?: ("P0"\|"P1"\|"P2")[]`, `push?: boolean` | `summary` (or profile `summary_template`) | `before, after, commit_sha, pushed, push_error?` |
+| `reopen`  | DONE → IN_PROGRESS                             | `reason`                                                          | `reason`                                  | `before, after, commit_sha`                      |
+| `park`    | DRAFT/APPROVED/IN_PROGRESS/BLOCKED → PARKED    | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
+| `block`   | IN_PROGRESS → BLOCKED                          | `reason`                                                          | `reason`                                  | `before, after, commit_sha`                      |
+| `unblock` | BLOCKED → IN_PROGRESS                          | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
+| `unpark`  | PARKED → IN_PROGRESS                           | `resolution`                                                      | `resolution`                              | `before, after, commit_sha`                      |
+
+`claim` writes Owner to the claimer. When the claimer differs from the previous Owner, the status
+tail records who it was taken from (`Bob claims execution (from Alice)`). A repeat claim by that
+owner once the spec is IN_PROGRESS is `state_invalid` (existing semantics).
 
 `before`/`after` are `{state, dtg}` for transitions that never leave `specs/active/` (`approve`,
 `claim`, `block`, `unblock`) and `{state, dtg, path}` for transitions that `git mv` the spec directory

@@ -44,6 +44,24 @@ function defaultClaimer(ctx: ToolContext): string {
   return 'Bastion'
 }
 
+function assignOwner(
+  fields: ReadonlyArray<readonly [string, string]>,
+  owner: string,
+): Array<[string, string]> {
+  let found = false
+  const next: Array<[string, string]> = fields.map(([k, v]) => {
+    if (k.toLowerCase() === 'owner') {
+      found = true
+      return [k, owner]
+    }
+    return [k, v]
+  })
+  if (!found) {
+    next.push(['Owner', owner])
+  }
+  return next
+}
+
 export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOutput {
   const repo = repoCtx(ctx)
   const loc = locateSpec(repo, input.slug)
@@ -83,7 +101,10 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
   const newStatus = {
     state: transition.to,
     dtg,
-    tail: `${claimer} claims execution`,
+    tail:
+      author.length > 0 && author !== claimer
+        ? `${claimer} claims execution (from ${author})`
+        : `${claimer} claims execution`,
   }
 
   const ratifyOpts = {
@@ -91,9 +112,17 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     default_disposition: `Ratified ${dtg}`,
     dtg,
   }
-  const updatedSpec = ratifyEnabled
+  const statused = ratifyEnabled
     ? setStatusOnSpec(ratifySpec(spec, ratifyOpts), newStatus)
     : setStatusOnSpec(spec, newStatus)
+  // spec_list mine:true matches Owner; claim transfers execution, so the claimer becomes Owner.
+  const updatedSpec = {
+    ...statused,
+    frontmatter: {
+      ...statused.frontmatter,
+      fields: assignOwner(statused.frontmatter.fields, claimer),
+    },
+  }
   const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
   const ratifiedCount = ratifyEnabled
