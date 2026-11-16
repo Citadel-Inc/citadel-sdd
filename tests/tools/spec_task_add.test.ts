@@ -34,7 +34,7 @@ describe('specTaskAdd', () => {
     expect(tasks).toContain('- [ ] New polish item')
   })
 
-  test('blocker:true adds [BLOCKED] prefix', () => {
+  test('blocker:true adds [HUMAN] prefix', () => {
     temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
     specTaskAdd(
       { slug: 'draft-minimal', phase: 'P0', text: 'Wait for upstream', blocker: true },
@@ -44,7 +44,7 @@ describe('specTaskAdd', () => {
       join(temp.rootDir, 'specs', 'active', 'draft-minimal', 'tasks.md'),
       'utf8',
     )
-    expect(tasks).toContain('- [ ] [BLOCKED] Wait for upstream')
+    expect(tasks).toContain('- [ ] [HUMAN] Wait for upstream')
   })
 
   test('dryRun no write', () => {

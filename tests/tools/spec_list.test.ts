@@ -94,10 +94,9 @@ describe('specList', () => {
     expect(none).toEqual([])
   })
 
-  test('mine without principal returns all (no filter)', () => {
+  test('mine without principal errors', () => {
     temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
-    const out = specList({ mine: true }, ctx())
-    expect(out).toHaveLength(1)
+    expect(() => specList({ mine: true }, ctx())).toThrow('mine_requires_principal')
   })
 
   test('skips spec with unparseable status instead of throwing', () => {
