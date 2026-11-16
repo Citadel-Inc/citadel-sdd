@@ -17,21 +17,21 @@ All tools resolve their project root at call time from `workspaceRoot`, MCP clie
 
 ## Common failure codes
 
-| Code                   | Trigger                                                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `state_invalid`        | Requested transition not legal per [docs/architecture.md § State machine](architecture.md#state-machine).                                        |
-| `slug_collision`       | Slug already used under `active/`, `done/`, or `parked/`. Slugs are unique forever ([D-9](decisions.md)).                                        |
-| `slug_invalid`         | Slug fails canonical pattern (lowercase kebab-case, no path separators).                                                                         |
-| `working_tree_dirty`   | Dirty paths within the spec's own scope; every mutating tool now refuses unconditionally so a failed mutation can always be rolled back cleanly. |
-| `ratify_required`      | Q-table has `TBD` rows and `ratify=false`.                                                                                                       |
-| `tasks_open`           | `spec_close` called with unchecked checkboxes outside `allow_open` whitelist.                                                                    |
-| `path_outside_repo`    | Input path escapes `git rev-parse --show-toplevel`. Refused.                                                                                     |
-| `path_is_symlink`      | A spec's `spec.md` / `tasks.md` / `plan.md` is a symlink. Read and write both refuse — specs must be regular files.                              |
-| `profile_chain_broken` | `extends:` references an unknown profile or exceeds the inheritance depth limit.                                                                 |
-| `profile_cycle`        | `extends:` chain forms a cycle (a profile name recurs in its own resolution chain).                                                              |
-| `config_invalid`       | `specs/config.yaml` fails schema validation.                                                                                                     |
-| `owner_mismatch`       | `spec_claim` against IN_PROGRESS spec held by a different owner.                                                                                 |
-| `task_ambiguous`       | A task `match` string is a prefix of more than one task; no task is mutated.                                                                     |
+| Code                   | Trigger                                                                                                                                                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `state_invalid`        | Requested transition not legal per [docs/architecture.md § State machine](architecture.md#state-machine).                                                                                                                                                          |
+| `slug_collision`       | Slug already used under `active/`, `done/`, or `parked/`. Slugs are unique forever ([D-9](decisions.md)).                                                                                                                                                          |
+| `slug_invalid`         | Slug fails canonical pattern (lowercase kebab-case, no path separators).                                                                                                                                                                                           |
+| `working_tree_dirty`   | Dirty paths within the spec's own scope; every mutating tool now refuses unconditionally so a failed mutation can always be rolled back cleanly.                                                                                                                   |
+| `ratify_required`      | Q-table has `TBD` rows and `ratify=false`.                                                                                                                                                                                                                         |
+| `tasks_open`           | `spec_close` called with unchecked checkboxes outside `allow_open` whitelist.                                                                                                                                                                                      |
+| `path_outside_repo`    | Input path escapes `git rev-parse --show-toplevel`. Refused.                                                                                                                                                                                                       |
+| `path_is_symlink`      | A file a tool reads or writes — a spec's `spec.md` / `tasks.md` / `plan.md`, or `specs/README.md` — is a symlink. Reads refuse with `path_is_symlink`, writes with `target_is_symlink`, on `commit: true` and `commit: false` alike — specs must be regular files. |
+| `profile_chain_broken` | `extends:` references an unknown profile or exceeds the inheritance depth limit.                                                                                                                                                                                   |
+| `profile_cycle`        | `extends:` chain forms a cycle (a profile name recurs in its own resolution chain).                                                                                                                                                                                |
+| `config_invalid`       | `specs/config.yaml` fails schema validation.                                                                                                                                                                                                                       |
+| `owner_mismatch`       | `spec_claim` against IN_PROGRESS spec held by a different owner.                                                                                                                                                                                                   |
+| `task_ambiguous`       | A task `match` string is a prefix of more than one task; no task is mutated.                                                                                                                                                                                       |
 
 ---
 

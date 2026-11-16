@@ -9,7 +9,7 @@ import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
 import type { SpecState } from '../spec/types.ts'
 import { spliceFrontmatter, spliceTasksFile } from '../spec/writer.ts'
-import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
+import { runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface SpecUnparkInput {

@@ -94,6 +94,7 @@ Every write tool enforces these on completion. Failure → restore pre-call stat
 5. Deterministic file ordering for stable diffs.
 6. Slug never reused (see [docs/profile-system.md](profile-system.md#slug-uniqueness)).
 7. No path traversal: all writes scoped to `git rev-parse --show-toplevel`.
+8. No symlinked write target: a symlink at any file a tool writes — `spec.md`, `tasks.md`, or `specs/README.md` — is refused with `target_is_symlink` before the first write, on both the `commit: true` and `commit: false` paths. `commit: false` writes all of its files or none (see [docs/decisions.md D-28](decisions.md)).
 
 ## Tool taxonomy
 
