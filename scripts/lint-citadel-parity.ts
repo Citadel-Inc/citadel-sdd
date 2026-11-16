@@ -67,10 +67,8 @@ if (errors.length > 0) {
 }
 
 if (!existsSync(pythonLint)) {
-  process.stderr.write(
-    `\nPython reference script not found at ${pythonLint}; skipping cross-check.\n`,
-  )
-  process.exit(ours.exit_code)
+  process.stdout.write(`\nPARITY: NOT RUN (Python reference script not found at ${pythonLint})\n`)
+  process.exit(1)
 }
 
 let pythonExit = 0
