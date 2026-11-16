@@ -173,6 +173,50 @@ Some prose about a question and proposed default without a proper table.
     const rows = parseQTable(md)
     expect(rows).toHaveLength(0)
   })
+
+  test('keeps a row whose cell count is short (missing disposition column)', () => {
+    const md = `# Spec
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Decisions
+
+| # | Question | Proposed default |
+|---|----------|------------------|
+| Q1 | Use TS? | Yes |
+| Q2 | License? | MIT |
+`
+    const rows = parseQTable(md)
+    expect(rows).toHaveLength(2)
+    expect(rows[1]).toEqual({
+      id: 'Q2',
+      question: 'License?',
+      proposedDefault: 'MIT',
+      ratified: 'TBD',
+    })
+  })
+
+  test('keeps a row whose cell count is inflated by an unescaped pipe', () => {
+    const md = `# Spec
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Decisions
+
+| # | Question | Proposed default | NOMAD |
+|---|----------|------------------|-------|
+| Q1 | Curve | fixed|exponential | TBD |
+`
+    const rows = parseQTable(md)
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.id).toBe('Q1')
+    expect(rows[0]?.proposedDefault).toBe('fixed | exponential')
+    expect(rows[0]?.ratified).toBe('TBD')
+  })
 })
 
 describe('parseFrontmatter — inline heading boundary', () => {

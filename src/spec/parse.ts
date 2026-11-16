@@ -95,6 +95,33 @@ function extractPipeTable(lines: readonly string[], startIdx: number): PipeTable
   return { rows, startIdx, endIdx: i }
 }
 
+/**
+ * Hand-written Q-tables deviate: a missing disposition column, or an unescaped
+ * pipe inside a cell that inflates the cell count. Tolerate both instead of
+ * dropping the row — a dropped row is erased by the next round-trip write.
+ */
+function qRowFromCells(cells: readonly string[]): QTableRow | null {
+  const id = cells[0] ?? ''
+  if (cells.length < 2 || !id) {
+    return null
+  }
+  if (cells.length >= 4) {
+    return {
+      id,
+      question: cells[1] ?? '',
+      proposedDefault: cells.slice(2, -1).join(' | '),
+      ratified: cells[cells.length - 1] ?? '',
+    }
+  }
+  return {
+    id,
+    question: cells[1] ?? '',
+    proposedDefault: cells[2] ?? '',
+    // No disposition column means the row is still open, i.e. TBD.
+    ratified: 'TBD',
+  }
+}
+
 export function parseStatusValue(raw: string): StatusValue {
   let trimmed = raw.trim()
   let bold = false
@@ -232,19 +259,10 @@ export function parseQTable(md: string): QTableRow[] {
   const dataRows = rows.slice(1)
   const out: QTableRow[] = []
   for (const row of dataRows) {
-    if (row.length !== 4) {
-      continue
+    const parsed = qRowFromCells(row)
+    if (parsed !== null) {
+      out.push(parsed)
     }
-    const [id, question, proposedDefault, ratified] = row
-    if (
-      id === undefined ||
-      question === undefined ||
-      proposedDefault === undefined ||
-      ratified === undefined
-    ) {
-      continue
-    }
-    out.push({ id, question, proposedDefault, ratified })
   }
   return out
 }

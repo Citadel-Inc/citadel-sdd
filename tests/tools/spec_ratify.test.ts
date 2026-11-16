@@ -119,4 +119,72 @@ describe('specRatify', () => {
     temp = makeTempRepo()
     expect(() => specRatify({ slug: 'missing' }, ctx())).toThrow('spec_not_found')
   })
+
+  test('three-column Q-table ratifies instead of silently deleting its rows', () => {
+    temp = makeTempRepo()
+    const dir = join(temp.rootDir, 'specs', 'active', 'short-qtable')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(
+      join(dir, 'spec.md'),
+      `# T
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Decisions
+
+| # | Question | Proposed default |
+|---|----------|------------------|
+| Q1 | A? | Yes |
+| Q2 | B? | No |
+`,
+    )
+    writeFileSync(join(dir, 'plan.md'), '')
+    writeFileSync(
+      join(dir, 'tasks.md'),
+      '| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n',
+    )
+    gitCommitAll(temp.rootDir, 'fixture: three-column Q-table')
+
+    const out = specRatify({ slug: 'short-qtable' }, ctx())
+    expect(out.ratified_q_count).toBe(2)
+    const md = readFileSync(join(dir, 'spec.md'), 'utf8')
+    expect(md).toContain('| Q1 | A? | Yes | Ratified 011945ZMAY26 |')
+    expect(md).toContain('| Q2 | B? | No | Ratified 011945ZMAY26 |')
+  })
+
+  test('Q-table row with an unescaped pipe survives ratify', () => {
+    temp = makeTempRepo()
+    const dir = join(temp.rootDir, 'specs', 'active', 'piped-qtable')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(
+      join(dir, 'spec.md'),
+      `# T
+
+| | |
+|---|---|
+| Status | DRAFT 011900ZMAY26 |
+
+## Decisions
+
+| # | Question | Proposed default | NOMAD |
+|---|----------|------------------|-------|
+| Q1 | Curve? | fixed|exponential | TBD |
+`,
+    )
+    writeFileSync(join(dir, 'plan.md'), '')
+    writeFileSync(
+      join(dir, 'tasks.md'),
+      '| | |\n|---|---|\n| Status | DRAFT 011900ZMAY26 |\n\n## P0\n\n- [ ] x\n',
+    )
+    gitCommitAll(temp.rootDir, 'fixture: unescaped pipe in Q-table')
+
+    const out = specRatify({ slug: 'piped-qtable' }, ctx())
+    expect(out.ratified_q_count).toBe(1)
+    const md = readFileSync(join(dir, 'spec.md'), 'utf8')
+    expect(md).toContain('fixed')
+    expect(md).toContain('exponential')
+    expect(md).toContain('Ratified 011945ZMAY26')
+  })
 })
