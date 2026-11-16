@@ -9,7 +9,7 @@ import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
 import type { SpecState } from '../spec/types.ts'
 import { spliceFrontmatter, spliceTasksFile } from '../spec/writer.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface SpecUnparkInput {
@@ -103,6 +103,7 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
   let commitSha: string | null = null
 
   if (input.commit === false) {
+    assertNoSymlinks([loc.specMd, loc.tasksMd])
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)

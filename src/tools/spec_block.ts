@@ -8,7 +8,7 @@ import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { assertTransitionEnabled, canTransition } from '../spec/transitions.ts'
 import type { SpecState } from '../spec/types.ts'
 import { spliceFrontmatter } from '../spec/writer.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 const LINE_SPLIT_RE = /\r?\n/
@@ -108,6 +108,7 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
   let commitSha: string | null = null
 
   if (input.commit === false) {
+    assertNoSymlinks([loc.specMd, loc.tasksMd])
     writeFileSync(loc.specMd, appendHistoryRow(newSpecRaw, dtg, 'BLOCKED'))
     writeFileSync(loc.tasksMd, newTasksRaw)
     upsertSpecReadmeRow(repo, loc.slug)

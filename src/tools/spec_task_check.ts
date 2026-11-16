@@ -5,7 +5,7 @@ import { parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import type { Priority } from '../spec/types.ts'
 import { spliceTasksFile } from '../spec/writer.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface TaskCheckItem {
@@ -112,6 +112,7 @@ export function specTaskCheck(input: SpecTaskCheckInput, ctx: ToolContext): Spec
   let commitSha: string | null = null
 
   if (input.commit === false) {
+    assertNoSymlinks([loc.tasksMd])
     writeFileSync(loc.tasksMd, newRaw)
   } else {
     runSpecTxn(

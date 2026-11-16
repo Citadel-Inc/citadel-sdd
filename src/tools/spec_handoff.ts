@@ -5,7 +5,7 @@ import { parseSpec } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
 import { spliceFrontmatter } from '../spec/writer.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface SpecHandoffInput {
@@ -78,6 +78,7 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   let commitSha: string | null = null
 
   if (input.commit === false) {
+    assertNoSymlinks([loc.specMd])
     writeFileSync(loc.specMd, newRaw)
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
