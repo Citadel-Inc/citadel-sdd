@@ -130,8 +130,8 @@ export function addTaskItem(
 ): ParsedTasks {
   const newItem: TaskItem = {
     checked: false,
-    text: blocker && !text.startsWith('[BLOCKED]') ? `[BLOCKED] ${text}` : text,
-    isHumanGate: text.trimStart().startsWith('[HUMAN]'),
+    text: blocker && !text.startsWith('[HUMAN]') ? `[HUMAN] ${text}` : text,
+    isHumanGate: blocker || text.trimStart().startsWith('[HUMAN]'),
   }
   const items = [...tasks.phases[phase], newItem]
   const phases: PhaseMap = { ...tasks.phases, [phase]: items }
@@ -153,6 +153,14 @@ export function setStatusOnSpec(spec: ParsedSpec, next: StatusValue): ParsedSpec
 
 export function setStatusOnTasks(tasks: ParsedTasks, next: StatusValue): ParsedTasks {
   return { ...tasks, frontmatter: mutateStatus(tasks.frontmatter, next) }
+}
+
+export function appendHistoryRow(raw: string, dtg: string, note: string): string {
+  const row = `- ${dtg} — ${note}`
+  if (/^## History\s*$/m.test(raw)) {
+    return raw.replace(/^## History\s*$/m, `## History\n\n${row}`)
+  }
+  return `${raw.replace(/\s+$/, '')}\n\n## History\n\n${row}\n`
 }
 
 export type { Priority, SpecState, StatusValue } from './types.ts'

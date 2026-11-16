@@ -1,5 +1,13 @@
 import type { SpecLifecycleState } from './repo.ts'
+import { existsSync } from 'node:fs'
+import { join } from 'node:path'
 import type { ParsedSpec, ParsedTasks } from './types.ts'
+
+export function assertDestinationFree(rootDir: string, destRelDir: string): void {
+  if (existsSync(join(rootDir, destRelDir))) {
+    throw new Error(`slug_collision: ${destRelDir} already exists`)
+  }
+}
 
 export interface InvariantViolation {
   code: string

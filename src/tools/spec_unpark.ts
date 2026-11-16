@@ -1,7 +1,7 @@
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv } from '../spec/git.ts'
-import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { appendHistoryRow, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -71,11 +71,18 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
   const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
   const fmt = ctx.profile.frontmatter_format
-  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
+  const newSpecRaw = appendHistoryRow(
+    spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt),
+    dtg,
+    'UNPARKED',
+  )
   const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt)
 
   const beforePath = loc.relDir
   const afterRelDir = `${repo.specDir}/active/${loc.slug}`
+  if (afterRelDir !== loc.relDir && existsSync(join(ctx.rootDir, afterRelDir))) {
+    throw new Error(`slug_collision: ${afterRelDir} already exists`)
+  }
 
   if (input.dryRun === true) {
     return {

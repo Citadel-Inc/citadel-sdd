@@ -2,7 +2,13 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv, gitPush } from '../spec/git.ts'
-import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from '../spec/mutate.ts'
+import { assertDestinationFree } from '../spec/invariants.ts'
+import {
+  appendHistoryRow,
+  setStatusOnSpec,
+  setStatusOnTasks,
+  setTaskChecked,
+} from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext, type SpecLocation } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -126,10 +132,17 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   const updatedTasks = checkOffCloseableTasks(setStatusOnTasks(tasksParsed, newStatus), allowOpen)
   const updatedSpec = setStatusOnSpec(spec, newStatus)
   const fmt = ctx.profile.frontmatter_format
-  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
+  const newSpecRaw = appendHistoryRow(
+    spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt),
+    dtg,
+    `DONE — ${summary}`,
+  )
   const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt)
   const beforePath = loc.relDir
   const afterRelDir = `${repo.specDir}/done/${loc.slug}`
+  if (loc.state === 'active' || loc.state === 'parked') {
+    assertDestinationFree(ctx.rootDir, afterRelDir)
+  }
 
   if (input.dryRun === true) {
     return {
