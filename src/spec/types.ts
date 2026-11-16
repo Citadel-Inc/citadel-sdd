@@ -25,6 +25,8 @@ export interface TaskItem {
   checked: boolean
   text: string
   isHumanGate: boolean
+  /** Leading spaces, preserved so indented sub-items survive a rewrite. */
+  indent?: number
 }
 
 export interface PhaseMap {

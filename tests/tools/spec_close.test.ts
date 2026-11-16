@@ -161,6 +161,19 @@ describe('specClose', () => {
     expect(() => specClose({ slug: 'draft-minimal', summary: 'x' }, ctx())).toThrow('state_invalid')
   })
 
+  test('open indented sub-task blocks close with tasks_open', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+    writeFileSync(
+      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
+      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] parent done\n  - [ ] nested child still open\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+    expect(() => specClose({ slug: 'in-progress-midway', summary: 'done' }, ctx())).toThrow(
+      'tasks_open',
+    )
+    expect(existsSync(join(temp.rootDir, 'specs', 'done', 'in-progress-midway'))).toBe(false)
+  })
+
   test('dryRun no write, no mv', () => {
     temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
 
@@ -221,27 +234,6 @@ describe('specClose', () => {
     expect(() => specClose({ slug: 'blocked-reason', summary: 'abandon' }, ctx())).toThrow(
       SPEC_UNBLOCK_RE,
     )
-  })
-
-  test('multi-line summary stays in one status cell and keeps the Owner field', () => {
-    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
-    writeFileSync(
-      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
-      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
-    )
-    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
-
-    specClose({ slug: 'in-progress-midway', summary: 'shipped v1\n\nnotes follow' }, ctx())
-
-    const md = readFileSync(
-      join(temp.rootDir, 'specs', 'done', 'in-progress-midway', 'spec.md'),
-      'utf8',
-    )
-    const statusRows = md.split('\n').filter((l) => l.startsWith('| Status |'))
-    expect(statusRows).toHaveLength(1)
-    expect(statusRows[0]).toContain('shipped v1 notes follow')
-    expect(md).toContain('| Owner | TestAgent |')
-    expect(specStatus({ slug: 'in-progress-midway' }, ctx()).owner).toBe('TestAgent')
   })
 
   test(
@@ -312,5 +304,28 @@ describe('specClose', () => {
     // runSpecTxn only checks scoped paths — unrelated files are ignored.
     const out = specClose({ slug: 'in-progress-midway', summary: 'implementation landed' }, ctx())
     expect(out.commit_sha).not.toBeNull()
+  })
+})
+
+describe('specClose — status tail rendering', () => {
+  test('multi-line summary stays in one status cell and keeps the Owner field', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+    writeFileSync(
+      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
+      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+
+    specClose({ slug: 'in-progress-midway', summary: 'shipped v1\n\nnotes follow' }, ctx())
+
+    const md = readFileSync(
+      join(temp.rootDir, 'specs', 'done', 'in-progress-midway', 'spec.md'),
+      'utf8',
+    )
+    const statusRows = md.split('\n').filter((l) => l.startsWith('| Status |'))
+    expect(statusRows).toHaveLength(1)
+    expect(statusRows[0]).toContain('shipped v1 notes follow')
+    expect(md).toContain('| Owner | TestAgent |')
+    expect(specStatus({ slug: 'in-progress-midway' }, ctx()).owner).toBe('TestAgent')
   })
 })

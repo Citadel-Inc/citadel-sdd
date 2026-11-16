@@ -111,7 +111,7 @@ describe('spliceFrontmatter — empty DTG', () => {
 })
 
 describe('spliceFrontmatter — inline frontmatter file that also contains body tables', () => {
-  const INLINE_WITH_BODY_TABLE = `# Spec
+  const inlineWithBodyTable = `# Spec
 
 Status: DRAFT 011900ZMAY26
 Owner: TestAgent
@@ -126,9 +126,8 @@ A spec body with its own table.
 `
 
   test('splice keeps the body table and does not leave a second status line', () => {
-    const fm = parseFrontmatter(INLINE_WITH_BODY_TABLE)
     const next = parseFrontmatter('| | |\n|---|---|\n| Status | APPROVED 011945ZMAY26 |')
-    const out = spliceFrontmatter(INLINE_WITH_BODY_TABLE, next, 'any')
+    const out = spliceFrontmatter(inlineWithBodyTable, next, 'any')
     expect(out).toContain('| Component | Owner |')
     expect(out).toContain('| parser    | TestAgent |')
     expect(out.match(/Status:/g) ?? []).toHaveLength(1)
@@ -136,8 +135,8 @@ A spec body with its own table.
   })
 
   test('format=pipe-table converts the inline fields and leaves the body table alone', () => {
-    const fm = parseFrontmatter(INLINE_WITH_BODY_TABLE)
-    const out = spliceFrontmatter(INLINE_WITH_BODY_TABLE, fm, 'pipe-table')
+    const fm = parseFrontmatter(inlineWithBodyTable)
+    const out = spliceFrontmatter(inlineWithBodyTable, fm, 'pipe-table')
     expect(out).toContain('| Status | DRAFT 011900ZMAY26 |')
     expect(out).toContain('| Component | Owner |')
     expect(out).not.toMatch(STATUS_LINE_RE)

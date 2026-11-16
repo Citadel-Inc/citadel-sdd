@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
-import { readFileSync } from 'node:fs'
+import { execSync } from 'node:child_process'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { resolveBuiltIn } from '../../src/profile/resolver.ts'
 import { specTaskCheck } from '../../src/tools/spec_task_check.ts'
@@ -212,5 +213,31 @@ describe('specTaskCheck', () => {
     expect(() => specTaskCheck({ slug: 'draft-minimal', items: [] }, ctx())).toThrow(
       'items_missing',
     )
+  })
+})
+
+describe('specTaskCheck — indented sub-items', () => {
+  test('indented sub-item stays in place and keeps its indent', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-inline'] })
+    const tasksPath = join(temp.rootDir, 'specs', 'active', 'in-progress-inline', 'tasks.md')
+    writeFileSync(
+      tasksPath,
+      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [ ] parent one\n  - [ ] child of one\nNotes about P0 go here.\n\n- [x] parent two\n',
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+
+    specTaskCheck(
+      {
+        slug: 'in-progress-inline',
+        items: [{ phase: 'P0', match: 'parent one', checked: true }],
+      },
+      ctx(),
+    )
+
+    const tasks = readFileSync(tasksPath, 'utf8')
+    expect(tasks).toContain('  - [ ] child of one')
+    expect(tasks).toContain('Notes about P0 go here.')
+    expect(tasks).toContain('- [x] parent one')
+    expect(tasks.indexOf('- [x] parent one')).toBeLessThan(tasks.indexOf('  - [ ] child of one'))
   })
 })

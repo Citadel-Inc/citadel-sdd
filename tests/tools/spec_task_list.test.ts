@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
+import { writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { resolveBuiltIn } from '../../src/profile/resolver.ts'
 import { specTaskList } from '../../src/tools/spec_task_list.ts'
 import type { ToolContext } from '../../src/tools/types.ts'
@@ -71,5 +73,17 @@ describe('specTaskList', () => {
   test('spec_not_found throws for unknown slug', () => {
     temp = makeTempRepo({ activeFixtures: ['draft-minimal'] })
     expect(() => specTaskList({ slug: 'no-such-spec' }, ctx())).toThrow('spec_not_found')
+  })
+
+  test('indented sub-items are listed and counted open', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-inline'] })
+    const path = join(temp.rootDir, 'specs', 'active', 'in-progress-inline', 'tasks.md')
+    writeFileSync(
+      path,
+      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] parent done\n  - [ ] nested child still open\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
+    )
+    const out = specTaskList({ slug: 'in-progress-inline' }, ctx())
+    expect(out.items.map((i) => i.text)).toContain('nested child still open')
+    expect(out.unchecked).toBe(1)
   })
 })

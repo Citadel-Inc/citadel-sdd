@@ -1,3 +1,4 @@
+import { matchChecklistItem } from './checklist_scan.ts'
 import {
   type Frontmatter,
   type ParsedSpec,
@@ -21,7 +22,6 @@ const Q_HEADER_QUESTION_RE = /question/i
 const Q_HEADER_DEFAULT_RE = /proposed\s*default/i
 const PHASE_HEADING_RE = /^##\s+(P[012])\b/
 const H2_RE = /^##\s+/
-const TASK_ITEM_RE = /^- \[([ xX])\] (.*)$/
 
 const STATE_ALIASES = new Map<string, SpecState>([['CLOSED', 'DONE']])
 
@@ -294,16 +294,13 @@ export function parseTasks(md: string): ParsedTasks {
     if (current === null) {
       continue
     }
-    const itemMatch: RegExpExecArray | null = TASK_ITEM_RE.exec(line)
-    if (itemMatch) {
-      const [, mark, text] = itemMatch
-      if (mark === undefined || text === undefined) {
-        continue
-      }
+    const item = matchChecklistItem(raw)
+    if (item) {
       phases[current].push({
-        checked: mark.toLowerCase() === 'x',
-        text,
-        isHumanGate: text.trimStart().startsWith('[HUMAN]'),
+        checked: item.checked,
+        text: item.text,
+        isHumanGate: item.text.trimStart().startsWith('[HUMAN]'),
+        indent: item.indent,
       })
     }
   }

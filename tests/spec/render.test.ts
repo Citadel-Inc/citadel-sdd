@@ -147,9 +147,32 @@ describe('renderTaskItem', () => {
     }
     expect(renderTaskItem(item)).toBe('- [ ] [HUMAN] NOMAD ratifies Q-table')
   })
+
+  test('indented sub-item keeps its indent', () => {
+    expect(renderTaskItem({ checked: false, text: 'child', isHumanGate: false, indent: 2 })).toBe(
+      '  - [ ] child',
+    )
+  })
 })
 
 describe('renderTasks idempotency', () => {
+  test('nested sub-items survive parse → render → parse', () => {
+    const md = `# Tasks
+
+| | |
+|---|---|
+| Status | IN_PROGRESS 011920ZMAY26 |
+
+## P0
+
+- [x] parent
+  - [ ] child
+`
+    const parsed = parseTasks(md)
+    expect(parsed.phases.P0).toHaveLength(2)
+    expect(parsed.phases.P0[1]).toMatchObject({ checked: false, text: 'child', indent: 2 })
+    expect(renderTasks(parsed)).toContain('  - [ ] child')
+  })
   test('every fixture round-trips at AST level', () => {
     for (const fix of loadAllFixtures()) {
       const parsed = parseTasks(fix.tasks)

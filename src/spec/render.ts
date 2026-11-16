@@ -81,7 +81,7 @@ export function renderQTable(rows: readonly QTableRow[]): string {
 
 export function renderTaskItem(item: TaskItem): string {
   const box = item.checked ? '[x]' : '[ ]'
-  return `- ${box} ${item.text}`
+  return `${' '.repeat(item.indent ?? 0)}- ${box} ${item.text}`
 }
 
 export function renderPhase(priority: Priority, items: readonly TaskItem[]): string {

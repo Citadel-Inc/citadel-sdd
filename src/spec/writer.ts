@@ -1,4 +1,5 @@
 import type { FrontmatterFormat } from '../profile/types.ts'
+import { matchChecklistItem } from './checklist_scan.ts'
 import {
   renderFrontmatter,
   renderFrontmatterInline,
@@ -12,7 +13,6 @@ const Q_HEADER_QUESTION_RE = /question/i
 const Q_HEADER_DEFAULT_RE = /proposed\s*default/i
 const SEPARATOR_ROW_RE = /^\|[\s:|-]+\|$/
 const FIELD_PREFIX_RE = /^([A-Za-z][A-Za-z _-]*?):\s+/
-const TASK_ITEM_RE = /^- \[([ xX])\] /
 
 const LINE_SPLIT_RE = /\r?\n/
 const TRAILING_NEWLINES_RE = /\n+$/
@@ -309,7 +309,7 @@ function splicePhase(
   const heading = lines[block.start] ?? `## ${priority}`
   const preserved = lines.slice(block.start + 1, block.end).filter((line) => {
     const t = line.trim()
-    return t.length > 0 && !TASK_ITEM_RE.test(line)
+    return t.length > 0 && matchChecklistItem(line) === null
   })
   const rendered = renderPhaseBody(heading, items, preserved)
   return [...before, ...rendered, ...after].join('\n').replace(COLLAPSE_BLANK_RE, '\n\n')
