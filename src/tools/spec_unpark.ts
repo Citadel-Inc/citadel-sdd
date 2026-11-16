@@ -2,7 +2,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv } from '../spec/git.ts'
-import { appendHistoryRow, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -72,11 +72,7 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
   const updatedTasks = setStatusOnTasks(tasks, newStatus)
 
   const fmt = ctx.profile.frontmatter_format
-  const newSpecRaw = appendHistoryRow(
-    spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt),
-    dtg,
-    'UNPARKED',
-  )
+  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
   const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt)
 
   const beforePath = loc.relDir

@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitConfigUserName } from '../spec/git.ts'
-import { appendHistoryRow, ratifySpec, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { ratifySpec, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -130,11 +130,7 @@ export function specClaim(input: SpecClaimInput, ctx: ToolContext): SpecClaimOut
     : 0
 
   const fmt = ctx.profile.frontmatter_format
-  let newSpecRaw = appendHistoryRow(
-    spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt),
-    dtg,
-    'CLAIMED',
-  )
+  let newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
   if (ratifyEnabled && spec.qTable.length > 0) {
     newSpecRaw = spliceQTable(newSpecRaw, updatedSpec.qTable)
   } else {

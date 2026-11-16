@@ -3,12 +3,7 @@ import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv, gitPush } from '../spec/git.ts'
 import { assertDestinationFree } from '../spec/invariants.ts'
-import {
-  appendHistoryRow,
-  setStatusOnSpec,
-  setStatusOnTasks,
-  setTaskChecked,
-} from '../spec/mutate.ts'
+import { setStatusOnSpec, setStatusOnTasks, setTaskChecked } from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext, type SpecLocation } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -132,11 +127,7 @@ export function specClose(input: SpecCloseInput, ctx: ToolContext): SpecCloseOut
   const updatedTasks = checkOffCloseableTasks(setStatusOnTasks(tasksParsed, newStatus), allowOpen)
   const updatedSpec = setStatusOnSpec(spec, newStatus)
   const fmt = ctx.profile.frontmatter_format
-  const newSpecRaw = appendHistoryRow(
-    spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt),
-    dtg,
-    `DONE — ${summary}`,
-  )
+  const newSpecRaw = spliceFrontmatter(specRaw, updatedSpec.frontmatter, fmt)
   const newTasksRaw = spliceTasksFile(tasksRaw, updatedTasks, fmt)
   const beforePath = loc.relDir
   const afterRelDir = `${repo.specDir}/done/${loc.slug}`

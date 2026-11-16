@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit } from '../spec/git.ts'
-import { appendHistoryRow, type RatifyDecision, ratifySpec } from '../spec/mutate.ts'
+import { type RatifyDecision, ratifySpec } from '../spec/mutate.ts'
 import { parseSpec } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { spliceQTable } from '../spec/writer.ts'
@@ -50,7 +50,7 @@ export function specRatify(input: SpecRatifyInput, ctx: ToolContext): SpecRatify
     (r, i) => r.ratified !== spec.qTable[i]?.ratified,
   ).length
 
-  const newRaw = appendHistoryRow(spliceQTable(raw, updated.qTable), dtg, 'RATIFIED')
+  const newRaw = spliceQTable(raw, updated.qTable)
 
   if (input.dryRun === true) {
     return { slug: loc.slug, ratified_q_count: ratifiedQCount, commit_sha: null, dryRun: true }

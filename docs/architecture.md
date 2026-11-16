@@ -68,7 +68,7 @@ Transition rules:
 - DRAFT → DONE direct: invalid.
 - DONE → DRAFT: invalid; use `to: "reopen"` then iterate.
 - BLOCKED → DONE direct: invalid; `to: "unblock"` first (the close error message says so).
-- Each transition appends a row to `## History` in `spec.md` (DTG + actor + transition).
+- Transitions do not write History rows; `git log` is the history (D-31).
 
 ## File-system contract
 
