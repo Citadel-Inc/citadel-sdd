@@ -48,6 +48,9 @@ export function nowDTG(format: DtgFormat, clock: () => Date = () => new Date()):
 
 /** Slugs with no parseable DTG sort last (oldest-at-bottom in descending recency order). */
 const DTG_SORT_UNKNOWN = Number.NEGATIVE_INFINITY
+const TWO_DIGIT_YEAR_PIVOT = 70
+const CENTURY_1900 = 1900
+const CENTURY_2000 = 2000
 
 /**
  * Maps a status DTG string to a numeric recency key (UTC ms) for sorting.
@@ -81,7 +84,7 @@ export function dtgToRecencySortKey(dtg: string): number {
     ) {
       return DTG_SORT_UNKNOWN
     }
-    const year = yy >= 70 ? 1900 + yy : 2000 + yy
+    const year = yy >= TWO_DIGIT_YEAR_PIVOT ? CENTURY_1900 + yy : CENTURY_2000 + yy
     // Validate day against the calendar month, accounting for leap years.
     const isLeap = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)
     const maxDay = (MONTH_MAX_DAYS[month] ?? 31) + (month === 1 && isLeap ? 1 : 0)
