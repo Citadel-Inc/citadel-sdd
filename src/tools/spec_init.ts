@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
-import { resolveProfile } from '../profile/resolver.ts'
 import { join } from 'node:path'
 import { stringify as stringifyYaml } from 'yaml'
+import { resolveProfile } from '../profile/resolver.ts'
 import { gitAdd, gitCommit } from '../spec/git.ts'
 import { type RepoContext, specsRoot } from '../spec/repo.ts'
 import { ensureSpecBucketDirs } from '../spec/scaffold.ts'
@@ -51,7 +51,9 @@ function specsAlreadyPopulated(specRoot: string): boolean {
 
 export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput {
   const base = repoCtx(ctx)
-  const repo = { ...base, specDir: input.overrides?.spec_dir ?? base.specDir }
+  const specDir =
+    typeof input.overrides?.spec_dir === 'string' ? input.overrides.spec_dir : base.specDir
+  const repo = { ...base, specDir }
   const root = specsRoot(repo)
 
   if (specsAlreadyPopulated(root)) {

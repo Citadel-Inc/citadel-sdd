@@ -155,12 +155,15 @@ export function setStatusOnTasks(tasks: ParsedTasks, next: StatusValue): ParsedT
   return { ...tasks, frontmatter: mutateStatus(tasks.frontmatter, next) }
 }
 
+const HISTORY_HEADING = /^## History\s*$/m
+const TRAILING_WS = /\s+$/
+
 export function appendHistoryRow(raw: string, dtg: string, note: string): string {
   const row = `- ${dtg} — ${note}`
-  if (/^## History\s*$/m.test(raw)) {
-    return raw.replace(/^## History\s*$/m, `## History\n\n${row}`)
+  if (HISTORY_HEADING.test(raw)) {
+    return raw.replace(HISTORY_HEADING, `## History\n\n${row}`)
   }
-  return `${raw.replace(/\s+$/, '')}\n\n## History\n\n${row}\n`
+  return `${raw.replace(TRAILING_WS, '')}\n\n## History\n\n${row}\n`
 }
 
 export type { Priority, SpecState, StatusValue } from './types.ts'

@@ -1,7 +1,7 @@
+import { describe, expect, test } from 'bun:test'
 import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, test } from 'bun:test'
 import { resolveProfile } from '../src/profile/resolver.ts'
 import { specLint } from '../src/tools/spec_lint.ts'
 import type { ToolContext } from '../src/tools/types.ts'
@@ -28,8 +28,8 @@ describe('spec_lint fail_on', () => {
     expect(baseline.exit_code).toBe(1)
     expect(baseline.findings.some((f) => f.code === 'spec_md_unparseable')).toBe(true)
 
-    for (const fail_on of [[], ['nope'], ['stale']] as const) {
-      const out = specLint({ fail_on: [...fail_on] }, c)
+    for (const failOn of [[], ['nope'], ['stale']] as const) {
+      const out = specLint({ fail_on: [...failOn] }, c)
       expect(out.exit_code).toBe(1)
       expect(out.findings.some((f) => f.code === 'spec_md_unparseable')).toBe(true)
     }

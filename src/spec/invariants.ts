@@ -1,6 +1,6 @@
-import type { SpecLifecycleState } from './repo.ts'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import type { SpecLifecycleState } from './repo.ts'
 import type { ParsedSpec, ParsedTasks } from './types.ts'
 
 export function assertDestinationFree(rootDir: string, destRelDir: string): void {

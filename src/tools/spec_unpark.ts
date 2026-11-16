@@ -1,4 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit, gitMv } from '../spec/git.ts'
 import { appendHistoryRow, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'

@@ -1,16 +1,17 @@
+import { describe, expect, test } from 'bun:test'
+import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { describe, expect, test } from 'bun:test'
 import { resolveProfile } from '../src/profile/resolver.ts'
 import { specApprove } from '../src/tools/spec_approve.ts'
 import { specInit } from '../src/tools/spec_init.ts'
 import type { ToolContext } from '../src/tools/types.ts'
 
 function git(root: string, args: string[]): void {
-  const r = Bun.spawnSync(['git', ...args], { cwd: root, stdout: 'pipe', stderr: 'pipe' })
-  if (r.exitCode !== 0) {
-    throw new Error(`git ${args.join(' ')}: ${r.stderr.toString()}`)
+  const r = spawnSync('git', args, { cwd: root, encoding: 'utf8' })
+  if (r.status !== 0) {
+    throw new Error(`git ${args.join(' ')}: ${r.stderr}`)
   }
 }
 
