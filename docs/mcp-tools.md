@@ -63,11 +63,11 @@ Single-spec status summary.
 
 **Inputs:** `{ slug, recent_limit?: number, since?: string }`. `recent_limit` caps the number of history rows returned. `since` is an ISO-8601 or Bastion DTG string; only history entries at or after that timestamp are included.
 
-**Output:** `{ slug, state, dtg, owner, approved_dtg, ratified, q_table: [{id, question, default, ratified_at}], task_counts: { p0:{open,done}, p1:{...}, p2:{...} }, blockers, last_commit_sha }`.
+**Output:** `{ slug, state, dtg, owner, approved_dtg, ratified, q_table: [{id, question, proposedDefault, ratified}], task_counts: { p0:{open,done}, p1:{...}, p2:{...} }, blockers }`.
 
 ### `spec_lint`
 
-Run strict-mode validation across the spec tree.
+`fail_on` adds matching warning categories to the error-based exit code; `severity: "error"` findings always fail.Run strict-mode validation across the spec tree.
 
 **Inputs:** `{ slug?, include_done?: boolean, include_parked?: boolean, no_strict?: boolean, fail_on?: string[]|"all", roots?: string[], scan_nested?: { parent: string, depth?: number }, stale_days?: number }`. Without slug, lints the whole tree. Default scans `specs/active/` only; `include_done` adds `specs/done/`; `include_parked` adds `specs/parked/` (flags compose). Per-spec `slug` lint resolves the slug wherever it lives. `no_strict` disables strict-mode rules. `fail_on` sets which rule codes (or `"all"`) cause a non-zero exit. `roots` overrides the set of spec-tree roots to lint. `scan_nested` walks `parent` up to `depth` levels looking for nested spec trees. `stale_days` overrides the profile default for stale-spec detection.
 
