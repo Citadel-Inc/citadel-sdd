@@ -79,6 +79,9 @@ function specListEntry(opts: {
 
   const ownerField = spec.frontmatter.fields.find(([k]) => k.toLowerCase() === 'owner')
   const owner = ownerField?.[1] ?? ''
+  if (opts.mine && !opts.principal) {
+    throw new Error('mine_requires_principal: git user.name is not configured')
+  }
   if (opts.mine && opts.principal !== undefined && owner !== opts.principal) {
     return null
   }
