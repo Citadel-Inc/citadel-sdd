@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs'
+import { resolveProfile } from '../profile/resolver.ts'
 import { join } from 'node:path'
 import { stringify as stringifyYaml } from 'yaml'
 import { gitAdd, gitCommit } from '../spec/git.ts'
@@ -49,7 +50,8 @@ function specsAlreadyPopulated(specRoot: string): boolean {
 }
 
 export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput {
-  const repo = repoCtx(ctx)
+  const base = repoCtx(ctx)
+  const repo = { ...base, specDir: input.overrides?.spec_dir ?? base.specDir }
   const root = specsRoot(repo)
 
   if (specsAlreadyPopulated(root)) {
@@ -57,6 +59,7 @@ export function specInit(input: SpecInitInput, ctx: ToolContext): SpecInitOutput
   }
 
   const config = { extends: input.profile, ...(input.overrides ?? {}) }
+  resolveProfile(config)
   const yamlText = stringifyYaml(config)
 
   const createdFiles: string[] = []
