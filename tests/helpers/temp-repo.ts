@@ -45,6 +45,9 @@ function templateDir(opts: TempRepoOptions): string {
   git(dir, ['config', 'user.name', 'Test Agent'])
   git(dir, ['config', 'user.email', 'test@example.com'])
   git(dir, ['config', 'commit.gpgsign', 'false'])
+  // Auto-maintenance forks into the background and races the cpSync clone of this template.
+  git(dir, ['config', 'maintenance.auto', 'false'])
+  git(dir, ['config', 'gc.auto', '0'])
 
   mkdirSync(join(dir, 'specs', 'active'), { recursive: true })
   mkdirSync(join(dir, 'specs', 'done'), { recursive: true })
