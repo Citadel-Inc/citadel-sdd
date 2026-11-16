@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { execSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { resolveBuiltIn } from '../../src/profile/resolver.ts'
 import { gitStatusPorcelain } from '../../src/spec/git.ts'
@@ -126,5 +126,45 @@ describe('specApprove', () => {
     expect(out.dryRun).toBe(true)
     expect(out.commit_sha).toBeNull()
     expect(readFileSync(path, 'utf8')).toBe(before)
+  })
+
+  test('inline frontmatter spec keeps body tables and one Status line', () => {
+    temp = makeTempRepo()
+    const dir = join(temp.rootDir, 'specs', 'active', 'inline-tables')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(
+      join(dir, 'spec.md'),
+      `# Inline with tables
+
+Status: DRAFT 011900ZMAY26
+Owner: TestAgent
+
+## Summary
+
+| Component | Owner |
+|-----------|-------|
+| parser    | TestAgent |
+
+## Decisions
+
+| # | Question | Proposed default | NOMAD |
+|---|----------|------------------|-------|
+| Q1 | Use TS? | Yes | TBD |
+`,
+    )
+    writeFileSync(join(dir, 'plan.md'), '')
+    writeFileSync(
+      join(dir, 'tasks.md'),
+      'Status: DRAFT 011900ZMAY26\nOwner: TestAgent\n\n## P0\n\n- [ ] x\n',
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fixture`)
+
+    specApprove({ slug: 'inline-tables' }, ctx())
+
+    const md = readFileSync(join(dir, 'spec.md'), 'utf8')
+    expect(md).toContain('| Component | Owner |')
+    expect(md).toContain('| Q1 | Use TS? | Yes | TBD |')
+    expect(md.match(/^Status:/gm) ?? []).toHaveLength(1)
+    expect(md).toContain('Status: APPROVED 011945ZMAY26')
   })
 })

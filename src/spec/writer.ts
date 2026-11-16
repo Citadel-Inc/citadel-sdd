@@ -40,9 +40,13 @@ function insertAfterTitle(lines: readonly string[], block: string): string {
     .replace(COLLAPSE_BLANK_RE, '\n\n')
 }
 
-function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | null {
+function findFirstPipeBlock(
+  lines: readonly string[],
+  from = 0,
+  until = lines.length,
+): BlockRange | null {
   let start = -1
-  for (let i = from; i < lines.length; i += 1) {
+  for (let i = from; i < until && i < lines.length; i += 1) {
     const line = lines[i]
     if (line === undefined) {
       continue
@@ -56,7 +60,7 @@ function findFirstPipeBlock(lines: readonly string[], from = 0): BlockRange | nu
     return null
   }
   let end = start
-  while (end < lines.length) {
+  while (end < until && end < lines.length) {
     const line = lines[end]
     if (line === undefined) {
       break
@@ -173,13 +177,22 @@ function replaceInlineFields(
   return newLines.join('\n')
 }
 
+/**
+ * The frontmatter pipe table is the first table before the first H2 — any later
+ * table is body content (Q-table, index, prose), even though it is also pipe-shaped.
+ */
+function findFrontmatterPipeBlock(lines: readonly string[]): BlockRange | null {
+  const { titleIdx, fmEnd } = frontmatterRegion(lines)
+  return findFirstPipeBlock(lines, titleIdx + 1, fmEnd)
+}
+
 export function spliceFrontmatter(
   rawMd: string,
   newFm: Frontmatter,
   format: FrontmatterFormat = 'any',
 ): string {
   const lines = rawMd.split(LINE_SPLIT_RE)
-  const block = findFirstPipeBlock(lines)
+  const block = findFrontmatterPipeBlock(lines)
   const hasPipe = block !== null
   const targetPipe = format === 'pipe-table' || (format === 'any' && hasPipe)
 

@@ -110,6 +110,42 @@ describe('spliceFrontmatter — empty DTG', () => {
   })
 })
 
+describe('spliceFrontmatter — inline frontmatter file that also contains body tables', () => {
+  const INLINE_WITH_BODY_TABLE = `# Spec
+
+Status: DRAFT 011900ZMAY26
+Owner: TestAgent
+
+## Summary
+
+A spec body with its own table.
+
+| Component | Owner |
+|-----------|-------|
+| parser    | TestAgent |
+`
+
+  test('splice keeps the body table and does not leave a second status line', () => {
+    const fm = parseFrontmatter(INLINE_WITH_BODY_TABLE)
+    const next = parseFrontmatter('| | |\n|---|---|\n| Status | APPROVED 011945ZMAY26 |')
+    const out = spliceFrontmatter(INLINE_WITH_BODY_TABLE, next, 'any')
+    expect(out).toContain('| Component | Owner |')
+    expect(out).toContain('| parser    | TestAgent |')
+    expect(out.match(/Status:/g) ?? []).toHaveLength(1)
+    expect(out).toContain('Status: APPROVED 011945ZMAY26')
+  })
+
+  test('format=pipe-table converts the inline fields and leaves the body table alone', () => {
+    const fm = parseFrontmatter(INLINE_WITH_BODY_TABLE)
+    const out = spliceFrontmatter(INLINE_WITH_BODY_TABLE, fm, 'pipe-table')
+    expect(out).toContain('| Status | DRAFT 011900ZMAY26 |')
+    expect(out).toContain('| Component | Owner |')
+    expect(out).not.toMatch(STATUS_LINE_RE)
+    const statusRows = out.split('\n').filter((l) => l.startsWith('| Status |'))
+    expect(statusRows).toHaveLength(1)
+  })
+})
+
 describe('spliceQTable', () => {
   const row = {
     id: 'Q1',
