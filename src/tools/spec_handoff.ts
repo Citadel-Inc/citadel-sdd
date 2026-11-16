@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { gitAdd, gitCommit } from '../spec/git.ts'
 import { setOwner } from '../spec/mutate.ts'
 import { parseSpec } from '../spec/parse.ts'
@@ -76,13 +77,15 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
 
   const scopePaths = [`${loc.relDir}/spec.md`, `${repo.specDir}/README.md`]
   let commitSha: string | null = null
+  // README is rewritten too, so it is a write target alongside spec.md.
+  const writeTargets = [loc.specMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
   if (input.commit === false) {
-    assertNoSymlinks([loc.specMd])
+    assertNoSymlinks(writeTargets)
     writeFileSync(loc.specMd, newRaw)
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd] }, () => {
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
       writeFileSync(loc.specMd, newRaw)
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
       const subject =

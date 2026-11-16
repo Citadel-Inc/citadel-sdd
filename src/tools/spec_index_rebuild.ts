@@ -1,12 +1,13 @@
 import { execFileSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { gitAdd, gitCommit } from '../spec/git.ts'
 import { buildIndex, renderIndex } from '../spec/index_render.ts'
 import type { RepoContext } from '../spec/repo.ts'
 import { specsRoot } from '../spec/repo.ts'
 import { ensureSpecBucketDirs } from '../spec/scaffold.ts'
 import { writeSpecReadmeFull } from '../spec/spec_readme.ts'
-import { runSpecTxn } from './_txn.ts'
+import { assertNoSymlinks, runSpecTxn } from './_txn.ts'
 import type { ToolContext } from './types.ts'
 
 export interface SpecIndexRebuildInput {
@@ -71,12 +72,14 @@ export function specIndexRebuild(
 
   let commitSha: string | null = null
   let scaffoldRepairs: string[] = []
+  const writeTargets = [join(ctx.rootDir, repo.specDir, 'README.md')]
 
   if (input.commit === false) {
+    assertNoSymlinks(writeTargets)
     scaffoldRepairs = ensureSpecBucketDirs(repo)
     writeSpecReadmeFull(repo)
   } else {
-    runSpecTxn(ctx.rootDir, { scopePaths: [`${repo.specDir}/README.md`], writeTargets: [] }, () => {
+    runSpecTxn(ctx.rootDir, { scopePaths: [`${repo.specDir}/README.md`], writeTargets }, () => {
       scaffoldRepairs = ensureSpecBucketDirs(repo)
       writeSpecReadmeFull(repo)
       const subject =

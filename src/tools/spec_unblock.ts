@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { nowDTG } from '../spec/dtg.ts'
 import { gitAdd, gitCommit } from '../spec/git.ts'
-import { appendHistoryRow, setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
+import { setStatusOnSpec, setStatusOnTasks } from '../spec/mutate.ts'
 import { parseSpec, parseTasks } from '../spec/parse.ts'
 import { locateSpec, type RepoContext } from '../spec/repo.ts'
 import { upsertSpecReadmeRow } from '../spec/spec_readme.ts'
@@ -85,15 +86,17 @@ export function specUnblock(input: SpecUnblockInput, ctx: ToolContext): SpecUnbl
     `${repo.specDir}/README.md`,
   ]
   let commitSha: string | null = null
+  // README is rewritten too, so it is a write target alongside the spec files.
+  const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
   if (input.commit === false) {
-    assertNoSymlinks([loc.specMd, loc.tasksMd])
-    writeFileSync(loc.specMd, appendHistoryRow(newSpecRaw, dtg, 'UNBLOCKED'))
+    assertNoSymlinks(writeTargets)
+    writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
-      writeFileSync(loc.specMd, appendHistoryRow(newSpecRaw, dtg, 'UNBLOCKED'))
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
+      writeFileSync(loc.specMd, newSpecRaw)
       writeFileSync(loc.tasksMd, newTasksRaw)
       const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
       const subject =

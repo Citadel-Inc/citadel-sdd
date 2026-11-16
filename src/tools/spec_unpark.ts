@@ -101,15 +101,17 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
 
   const scopePaths = [beforePath, afterRelDir, `${repo.specDir}/README.md`]
   let commitSha: string | null = null
+  // README is rewritten too, so it is a write target alongside the spec files.
+  const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
   if (input.commit === false) {
-    assertNoSymlinks([loc.specMd, loc.tasksMd])
+    assertNoSymlinks(writeTargets)
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)
     upsertSpecReadmeRow(repo, loc.slug)
   } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets: [loc.specMd, loc.tasksMd] }, () => {
+    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
       writeFileSync(loc.specMd, newSpecRaw)
       writeFileSync(loc.tasksMd, newTasksRaw)
       // loc.state is always "parked" here — ensured by fix 4 guard above.
