@@ -63,7 +63,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.7",
+    "@biomejs/biome": "^2.6.8",
     "@types/node": "^26.6.6",
     "fast-check": "^4.10.2",
     "turbo": "^2.11.11",
