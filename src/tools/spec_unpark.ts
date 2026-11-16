@@ -104,31 +104,26 @@ export function specUnpark(input: SpecUnparkInput, ctx: ToolContext): SpecUnpark
   // README is rewritten too, so it is a write target alongside the spec files.
   const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
-  if (input.commit === false) {
-    assertNoSymlinks(writeTargets)
+  runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
+    // loc.state is always "parked" here — ensured by fix 4 guard above.
     gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)
-    upsertSpecReadmeRow(repo, loc.slug)
-  } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
-      writeFileSync(loc.specMd, newSpecRaw)
-      writeFileSync(loc.tasksMd, newTasksRaw)
-      // loc.state is always "parked" here — ensured by fix 4 guard above.
-      gitMv({ rootDir: ctx.rootDir }, beforePath, afterRelDir)
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
-      const subject =
-        ctx.profile.commit_style === 'conventional'
-          ? `spec(${loc.slug}): UNPARK — ${resolution}`
-          : `Unpark ${loc.slug}: ${resolution}`
-      gitAdd({ rootDir: ctx.rootDir }, [
-        `${afterRelDir}/spec.md`,
-        `${afterRelDir}/tasks.md`,
-        readmeRel,
-      ])
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
-    })
-  }
+    const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+    if (input.commit === false) {
+      return
+    }
+    const subject =
+      ctx.profile.commit_style === 'conventional'
+        ? `spec(${loc.slug}): UNPARK — ${resolution}`
+        : `Unpark ${loc.slug}: ${resolution}`
+    gitAdd({ rootDir: ctx.rootDir }, [
+      `${afterRelDir}/spec.md`,
+      `${afterRelDir}/tasks.md`,
+      readmeRel,
+    ])
+    commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+  })
 
   return {
     slug: loc.slug,

@@ -110,28 +110,20 @@ export function specBlock(input: SpecBlockInput, ctx: ToolContext): SpecBlockOut
   // README is rewritten too, so it is a write target alongside the spec files.
   const writeTargets = [loc.specMd, loc.tasksMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
-  if (input.commit === false) {
-    assertNoSymlinks(writeTargets)
+  runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
     writeFileSync(loc.specMd, newSpecRaw)
     writeFileSync(loc.tasksMd, newTasksRaw)
-    upsertSpecReadmeRow(repo, loc.slug)
-  } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
-      writeFileSync(loc.specMd, newSpecRaw)
-      writeFileSync(loc.tasksMd, newTasksRaw)
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
-      const subject =
-        ctx.profile.commit_style === 'conventional'
-          ? `spec(${loc.slug}): BLOCKED — ${input.reason}`
-          : `Block ${loc.slug}: ${input.reason}`
-      gitAdd({ rootDir: ctx.rootDir }, [
-        `${loc.relDir}/spec.md`,
-        `${loc.relDir}/tasks.md`,
-        readmeRel,
-      ])
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
-    })
-  }
+    const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+    if (input.commit === false) {
+      return
+    }
+    const subject =
+      ctx.profile.commit_style === 'conventional'
+        ? `spec(${loc.slug}): BLOCKED — ${input.reason}`
+        : `Block ${loc.slug}: ${input.reason}`
+    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, `${loc.relDir}/tasks.md`, readmeRel])
+    commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+  })
 
   return { slug: loc.slug, before, after, commit_sha: commitSha, dryRun: false }
 }

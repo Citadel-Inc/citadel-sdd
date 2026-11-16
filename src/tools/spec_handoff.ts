@@ -80,22 +80,19 @@ export function specHandoff(input: SpecHandoffInput, ctx: ToolContext): SpecHand
   // README is rewritten too, so it is a write target alongside spec.md.
   const writeTargets = [loc.specMd, join(ctx.rootDir, repo.specDir, 'README.md')]
 
-  if (input.commit === false) {
-    assertNoSymlinks(writeTargets)
+  runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
     writeFileSync(loc.specMd, newRaw)
-    upsertSpecReadmeRow(repo, loc.slug)
-  } else {
-    runSpecTxn(ctx.rootDir, { scopePaths, writeTargets }, () => {
-      writeFileSync(loc.specMd, newRaw)
-      const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
-      const subject =
-        ctx.profile.commit_style === 'conventional'
-          ? `spec(${loc.slug}): handoff to ${newOwner}${input.note ? ` — ${input.note}` : ''}`
-          : `Handoff ${loc.slug} to ${newOwner}`
-      gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel])
-      commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
-    })
-  }
+    const readmeRel = upsertSpecReadmeRow(repo, loc.slug)
+    if (input.commit === false) {
+      return
+    }
+    const subject =
+      ctx.profile.commit_style === 'conventional'
+        ? `spec(${loc.slug}): handoff to ${newOwner}${input.note ? ` — ${input.note}` : ''}`
+        : `Handoff ${loc.slug} to ${newOwner}`
+    gitAdd({ rootDir: ctx.rootDir }, [`${loc.relDir}/spec.md`, readmeRel])
+    commitSha = gitCommit({ rootDir: ctx.rootDir }, subject)
+  })
 
   return {
     slug: loc.slug,
