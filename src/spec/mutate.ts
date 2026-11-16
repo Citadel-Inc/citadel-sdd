@@ -1,3 +1,4 @@
+import { renderStatusValue } from './render.ts'
 import type {
   Frontmatter,
   ParsedSpec,
@@ -12,19 +13,10 @@ import type {
 export function mutateStatus(fm: Frontmatter, next: StatusValue): Frontmatter {
   const fields = fm.fields.map(([k, v]) =>
     k.toLowerCase() === 'status'
-      ? ([k, formatStatusForFrontmatter(next)] as readonly [string, string])
+      ? ([k, renderStatusValue(next)] as readonly [string, string])
       : ([k, v] as readonly [string, string]),
   )
   return { status: next, fields }
-}
-
-function formatStatusForFrontmatter(s: StatusValue): string {
-  const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state
-  const head = s.bold ? `**${stateStr}**` : stateStr
-  if (!s.tail) {
-    return head
-  }
-  return `${head} — ${s.tail}`
 }
 
 export function mutateField(fm: Frontmatter, key: string, value: string): Frontmatter {

@@ -50,6 +50,15 @@ describe('renderStatusValue', () => {
     const v = parseStatusValue('**DRAFT**')
     expect(renderStatusValue(v)).toBe('**DRAFT**')
   })
+
+  test('multi-line tail collapses to a single line', () => {
+    const out = renderStatusValue({
+      state: 'DONE',
+      dtg: '011945ZMAY26',
+      tail: 'shipped v1\n\nnotes follow',
+    })
+    expect(out).toBe('DONE 011945ZMAY26 — shipped v1 notes follow')
+  })
 })
 
 describe('renderFrontmatter', () => {

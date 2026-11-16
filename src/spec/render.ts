@@ -12,10 +12,13 @@ import { PRIORITIES } from './types.ts'
 export function renderStatusValue(s: StatusValue): string {
   const stateStr = s.dtg ? `${s.state} ${s.dtg}` : s.state
   const head = s.bold ? `**${stateStr}**` : stateStr
-  if (!s.tail) {
+  // The status tail lands in a one-line table cell: a newline would break the
+  // table and orphan the fields below it, so multi-line text collapses to spaces.
+  const tail = s.tail.replace(/\s+/g, ' ').trim()
+  if (!tail) {
     return head
   }
-  return `${head} — ${s.tail}`
+  return `${head} — ${tail}`
 }
 
 function escapePipeCell(s: string): string {

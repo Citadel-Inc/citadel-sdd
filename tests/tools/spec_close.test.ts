@@ -4,6 +4,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { resolveBuiltIn } from '../../src/profile/resolver.ts'
 import { specClose } from '../../src/tools/spec_close.ts'
+import { specStatus } from '../../src/tools/spec_status.ts'
 import type { ToolContext } from '../../src/tools/types.ts'
 import { makeTempRepo, type TempRepo } from '../helpers/temp-repo.ts'
 
@@ -220,6 +221,27 @@ describe('specClose', () => {
     expect(() => specClose({ slug: 'blocked-reason', summary: 'abandon' }, ctx())).toThrow(
       SPEC_UNBLOCK_RE,
     )
+  })
+
+  test('multi-line summary stays in one status cell and keeps the Owner field', () => {
+    temp = makeTempRepo({ activeFixtures: ['in-progress-midway'] })
+    writeFileSync(
+      join(temp.rootDir, 'specs', 'active', 'in-progress-midway', 'tasks.md'),
+      '# T\n\n| | |\n|---|---|\n| Status | IN_PROGRESS 011920ZMAY26 |\n\n## P0\n\n- [x] done\n\n## P1\n\n- [x] done\n\n## P2\n\n- [x] done\n',
+    )
+    execSync(`git -C ${temp.rootDir} add -A && git -C ${temp.rootDir} commit -m fix`)
+
+    specClose({ slug: 'in-progress-midway', summary: 'shipped v1\n\nnotes follow' }, ctx())
+
+    const md = readFileSync(
+      join(temp.rootDir, 'specs', 'done', 'in-progress-midway', 'spec.md'),
+      'utf8',
+    )
+    const statusRows = md.split('\n').filter((l) => l.startsWith('| Status |'))
+    expect(statusRows).toHaveLength(1)
+    expect(statusRows[0]).toContain('shipped v1 notes follow')
+    expect(md).toContain('| Owner | TestAgent |')
+    expect(specStatus({ slug: 'in-progress-midway' }, ctx()).owner).toBe('TestAgent')
   })
 
   test(
